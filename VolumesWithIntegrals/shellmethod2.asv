@@ -1,0 +1,30 @@
+function sumShellVols = shellmethod2(funcString, shellcount, lowbound, upbound)
+%SHELLMETHOD2 Returns the , the volume under a function retrieved by rotating the
+% area under the function around the axis perpendicular to the axis of revolution. 
+% The volume approaches the approximate volume as the number of shells increases.
+%   Input:
+%       1. Function
+%       2. Number of shells encompassing the volume.
+%       3. Lower bound of input variable.
+%       4. Upper bound of input variable.
+
+%   General steps:
+%       1. Determine the delta based on bounds and number of shells, use
+%       delta to get shell radii.
+%       2. Generate shell heights(height of cylindert using function and radi
+%       3. Generate each shell volume by multiplying shell heights, their 
+%       radii and delta.
+%       3. Add them together, multiply their sum by 2*pi.
+
+delta = (upbound-lowbound)/shellcount;
+
+xpoints = lowbound:delta:upbound-delta;
+
+syms x
+f(x) = str2sym(funcString);
+
+shellVols = f(xpoints)*xpoints*delta;
+sumShellVols = 2*pi*sum(double(shellVols));
+
+end
+
