@@ -22,7 +22,7 @@ function varargout = AUC(varargin)
 
 % Edit the above text to modify the response to help AreaUnderCurve
 
-% Last Modified by GUIDE v2.5 17-Nov-2017 11:57:02
+% Last Modified by GUIDE v2.5 23-Nov-2017 20:26:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,7 +42,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
 
 % --- Executes just before AreaUnderCurve is made visible.
 function AreaUnderCurve_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -71,7 +70,6 @@ set(handles.text4, 'string', 'Select a function');
 % UIWAIT makes AreaUnderCurve wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
-
 % --- Outputs from this function are returned to the command line.
 function varargout = AreaUnderCurve_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -82,10 +80,9 @@ function varargout = AreaUnderCurve_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
-% --- Executes on selection change in popupmenu1.
-function popupmenu1_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
+% --- Executes on selection change in intervalMenu.
+function intervalMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to intervalMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global step;
@@ -125,13 +122,12 @@ else
         bDiff = upperBound - lowerBound;
         step = bDiff/50;
     end
-    popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
+    functionMenu_Callback(handles.functionMenu, eventdata, handles);
 end
 
-
 % --- Executes during object creation, after setting all properties.
-function popupmenu1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu1 (see GCBO)
+function intervalMenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to intervalMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -140,8 +136,6 @@ function popupmenu1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function edit1_Callback(hObject, eventdata, handles)
 % hObject    handle to edit1 (see GCBO)
@@ -166,14 +160,11 @@ else
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
-        popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-        pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
+        functionMenu_Callback(handles.functionMenu, eventdata, handles);
      else
-        popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-        pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
+        functionMenu_Callback(handles.functionMenu, eventdata, handles);
      end
 end
-
 
 % --- Executes during object creation, after setting all properties.
 function edit1_CreateFcn(hObject, eventdata, handles)
@@ -186,8 +177,6 @@ function edit1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function edit2_Callback(hObject, eventdata, handles)
 % hObject    handle to edit3 (see GCBO)
@@ -212,12 +201,10 @@ else
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
-        popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-        pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-     else
-        popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-        pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-     end
+        intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
+    else
+        intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
+    end
 end
 
 
@@ -234,9 +221,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenu2.
-function popupmenu2_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
+% --- Executes on selection change in functionMenu.
+function functionMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to functionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global x;
@@ -247,34 +234,35 @@ global step;
 global funcText;
 global functionChoice;
 global methodPicked;
+global AUC;
+
+functionContents = cellstr(get(handles.functionMenu, 'String'));
+functionChoice = functionContents{get(hObject, 'Value')};
+if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
+    funcText = 'x^3+5*x^2';
+    symFunc = 'q^3+5*q^2';
+elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
+    funcText = 'x^2+1';
+    symFunc = 'q^2+1';
+end
+syms q
+f(q) = str2sym(symFunc);
+
 if(lower(methodPicked) == 'trapz')
+    disp("Traps")
     x = (lowerBound:step:upperBound);
-    functionContents = cellstr(get(handles.popupmenu2, 'String'));
-    functionChoice = functionContents{get(hObject, 'Value')};
-    if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
-        funcSelected = x.^3+5*x.^2;
-        funcText = 'f(x)=x^{\3}+5x^2';
-    elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
-        funcSelected = x.^2+1;
-        funcText = 'f(x)=x^2+1';
-    end
-    pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
+    funcSelected = double(f(x));
+
+% Change of rectangles when "left" radio button selected. Under
+% construction
 elseif(lower(methodPicked) == 'left')
     disp('Left')
-    functionContents = cellstr(get(handles.popupmenu2, 'String'));
-    functionChoice = functionContents{get(hObject, 'Value')};
-    if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
-        funcText = 'q^3+5*q^2';
-    elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
-        funcText = 'q^2+1';
-    end
-    syms q
-    f(q) = str2sym(funcText);
     
     riemannsPoints = lowerBound:step:upperBound-step;
     rectHeights = double(f(riemannsPoints));
     plot(riemannsPoints,rectHeights);
-    disp(sum(rectHeights*step))
+    AUC = sum(rectHeights*step);
+    
 %     disp(length(riemannsPoints))
 %     disp(length(rectHeights))
 %     
@@ -284,36 +272,37 @@ elseif(lower(methodPicked) == 'left')
 %         rectHeights(2:end); zeros(1,length(riemannsPoints))];
 %     yverts
 %     p = patch(xverts,yverts,'b','LineWidth',1.5);
+
 elseif(lower(methodPicked) == 'center')
-    functionContents = cellstr(get(handles.popupmenu2, 'String'));
-    functionChoice = functionContents{get(hObject, 'Value')};
-    if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
-        funcText = 'q^3+5*q^2';
-    elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
-        funcText = 'q^2+1';
-    end
-    syms q
-    f(q) = str2sym(funcText);
     
     riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
     rectHeights = double(f(riemannsPoints));
     plot(riemannsPoints,rectHeights);
-    disp(sum(rectHeights*step))
+    AUC = sum(rectHeights*step);
+    disp("Center")
     
-    xverts = [riemannsPoints(1:end-1); riemannsPoints(1:end-1); ...
-        riemannsPoints(2:end); riemannsPoints(2:end)];
-    xverts
-    yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end-1); ... 
-        rectHeights(2:end); zeros(1,length(riemannsPoints))];
-    yverts
-    p = patch(xverts,yverts,'b','LineWidth',1.5);
+%     xverts = [riemannsPoints(1:end-1); riemannsPoints(1:end-1); ...
+%         riemannsPoints(2:end); riemannsPoints(2:end)];
+%     xverts
+%     yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end-1); ... 
+%         rectHeights(2:end); zeros(1,length(riemannsPoints))];
+%     yverts
+%     p = patch(xverts,yverts,'b','LineWidth',1.5);
+    
+elseif(lower(methodPicked) == 'right')
+    
+    riemannsPoints = lowerBound+step:step:upperBound;
+    rectHeights = double(f(riemannsPoints));
+    plot(riemannsPoints,rectHeights);
+    AUC = sum(rectHeights*step);
+    disp("Right:")
 end
 
-
+pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
 
 % --- Executes during object creation, after setting all properties.
-function popupmenu2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu2 (see GCBO)
+function functionMenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to functionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -322,7 +311,6 @@ function popupmenu2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 % --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
@@ -337,6 +325,7 @@ global step;
 global upperBound;
 global funcText;
 global functionChoice;
+global methodPicked;
 if(strcmp(functionChoice, 'Select a function'))
     newString = 'Select a function';
     set(handles.text4, 'string', newString);
@@ -352,20 +341,27 @@ elseif(lowerBound > upperBound)
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
 else
-    x = lowerBound:step:upperBound;
-    AUC = trapz(x,funcSelected);
-    plot(x,funcSelected);
+    if(lower(methodPicked) ~= "trapz")
+        disp(AUC)
+    else
+        x = lowerBound:step:upperBound;
+        AUC = trapz(x,funcSelected);
+        disp(AUC)
+        plot(x,funcSelected);
+%         set(handles.text4, 'string', newString);
+        xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
+        yverts = [zeros(1,length(x)-1); funcSelected(1:end-1); funcSelected(2:end);...
+            zeros(1,length(x)-1)];
+        p = patch(xverts,yverts,'b','LineWidth',1.5);
+    end
     string = 'Area Under the Curve for';
     string1 = 'with intervals from';
-    newString = strcat(string, {' '}, funcText, string1, {' '}, int2str(lowerBound), {' to '}, int2str(upperBound), {' is '}, int2str(AUC));
+    newString = strcat(string, {' '}, funcText, string1, {' '}, num2str(lowerBound),...
+        {' to '}, int2str(upperBound), {' is '}, num2str(AUC, 3));
     set(handles.text4, 'string', newString);
-    xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
-    yverts = [zeros(1,length(x)-1); funcSelected(1:end-1); funcSelected(2:end); zeros(1,length(x)-1)];
-    p = patch(xverts,yverts,'b','LineWidth',1.5);
 end
 
-
-% --- Executes when selected object is changed in uibuttongroup1.
+% --- Executes whe selected object is changed in uibuttongroup1.
 function uibuttongroup1_SelectionChangedFcn(hObject, eventdata, handles)
 % hObject    handle to the selected object in uibuttongroup1 
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -374,4 +370,5 @@ global methodPicked;
 
 hh = get(get(handles.uibuttongroup1,'SelectedObject'),'string');
 methodPicked = string(hh);
-popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
+% functionMenu_Callback(handles.functionMenu, eventdata, handles);
+intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
