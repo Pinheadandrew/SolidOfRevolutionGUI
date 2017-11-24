@@ -238,68 +238,75 @@ global AUC;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 functionChoice = functionContents{get(hObject, 'Value')};
-if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
-    funcText = 'x^3+5*x^2';
-    symFunc = 'q^3+5*q^2';
-elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
-    funcText = 'x^2+1';
-    symFunc = 'q^2+1';
-end
-syms q
-f(q) = str2sym(symFunc);
+    if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
+        funcText = 'x^3+5*x^2';
+        symFunc = 'q^3+5*q^2';
+    elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
+        funcText = 'x^2+1';
+        symFunc = 'q^2+1';
+    else
+        newString = 'Select a function';
+        set(handles.text4, 'string', newString);
+        plot(0,0);
+        f = errordlg('Select a function', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    end
+    syms q
+    f(q) = str2sym(symFunc);
 
-x = (lowerBound:step:upperBound);
-funcSelected = double(f(x));
+    x = (lowerBound:step:upperBound);
+    funcSelected = double(f(x));
 
-if(lower(methodPicked) == 'trapz')
-    disp("Traps")
+    if(lower(methodPicked) == 'trapz')
+        disp("Traps")
 
-% Change of rectangles when "left" radio button selected. Under
-% construction
-elseif(lower(methodPicked) == 'left')
-    disp('Left')
-    
-    riemannsPoints = lowerBound:step:upperBound-step;
-    rectHeights = double(f(riemannsPoints));
-    % plot(riemannsPoints,rectHeights);
-    AUC = sum(rectHeights*step);
-    
-%     disp(length(riemannsPoints))
-%     disp(length(rectHeights))
-%     
-%     xverts = [riemannsPoints(1:end-1); riemannsPoints(1:end-1); ...
-%         riemannsPoints(2:end); riemannsPoints(2:end)];
-%     yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end-1); ... 
-%         rectHeights(2:end); zeros(1,length(riemannsPoints))];
-%     yverts
-%     p = patch(xverts,yverts,'b','LineWidth',1.5);
+    % Change of rectangles when "left" radio button selected. Under
+    % construction
+    elseif(lower(methodPicked) == 'left')
+        disp('Left')
 
-elseif(lower(methodPicked) == 'center')
-    
-    riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
-    rectHeights = double(f(riemannsPoints));
-    % plot(riemannsPoints,rectHeights);
-    AUC = sum(rectHeights*step);
-    disp("Center")
-    
-%     xverts = [riemannsPoints(1:end-1); riemannsPoints(1:end-1); ...
-%         riemannsPoints(2:end); riemannsPoints(2:end)];
-%     xverts
-%     yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end-1); ... 
-%         rectHeights(2:end); zeros(1,length(riemannsPoints))];
-%     yverts
-%     p = patch(xverts,yverts,'b','LineWidth',1.5);
-    
-elseif(lower(methodPicked) == 'right')
-    
-    riemannsPoints = lowerBound+step:step:upperBound;
-    rectHeights = double(f(riemannsPoints));
-    % plot(riemannsPoints,rectHeights);
-    AUC = sum(rectHeights*step);
-    disp("Right:")
-end
+        riemannsPoints = lowerBound:step:upperBound-step;
+        rectHeights = double(f(riemannsPoints));
+        % plot(riemannsPoints,rectHeights);
+        AUC = sum(rectHeights*step);
 
-pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
+    %     disp(length(riemannsPoints))
+    %     disp(length(rectHeights))
+    %     
+    %     xverts = [riemannsPoints(1:end-1); riemannsPoints(1:end-1); ...
+    %         riemannsPoints(2:end); riemannsPoints(2:end)];
+    %     yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end-1); ... 
+    %         rectHeights(2:end); zeros(1,length(riemannsPoints))];
+    %     yverts
+    %     p = patch(xverts,yverts,'b','LineWidth',1.5);
+
+    elseif(lower(methodPicked) == 'center')
+
+        riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
+        rectHeights = double(f(riemannsPoints));
+        % plot(riemannsPoints,rectHeights);
+        AUC = sum(rectHeights*step);
+        disp("Center")
+
+    %     xverts = [riemannsPoints(1:end-1); riemannsPoints(1:end-1); ...
+    %         riemannsPoints(2:end); riemannsPoints(2:end)];
+    %     xverts
+    %     yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end-1); ... 
+    %         rectHeights(2:end); zeros(1,length(riemannsPoints))];
+    %     yverts
+    %     p = patch(xverts,yverts,'b','LineWidth',1.5);
+
+    elseif(lower(methodPicked) == 'right')
+
+        riemannsPoints = lowerBound+step:step:upperBound;
+        rectHeights = double(f(riemannsPoints));
+        % plot(riemannsPoints,rectHeights);
+        AUC = sum(rectHeights*step);
+        disp("Right:")
+    end
+
+    pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
 
 % --- Executes during object creation, after setting all properties.
 function functionMenu_CreateFcn(hObject, eventdata, handles)
@@ -349,8 +356,8 @@ else
         % x = lowerBound:step:upperBound;
         % AUC = trapz(x,funcSelected);
         disp(AUC)
-        plot(x,funcSelected);
-%         set(handles.text4, 'string', newString);
+        % plot(x,funcSelected);
+        % set(handles.text4, 'string', newString);
         xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
         yverts = [zeros(1,length(x)-1); funcSelected(1:end-1); funcSelected(2:end);...
             zeros(1,length(x)-1)];
