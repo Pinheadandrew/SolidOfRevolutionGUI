@@ -248,10 +248,11 @@ end
 syms q
 f(q) = str2sym(symFunc);
 
+x = (lowerBound:step:upperBound);
+funcSelected = double(f(x));
+
 if(lower(methodPicked) == 'trapz')
     disp("Traps")
-    x = (lowerBound:step:upperBound);
-    funcSelected = double(f(x));
 
 % Change of rectangles when "left" radio button selected. Under
 % construction
@@ -260,7 +261,7 @@ elseif(lower(methodPicked) == 'left')
     
     riemannsPoints = lowerBound:step:upperBound-step;
     rectHeights = double(f(riemannsPoints));
-    plot(riemannsPoints,rectHeights);
+    % plot(riemannsPoints,rectHeights);
     AUC = sum(rectHeights*step);
     
 %     disp(length(riemannsPoints))
@@ -277,7 +278,7 @@ elseif(lower(methodPicked) == 'center')
     
     riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
     rectHeights = double(f(riemannsPoints));
-    plot(riemannsPoints,rectHeights);
+    % plot(riemannsPoints,rectHeights);
     AUC = sum(rectHeights*step);
     disp("Center")
     
@@ -293,7 +294,7 @@ elseif(lower(methodPicked) == 'right')
     
     riemannsPoints = lowerBound+step:step:upperBound;
     rectHeights = double(f(riemannsPoints));
-    plot(riemannsPoints,rectHeights);
+    % plot(riemannsPoints,rectHeights);
     AUC = sum(rectHeights*step);
     disp("Right:")
 end
@@ -341,11 +342,12 @@ elseif(lowerBound > upperBound)
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
 else
+    plot(x,funcSelected);
     if(lower(methodPicked) ~= "trapz")
         disp(AUC)
     else
-        x = lowerBound:step:upperBound;
-        AUC = trapz(x,funcSelected);
+        % x = lowerBound:step:upperBound;
+        % AUC = trapz(x,funcSelected);
         disp(AUC)
         plot(x,funcSelected);
 %         set(handles.text4, 'string', newString);
