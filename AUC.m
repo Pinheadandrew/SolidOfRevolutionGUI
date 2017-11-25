@@ -252,48 +252,51 @@ functionChoice = functionContents{get(hObject, 'Value')};
         set(f, 'WindowStyle', 'modal');
         uiwait(f);
     end
+    
     syms q
     f(q) = str2sym(symFunc);
-
-      x = lowerBound:step:upperBound;
-      funcSelected = double(f(x));
-      plot(x,funcSelected);
+    x = lowerBound:step:upperBound;
+    funcSelected = double(f(x));
+    plot(x,funcSelected);
 
     if(lower(methodPicked) == 'trapz')
         disp("Traps")
-        x = lowerBound:step:upperBound;
-        funcSelected = double(f(x));
-    % Change of rectangles when "left" radio button selected. Under
-    % construction
-    elseif(lower(methodPicked) == 'left')
-        disp('Left')
-
-        riemannsPoints = lowerBound:step:upperBound-step;
-        rectHeights = double(f(riemannsPoints));
-        AUC = sum(rectHeights*step);
         
+        xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
+        yverts = [zeros(1,length(x)-1); funcSelected(1:end-1);...
+            funcSelected(2:end); zeros(1,length(x)-1)];
+         patch(xverts,yverts,'b','LineWidth',1)
+         
+    else
+        if(lower(methodPicked) == 'left')
+            
+            riemannsPoints = lowerBound:step:upperBound-step;
+            rectHeights = double(f(riemannsPoints));
+            AUC = sum(rectHeights*step);
+            disp('Left')
+
+        elseif(lower(methodPicked) == 'center')
+
+            riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
+            rectHeights = double(f(riemannsPoints));
+            AUC = sum(rectHeights*step);
+            disp("Center")
+        
+        elseif(lower(methodPicked) == 'right')
+
+            riemannsPoints = lowerBound+step:step:upperBound;
+            rectHeights = double(f(riemannsPoints));
+            AUC = sum(rectHeights*step);
+            disp("Right:")
+        
+        end
         xverts = [x(1:end-1); x(1:end-1);...
-            x(2:end); x(2:end)];
-        xverts
+                 x(2:end); x(2:end)];
+
         yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end); rectHeights(1:end);...
-           zeros(1,length(riemannsPoints))];
-        yverts
-        patch(xverts,yverts,'b','LineWidth',1.5)
-
-    elseif(lower(methodPicked) == 'center')
-
-        riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
-        rectHeights = double(f(riemannsPoints));
-        AUC = sum(rectHeights*step);
-
-        disp("Center")
-
-    elseif(lower(methodPicked) == 'right')
-
-        riemannsPoints = lowerBound+step:step:upperBound;
-        rectHeights = double(f(riemannsPoints));
-        AUC = sum(rectHeights*step);
-        disp("Right:")
+                zeros(1,length(riemannsPoints))];
+ 
+        patch(xverts,yverts,'b','LineWidth',1)
     end
 
     pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
@@ -339,18 +342,7 @@ elseif(lowerBound > upperBound)
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
 else
-    % plot(x,funcSelected);
-    if(lower(methodPicked) ~= "trapz")
-        disp(AUC)
-    else
-        disp(AUC)
-        xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
-        xverts
-        yverts = [zeros(1,length(x)-1); funcSelected(1:end-1); funcSelected(2:end);...
-            zeros(1,length(x)-1)];
-        yverts
-        p = patch(xverts,yverts,'b','LineWidth',1.5);
-    end
+    disp(AUC)
     string = 'Area Under the Curve for';
     string1 = 'with intervals from';
     newString = strcat(string, {' '}, funcText, string1, {' '}, num2str(lowerBound),...
