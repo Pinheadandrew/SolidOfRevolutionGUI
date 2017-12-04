@@ -22,7 +22,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 22-Nov-2017 11:02:08
+% Last Modified by GUIDE v2.5 02-Dec-2017 22:19:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,10 +57,12 @@ function VUC_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
-global lowBound;
-global upBound;
+global lowerBound;
+lowerBound = 0;
+global upperBound;
+upperBound = 5;
 global disks;
-global diskWidth;
+disks = 5;
 
 end
 
@@ -84,35 +86,18 @@ function functionMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to functionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global diskWidth;
-global lowerBound;
-global upperBound;
-global functionChoice;
-contents = cellstr(get(hObject,'String'));
-intervalChoice = contents{get(hObject,'Value')};
-if(strcmp(functionChoice, 'Select a function'))
-    newString = 'Select a function';
-    set(handles.text4, 'string', newString);
-    plot(0,0);
-    f = errordlg('Select a function', 'Function Error');
-    set(f, 'WindowStyle', 'modal');
-    uiwait(f);
-elseif(lowerBound > upperBound)
-    newString = 'Fix domain';
-    set(handles.text4, 'string', newString);
-    plot(0,0);
-    d = errordlg('LOWER bound is larger than UPPER bound', 'Domain Error');
-    set(d, 'WindowStyle', 'modal');
-    uiwait(d);
-else
-    diskWidth = upperBound - lowerBound / disks;
-    end
-    popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
+
+global funcChoice;
+
+functionContents = cellstr(get(handles.functionMenu, 'String'));
+% func_picked = functionContents{get(hObject, 'Value')};
+funcChoice = functionContents{get(hObject, 'Value')};
+
 end
 
 % Hints: contents = cellstr(get(hObject,'String')) returns functionMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from functionMenu
-end
+
 
 % --- Executes during object creation, after setting all properties.
 function functionMenu_CreateFcn(hObject, eventdata, handles)
@@ -133,41 +118,68 @@ function volumeButton_Callback(hObject, eventdata, handles)
 % hObject    handle to volumeButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global upperBound;
+global lowerBound;
+global funcChoice;
+global disks;
+
+if (strcmp(funcChoice, "Select a function"))
+%     newString = 'Select a function';
+%     set(handles.text4, 'string', newString);
+    plot(0,0);
+    f = errordlg('No Function Selected.', 'Function Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+else
+    estimated_volume = diskmethod2(funcChoice, disks, lowerBound, upperBound);
+    actual_volume = diskmethod1(funcChoice, lowerBound, upperBound);
+
+    string1 = 'The volume under the function of ';
+    string2 = ' rotated around the x-axis, with '; %intervals from ';
+    
+    statementString = strcat(string1, {' '}, funcChoice, string2, {' '}, num2str(disks), ...
+        {' disks between the interval of '}, num2str(lowerBound), {' to '},...
+        num2str(upperBound), {' is '}, sprintf('%0.4f', estimated_volume));
+
+    statementString2 = strcat("Actual Volume:", {' '}, sprintf('%0.4f', actual_volume));
+
+    set(handles.statementText, 'string', statementString);
+    set(handles.actualVolumeText, 'string', statementString2);
+end
 end
 
 function diskEdit_Callback(hObject, eventdata, handles)
     global lowerBound;
     global upperBound;
-    tempLowerBound = lowerBound;
-    lowerBound = str2double(get(hObject,'String'));
-    if(isnan(lowerBound))
-        d = errordlg('Domain must be Integer', 'Domain Error');
+    global diskWidth;
+    global disks;
+    
+    diskInput = str2double(get(hObject,'String'));
+    
+    if(isnan(diskInput))
+        d = errordlg('Disk Count must be Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
-        lowerBound = tempLowerBound;
-    else
-        if(lowerBound >= upperBound)
-            newString = 'Fix domain';
+    elseif(diskInput <= 0)
+            newString = 'Nonpositive Disk Count';
             set(handles.text4, 'string', newString);
             plot(0,0);
-            d = errordlg('Fix Upper Bound', 'Domain Error');
+            d = errordlg('Number of disks must be positive', 'Disk Error');
             set(d, 'WindowStyle', 'modal');
             uiwait(d);
-            lowerBound = tempLowerBound;
-            popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-            pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-         else
-            popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-            pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-         end
+    else
+        disks = diskInput;
+        diskWidth = (upperBound - lowerBound)/disks;
+    end
+
 % hObject    handle to diskEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of diskEdit as text
 %        str2double(get(hObject,'String')) returns contents of diskEdit as a double
-    end
-end
+   end
+
 
 % --- Executes during object creation, after setting all properties.
 function diskEdit_CreateFcn(hObject, eventdata, handles)
@@ -183,44 +195,37 @@ end
 end
 
 
-function lowBoundEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to lowBoundEdit (see GCBO)
+function lowerBoundEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to lowerBoundEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-    global lowBound;
-    global upBound;
-    tempLowerBound = lowBound;
-    lowBound = str2double(get(hObject,'String'));
-    if(isnan(lowerBound))
+    global lowerBound;
+    global upperBound;
+    lower_input = str2double(get(hObject,'String'));
+   
+    if(isnan(lower_input))
         d = errordlg('Domain must be Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
-        lowerBound = tempLowBound;
+    elseif(lower_input >= upperBound)
+%         newString = 'Fix domain';
+%         set(handles.text4, 'string', newString);
+        plot(0,0);
+        d = errordlg('Fix Lower Bound', 'Domain Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
     else
-        if(lowBound >= upBound)
-            newString = 'Fix domain';
-            set(handles.text4, 'string', newString);
-            plot(0,0);
-            d = errordlg('Fix Upper Bound', 'Domain Error');
-            set(d, 'WindowStyle', 'modal');
-            uiwait(d);
-            lowBound = tempLowerBound;
-            popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-            pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-         else
-            popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-            pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-         end
-
-% Hints: get(hObject,'String') returns contents of lowBoundEdit as text
-%        str2double(get(hObject,'String')) returns contents of lowBoundEdit as a double
+        lowerBound = lower_input;
     end
+
+% Hints: get(hObject,'String') returns contents of lowerBoundEdit as text
+%        str2double(get(hObject,'String')) returns contents of lowerBoundEdit as a double
 end
 
 % --- Executes during object creation, after setting all properties.
-function lowBoundEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to lowBoundEdit (see GCBO)
+function lowerBoundEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to lowerBoundEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -231,43 +236,36 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
-function upBoundEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to upBoundEdit (see GCBO)
+function upperBoundEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to upperBoundEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global upBound;
-    global lowBound;
-    tempUpperBound = upBound;
-    upBound = str2double(get(hObject,'String'));
-    if(isnan(upBound))
-        d = errordlg('Domain must be Integer', 'Domain Error');
+    global lowerBound;
+    global upperBound;
+    upper_input = str2double(get(hObject,'String'));
+    
+    if(isnan(upper_input))
+        d = errordlg('Domain must be an Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
-        upBound = tempUpperBound;
+    elseif(upper_input <= lowerBound)
+        newString = 'Fix domain';
+        set(handles.text4, 'string', newString);
+        plot(0,0);
+        d = errordlg('Fix Upper Bound', 'Domain Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
     else
-        if(lowBound >= upBound)
-            newString = 'Fix domain';
-            set(handles.text4, 'string', newString);
-            plot(0,0);
-            d = errordlg('Fix Upper Bound', 'Domain Error');
-            set(d, 'WindowStyle', 'modal');
-            uiwait(d);
-            upBound = tempUpperBound;
-            popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-            pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-         else
-            popupmenu2_Callback(handles.popupmenu2, eventdata, handles);
-            pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
-        end
+        upperBound = upper_input;
     end
 end
-% Hints: get(hObject,'String') returns contents of upBoundEdit as text
-%        str2double(get(hObject,'String')) returns contents of upBoundEdit as a double
+% Hints: get(hObject,'String') returns contents of upperBoundEdit as text
+%        str2double(get(hObject,'String')) returns contents of upperBoundEdit as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function upBoundEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to upBoundEdit (see GCBO)
+function upperBoundEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to upperBoundEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

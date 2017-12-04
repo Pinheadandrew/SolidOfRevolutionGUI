@@ -260,7 +260,6 @@ functionChoice = functionContents{get(hObject, 'Value')};
     plot(x,funcSelected);
 
     if(lower(methodPicked) == 'trapz')
-        disp("Traps")
         
         xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
         yverts = [zeros(1,length(x)-1); funcSelected(1:end-1);...
@@ -273,21 +272,18 @@ functionChoice = functionContents{get(hObject, 'Value')};
             riemannsPoints = lowerBound:step:upperBound-step;
             rectHeights = double(f(riemannsPoints));
             AUC = sum(rectHeights*step);
-            disp('Left')
 
         elseif(lower(methodPicked) == 'center')
 
             riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
             rectHeights = double(f(riemannsPoints));
             AUC = sum(rectHeights*step);
-            disp("Center")
         
         elseif(lower(methodPicked) == 'right')
 
             riemannsPoints = lowerBound+step:step:upperBound;
             rectHeights = double(f(riemannsPoints));
             AUC = sum(rectHeights*step);
-            disp("Right:")
         
         end
         xverts = [x(1:end-1); x(1:end-1);...
@@ -342,11 +338,11 @@ elseif(lowerBound > upperBound)
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
 else
-    disp(AUC)
-    string = 'Area Under the Curve for';
-    string1 = 'with intervals from';
-    newString = strcat(string, {' '}, funcText, string1, {' '}, num2str(lowerBound),...
-        {' to '}, int2str(upperBound), {' is '}, num2str(AUC, 3));
+    string = 'Estimated Area Under the Curve for';
+     string1 = 'with intervals from';
+     newString = strcat(string, {' '}, funcText, string1, {' '}, num2str(lowerBound),...
+         {' to '}, int2str(upperBound), {' is '}, sprintf('%0.4f', AUC));
+     
     set(handles.text4, 'string', newString);
 end
 
