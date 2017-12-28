@@ -61,7 +61,7 @@ global lowerBound
 lowerBound = 0;
 global upperBound 
 upperBound = 20;
-global step
+global step;
 step = 5;
 global methodPicked;
 methodPicked = 'trapz';
@@ -160,9 +160,10 @@ else
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
-        functionMenu_Callback(handles.functionMenu, eventdata, handles);
-     else
-        functionMenu_Callback(handles.functionMenu, eventdata, handles);
+        
+        stepEdit_Callback(handles.stepEdit, eventdata, handles);
+    else
+        stepEdit_Callback(handles.stepEdit, eventdata, handles);
      end
 end
 
@@ -201,9 +202,9 @@ else
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
-        intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
+        stepEdit_Callback(handles.stepEdit, eventdata, handles);
     else
-        intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
+        stepEdit_Callback(handles.stepEdit, eventdata, handles);
     end
 end
 
@@ -235,15 +236,95 @@ global funcText;
 global functionChoice;
 global methodPicked;
 global AUC;
+global actual_area;
 
+% When a function is selected, first all the fields for the exponential and
+% polynomial coefficients are hidden.
+
+set(handles.edit4,'Visible','off');
+set(handles.edit5,'Visible','off');
+set(handles.edit6,'Visible','off');
+set(handles.edit7,'Visible','off');
+set(handles.edit8,'Visible','off');
+set(handles.aBox,'Visible','off');
+set(handles.bBox,'Visible','off');
+set(handles.cBox,'Visible','off');
+set(handles.text5,'Visible','off');
+set(handles.degree2nd,'Visible','off');
+set(handles.degree1st,'Visible','off');
 functionContents = cellstr(get(handles.functionMenu, 'String'));
+
 functionChoice = functionContents{get(hObject, 'Value')};
+if(strcmp(functionChoice,'Select a function'))
+    newString = 'Select a function';
+    set(handles.text4, 'string', newString);
+    plot(0,0);
+    f = errordlg('Select a function', 'Function Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+else
     if(strcmp(functionChoice,'f(x)=x^3+5x^2'))
         funcText = 'x^3+5*x^2';
         symFunc = 'q^3+5*q^2';
     elseif(strcmp(functionChoice, 'f(x)=x^2+1'))
         funcText = 'x^2+1';
         symFunc = 'q^2+1';
+    elseif(strcmp(functionChoice, 'Exponential'))
+        % When exponential function option is selected:
+        %   -Set bounds to 0 and 1.
+        %   -Set the function so that it's e^x (first and second boxes = 1)
+%         set(handles.edit1,'string', lowerBound);
+%         set(handles.edit2,'string', upperBound);
+        
+        set(handles.edit4,'Visible','on');
+        set(handles.edit5,'Visible','on');
+        set(handles.edit6,'Visible','on');
+        set(handles.aBox,'Visible','on');
+        set(handles.bBox,'Visible','on');
+        set(handles.cBox,'Visible','on');
+        set(handles.text5,'Visible','on');
+        
+        set(handles.aBox, 'string', 'a');
+        set(handles.bBox, 'string', 'b');
+        set(handles.cBox, 'string', 'c');
+        
+        a = str2double(get(handles.edit4, 'String'));
+        b = str2double(get(handles.edit5, 'String'));
+        c = str2double(get(handles.edit6, 'String'));
+        
+        funcText = a + "* e^(" + b + "*x) + " + c;
+        symFunc = a + "*exp(" + b + "*q)+" + c;
+        
+    elseif(strcmp(functionChoice, 'Polynomial'))
+%         set(handles.edit4,'string', '1');
+%         set(handles.edit5,'string', '1');
+%         set(handles.edit6,'string', '0');
+        % Makes the forms for the coefficients and their captions visible.
+        set(handles.edit4,'Visible','on');
+        set(handles.edit5,'Visible','on');
+        set(handles.edit6,'Visible','on');
+        set(handles.edit7,'Visible','on');
+        set(handles.edit8,'Visible','on');
+        set(handles.aBox,'Visible','on');
+        set(handles.bBox,'Visible','on');
+        set(handles.cBox,'Visible','on');
+        set(handles.degree2nd,'Visible','on');
+        set(handles.degree1st,'Visible','on');
+        set(handles.text5,'Visible','on');
+        
+        set(handles.text5, 'string', 'Coefficients of Degrees');
+        set(handles.aBox, 'string', '5th');
+        set(handles.bBox, 'string', '4th');
+        set(handles.cBox, 'string', '3rd');
+        
+        a = str2double(get(handles.edit4, 'String'));
+        b = str2double(get(handles.edit5, 'String'));
+        c = str2double(get(handles.edit6, 'String'));
+        d = str2double(get(handles.edit7, 'String'));
+        e = str2double(get(handles.edit8, 'String'));
+        
+        funcText = a + " * x^5 + " + b + " * x^4 + " + c + " * x^3 + " + d + " * x^2 + " + e + " * x";
+        symFunc = a + "*(q^5)+" + b + "*(q^4)+" + c + "*(q^3)+" + d + "*(q^2)+" + e + "*q";
     else
         newString = 'Select a function';
         set(handles.text4, 'string', newString);
@@ -255,16 +336,19 @@ functionChoice = functionContents{get(hObject, 'Value')};
     
     syms q
     f(q) = str2sym(symFunc);
+    actual_area = int(f(q), lowerBound, upperBound);
     x = lowerBound:step:upperBound;
     funcSelected = double(f(x));
-    plot(x,funcSelected);
+    h = fplot(f(q), [lowerBound, upperBound], 'r');
 
     if(lower(methodPicked) == 'trapz')
         
         xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
         yverts = [zeros(1,length(x)-1); funcSelected(1:end-1);...
             funcSelected(2:end); zeros(1,length(x)-1)];
-         patch(xverts,yverts,'b','LineWidth',1)
+        patch(xverts,yverts,'b','LineWidth',1)
+        uistack(h, 'top');
+        AUC = trapz(x, funcSelected); % Trying this out
          
     else
         if(lower(methodPicked) == 'left')
@@ -293,8 +377,9 @@ functionChoice = functionContents{get(hObject, 'Value')};
                 zeros(1,length(riemannsPoints))];
  
         patch(xverts,yverts,'b','LineWidth',1)
+        uistack(h, 'top');
     end
-
+end
     pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -323,6 +408,8 @@ global upperBound;
 global funcText;
 global functionChoice;
 global methodPicked;
+global actual_area;
+
 if(strcmp(functionChoice, 'Select a function'))
     newString = 'Select a function';
     set(handles.text4, 'string', newString);
@@ -339,9 +426,10 @@ elseif(lowerBound > upperBound)
     uiwait(d);
 else
     string = 'Estimated Area Under the Curve for';
-     string1 = 'with intervals from';
+     string1 = ' with intervals from';
      newString = strcat(string, {' '}, funcText, string1, {' '}, num2str(lowerBound),...
-         {' to '}, int2str(upperBound), {' is '}, sprintf('%0.4f', AUC));
+         {' to '}, int2str(upperBound), {' is '}, sprintf('%0.2f', AUC), ...
+         {'. The actual area is '}, sprintf('%0.2f.', actual_area));
      
     set(handles.text4, 'string', newString);
 end
@@ -355,5 +443,147 @@ global methodPicked;
 
 hh = get(get(handles.uibuttongroup1,'SelectedObject'),'string');
 methodPicked = string(hh);
-% functionMenu_Callback(handles.functionMenu, eventdata, handles);
-intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+% intervalMenu_Callback(handles.intervalMenu, eventdata, handles);
+
+function edit4_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% pushbutton1_Callback(handles.pushbutton1, eventdata, handles);
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+
+function edit4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit5_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+
+function edit5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit6_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+
+% --- Executes during object creation, after setting all properties.
+function edit6_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit7_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+
+% --- Executes during object creation, after setting all properties.
+function edit7_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit8_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+
+% --- Executes during object creation, after setting all properties.
+function edit8_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function stepEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to stepEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of stepEdit as text
+%        str2double(get(hObject,'String')) returns contents of stepEdit as a double
+
+global step;
+global lowerBound;
+global upperBound;
+global functionChoice;
+rectCount = str2double(get(hObject,'String'));
+if(strcmp(functionChoice, 'Select a function'))
+    newString = 'Select a function';
+    set(handles.text4, 'string', newString);
+    plot(0,0);
+    f = errordlg('Select a function', 'Function Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+elseif(lowerBound > upperBound)
+    newString = 'Fix domain';
+    set(handles.text4, 'string', newString);
+    plot(0,0);
+    d = errordlg('LOWER bound is larger than UPPER bound', 'Domain Error');
+    set(d, 'WindowStyle', 'modal');
+    uiwait(d);
+elseif(rectCount < 1)
+    newString = 'Bad rectangle count';
+    set(handles.text4, 'string', newString);
+    plot(0,0);
+    d = errordlg('Rectangle count must be positive number', 'Rectangle Error');
+    set(d, 'WindowStyle', 'modal');
+    functionMenu_Callback(handles.functionMenu, eventdata, handles);
+    uiwait(d);
+else
+    step = (upperBound - lowerBound)/rectCount;
+functionMenu_Callback(handles.functionMenu, eventdata, handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function stepEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to stepEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+

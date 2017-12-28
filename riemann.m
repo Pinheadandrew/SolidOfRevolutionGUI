@@ -25,6 +25,5 @@ rectHeights = f(riemannsPoints);
 
 rectAreas = rectHeights*delta;
 areaUnderCurve = double(sum(rectAreas));
-plot(riemannsPoints,rectHeights);
 end
 

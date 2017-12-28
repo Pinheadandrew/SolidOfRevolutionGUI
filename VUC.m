@@ -22,7 +22,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 02-Dec-2017 22:19:15
+% Last Modified by GUIDE v2.5 05-Dec-2017 08:29:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,8 +61,8 @@ global lowerBound;
 lowerBound = 0;
 global upperBound;
 upperBound = 5;
-global disks;
-disks = 5;
+global steps;
+steps = 5;
 
 end
 
@@ -86,13 +86,10 @@ function functionMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to functionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 global funcChoice;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
-% func_picked = functionContents{get(hObject, 'Value')};
 funcChoice = functionContents{get(hObject, 'Value')};
-
 end
 
 % Hints: contents = cellstr(get(hObject,'String')) returns functionMenu contents as cell array
@@ -121,26 +118,32 @@ function volumeButton_Callback(hObject, eventdata, handles)
 global upperBound;
 global lowerBound;
 global funcChoice;
-global disks;
+global steps;
+global methodChoice;
 
 if (strcmp(funcChoice, "Select a function"))
-%     newString = 'Select a function';
-%     set(handles.text4, 'string', newString);
     plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else
-    estimated_volume = diskmethod2(funcChoice, disks, lowerBound, upperBound);
-    actual_volume = diskmethod1(funcChoice, lowerBound, upperBound);
+    if (strcmp(methodChoice, "Disk"))
+        estimated_volume = diskmethod2(funcChoice, steps, lowerBound, upperBound);
+        actual_volume = diskmethod1(funcChoice, lowerBound, upperBound);
+        axisString = "x-axis";
+    elseif (strcmp(methodChoice, "Shell"))
+        estimated_volume = shellmethod2(funcChoice, steps, lowerBound, upperBound);
+        actual_volume = shellmethod1(funcChoice, lowerBound, upperBound);
+        axisString = "y-axis";
+    end
 
     string1 = 'The volume under the function of ';
-    string2 = ' rotated around the x-axis, with '; %intervals from ';
-    
-    statementString = strcat(string1, {' '}, funcChoice, string2, {' '}, num2str(disks), ...
-        {' disks between the interval of '}, num2str(lowerBound), {' to '},...
-        num2str(upperBound), {' is '}, sprintf('%0.4f', estimated_volume));
 
+    statementString = strcat(string1, {' '}, funcChoice, {' rotated around the '}, ...
+        axisString, {' with '}, num2str(steps), ...
+        {' steps between the interval of '}, num2str(lowerBound), {' to '},...
+        num2str(upperBound), {' is '}, sprintf('%0.4f', estimated_volume));
+    
     statementString2 = strcat("Actual Volume:", {' '}, sprintf('%0.4f', actual_volume));
 
     set(handles.statementText, 'string', statementString);
@@ -152,24 +155,24 @@ function diskEdit_Callback(hObject, eventdata, handles)
     global lowerBound;
     global upperBound;
     global diskWidth;
-    global disks;
+    global steps;
     
-    diskInput = str2double(get(hObject,'String'));
+    stepInput = str2double(get(hObject,'String'));
     
-    if(isnan(diskInput))
+    if(isnan(stepInput))
         d = errordlg('Disk Count must be Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
-    elseif(diskInput <= 0)
+    elseif(stepInput <= 0)
             newString = 'Nonpositive Disk Count';
             set(handles.text4, 'string', newString);
             plot(0,0);
-            d = errordlg('Number of disks must be positive', 'Disk Error');
+            d = errordlg('Number of steps must be positive', 'Disk Error');
             set(d, 'WindowStyle', 'modal');
             uiwait(d);
     else
-        disks = diskInput;
-        diskWidth = (upperBound - lowerBound)/disks;
+        steps = stepInput;
+        diskWidth = (upperBound - lowerBound)/steps;
     end
 
 % hObject    handle to diskEdit (see GCBO)
@@ -209,8 +212,6 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
     elseif(lower_input >= upperBound)
-%         newString = 'Fix domain';
-%         set(handles.text4, 'string', newString);
         plot(0,0);
         d = errordlg('Fix Lower Bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
@@ -270,6 +271,34 @@ function upperBoundEdit_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+% --- Executes on selection change in methodMenu.
+function methodMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to methodMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global methodChoice;
+
+methodContents = cellstr(get(handles.methodMenu, 'String'));
+methodChoice = methodContents{get(hObject, 'Value')};
+
+% Hints: contents = cellstr(get(hObject,'String')) returns methodMenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from methodMenu
+end
+
+% --- Executes during object creation, after setting all properties.
+function methodMenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to methodMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
