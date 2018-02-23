@@ -22,7 +22,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 05-Dec-2017 08:29:24
+% Last Modified by GUIDE v2.5 07-Feb-2018 13:04:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,6 +63,10 @@ global upperBound;
 upperBound = 5;
 global steps;
 steps = 5;
+global axisValue;
+axisValue = 0;
+global axisOri;
+axisOri = "x";
 
 end
 
@@ -120,6 +124,8 @@ global lowerBound;
 global funcChoice;
 global steps;
 global methodChoice;
+global axisValue;
+global axisOri;
 
 if (strcmp(funcChoice, "Select a function"))
     plot(0,0);
@@ -127,16 +133,20 @@ if (strcmp(funcChoice, "Select a function"))
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else
+    syms x
+    simple_exp = funcChoice(6:end);
     if (strcmp(methodChoice, "Disk"))
-        estimated_volume = diskmethod2(funcChoice, steps, lowerBound, upperBound);
-        actual_volume = diskmethod1(funcChoice, lowerBound, upperBound);
+        estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound);
+        actual_volume = diskmethod1(simple_exp, lowerBound, upperBound);
+        % actual_volume = diskwithaxis(simple_exp, lowerBound, upperBound, axisOri, axisValue);
         axisString = "x-axis";
     elseif (strcmp(methodChoice, "Shell"))
-        estimated_volume = shellmethod2(funcChoice, steps, lowerBound, upperBound);
-        actual_volume = shellmethod1(funcChoice, lowerBound, upperBound);
+        estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound);
+        actual_volume = shellmethod1(simple_exp, lowerBound, upperBound);
         axisString = "y-axis";
     end
-
+    fplot(str2sym(simple_exp), [lowerBound upperBound])
+    
     string1 = 'The volume under the function of ';
 
     statementString = strcat(string1, {' '}, funcChoice, {' rotated around the '}, ...
@@ -165,7 +175,7 @@ function diskEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
     elseif(stepInput <= 0)
             newString = 'Nonpositive Disk Count';
-            set(handles.text4, 'string', newString);
+            set(handles.boundStatement, 'string', newString);
             plot(0,0);
             d = errordlg('Number of steps must be positive', 'Disk Error');
             set(d, 'WindowStyle', 'modal');
@@ -181,7 +191,7 @@ function diskEdit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of diskEdit as text
 %        str2double(get(hObject,'String')) returns contents of diskEdit as a double
-   end
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -251,7 +261,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
     elseif(upper_input <= lowerBound)
         newString = 'Fix domain';
-        set(handles.text4, 'string', newString);
+        set(handles.boundStatement, 'string', newString);
         plot(0,0);
         d = errordlg('Fix Upper Bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
@@ -302,5 +312,65 @@ function methodMenu_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+end
+
+
+function axisEditbox_Callback(hObject, eventdata, handles)
+% hObject    handle to axisEditbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global axisValue;
+    axis_input = str2double(get(hObject,'String'));
+   
+    if(isnan(axis_input))
+        d = errordlg('Axis Value must be a Real number', 'Domain Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+    else
+        axisValue = axis_input;
+    end
+% Hints: get(hObject,'String') returns contents of axisEditbox as text
+%        str2double(get(hObject,'String')) returns contents of axisEditbox as a double
+
+end
+% --- Executes during object creation, after setting all properties.
+function axisEditbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axisEditbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+
+% --- Executes when selected object is changed in axisButtonGroup.
+function axisButtonGroup_SelectionChangedFcn(hObject, eventdata, handles)
+global axisOri;
+% hObject    handle to the selected object in axisButtonGroup 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+axisPicked = get(get(handles.axisButtonGroup,'SelectedObject'),'string');
+bound_statement = "<= " + axisPicked(1) + " <=";
+set(handles.boundStatement, 'string', bound_statement);
+
+position = get(handles.axisEditbox,'Position');
+
+% Positions the axis value box adjacent to the axis orientation selected.
+% Also sets the axis orientation parameter in the volume function.
+if (axisPicked == "x")
+    position(2) = 3.2;
+    set(handles.axisEditbox, 'Position', position)
+    set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
+    set(handles.yAxisRadio,'string',"y")
+else
+    position(2) = 1;
+    set(handles.axisEditbox, 'Position', position)
+    set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
+    set(handles.xAxisRadio,'string',"x")
 end
 end
