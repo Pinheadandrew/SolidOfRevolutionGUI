@@ -1,5 +1,5 @@
-function approxVol = diskmethod2(funcString, diskcount, lowerbound, upperbound)
-%DISKMETHOD This function 
+function approxVol = diskmethod2(funcString, diskcount, lowerBound, upperBound, axisOri, axisValue)
+%DISKMETHOD2
 %   Input:
 %       1. A single-variable function in string form.
 %       2. The number of disks to sum the volumes of.
@@ -15,13 +15,24 @@ function approxVol = diskmethod2(funcString, diskcount, lowerbound, upperbound)
 % it with delta-x, resulting in the volume of each disks, which is stored 
 % as an element in a matrix for output.
 
-delta = (upperbound-lowerbound)/diskcount;
+delta = (upperBound-lowerBound)/diskcount;
 
-xpoints = lowerbound+(delta/2):delta:upperbound-(delta/2);
+%X-points separated by disk width, using midpoints.
+xpoints = lowerBound+(delta/2):delta:upperBound-(delta/2);
 
 syms x
 f(x) = str2sym(funcString);
-ypoints = double(f(xpoints));
+
+% If axis running through x-axis, flip the function determining disk radii
+% to be the inverse function of passed expression.
+if (lower(axisOri) == 'x')
+    f(x) = finverse(f);
+end
+
+ypoints = double(f(xpoints) - axisValue);
+
+% Vector to hold volumes of each disk, then add them all up to return the
+% volume for the solid.
 
 diskVolumes = pi*(ypoints.^2)*delta;
 approxVol = sum(diskVolumes);

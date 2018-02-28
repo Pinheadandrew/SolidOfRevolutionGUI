@@ -135,21 +135,19 @@ if (strcmp(funcChoice, "Select a function"))
 else
     syms x
     simple_exp = funcChoice(6:end);
+    axisString = strcat(axisOri, {' = '}, num2str(axisValue));
     if (strcmp(methodChoice, "Disk"))
-        estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound);
-        actual_volume = diskmethod1(simple_exp, lowerBound, upperBound);
-        % actual_volume = diskwithaxis(simple_exp, lowerBound, upperBound, axisOri, axisValue);
-        axisString = "x-axis";
+        estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
+        actual_volume = diskmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
     elseif (strcmp(methodChoice, "Shell"))
-        estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound);
-        actual_volume = shellmethod1(simple_exp, lowerBound, upperBound);
-        axisString = "y-axis";
+        estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
+        actual_volume = shellmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
     end
     fplot(str2sym(simple_exp), [lowerBound upperBound])
     
     string1 = 'The volume under the function of ';
 
-    statementString = strcat(string1, {' '}, funcChoice, {' rotated around the '}, ...
+    statementString = strcat(string1, {' '}, funcChoice, {' rotated about '}, ...
         axisString, {' with '}, num2str(steps), ...
         {' steps between the interval of '}, num2str(lowerBound), {' to '},...
         num2str(upperBound), {' is '}, sprintf('%0.4f', estimated_volume));
@@ -373,4 +371,5 @@ else
     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
     set(handles.xAxisRadio,'string',"x")
 end
+axisOri = axisPicked;
 end

@@ -1,4 +1,4 @@
-function volume = shellmethod1(funcString, lowerbound, upperbound)
+function volume = shellmethod1(funcString, lowerBound, upperBound, axisOri, axisValue)
 %SHELLMETHOD1 Returns the , the volume under a function retrieved by rotating the
 % area under the function around the axis perpendicular to the axis of revolution. 
 % The volume approaches the approximate volume as the number of shells increases.
@@ -15,8 +15,16 @@ function volume = shellmethod1(funcString, lowerbound, upperbound)
 %       3. 
 
 syms x
-f(x) = x * str2sym(funcString);
-volume = double(2*pi*int(f(x), lowerbound, upperbound));
+assume(x >= lowerBound & x <= upperBound);
+f(x) = str2sym(funcString);
+radius = x - axisValue;
 
+if (lower(axisOri) == 'x')
+    A(x) = f(x);
+else
+    A(x) = finverse(f(x));
+end
+    
+volume = 2*pi*double(int(abs(radius*A(x)), lowerBound, upperBound));
 end
 
