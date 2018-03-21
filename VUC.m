@@ -1,3 +1,6 @@
+% In this version, try to make the volume button press and make the plot
+% and descriptions when any parameter is changed.
+
 function varargout = VUC(varargin)
 % VUC MATLAB code for VUC.fig
 %      VUC, by itself, creates a new VUC or raises the existing
@@ -22,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 07-Feb-2018 13:04:47
+% Last Modified by GUIDE v2.5 21-Mar-2018 09:26:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,6 +57,7 @@ function VUC_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to VUC (see VARARGIN)
 
 % Choose default command line output for VUC
+startup
 handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
@@ -94,8 +98,8 @@ global funcChoice;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 funcChoice = functionContents{get(hObject, 'Value')};
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
-
 % Hints: contents = cellstr(get(hObject,'String')) returns functionMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from functionMenu
 
@@ -136,17 +140,28 @@ else
     syms x
     simple_exp = funcChoice(6:end);
     axisString = strcat(axisOri, {' = '}, num2str(axisValue));
+    
+    % Calls different methods depending on method picked. Also set bounds
     if (strcmp(methodChoice, "Disk"))
         estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = diskmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
+        
+        % TESTING for setting of bounds of plot based on axis's
+        % orientation.
+        if(axisOri == "x")
+            fplot(str2sym(simple_exp), inverseFunctionBounds(simple_exp, lowerBound, upperBound));
+        else
+            fplot(str2sym(simple_exp), [lowerBound upperBound]);
+        end
+        % END TEST
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = shellmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
+        fplot(str2sym(simple_exp), [lowerBound upperBound]);
     end
-    fplot(str2sym(simple_exp), [lowerBound upperBound])
-    
+ 
+    % functionString = char(finverse(str2sym(simple_exp)))
     string1 = 'The volume under the function of ';
-
     statementString = strcat(string1, {' '}, funcChoice, {' rotated about '}, ...
         axisString, {' with '}, num2str(steps), ...
         {' steps between the interval of '}, num2str(lowerBound), {' to '},...
@@ -189,7 +204,10 @@ function diskEdit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of diskEdit as text
 %        str2double(get(hObject,'String')) returns contents of diskEdit as a double
+%end
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -230,6 +248,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of lowerBoundEdit as text
 %        str2double(get(hObject,'String')) returns contents of lowerBoundEdit as a double
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -267,6 +286,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     else
         upperBound = upper_input;
     end
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 % Hints: get(hObject,'String') returns contents of upperBoundEdit as text
 %        str2double(get(hObject,'String')) returns contents of upperBoundEdit as a double
@@ -298,6 +318,7 @@ methodChoice = methodContents{get(hObject, 'Value')};
 
 % Hints: contents = cellstr(get(hObject,'String')) returns methodMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from methodMenu
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -319,10 +340,19 @@ function axisEditbox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global axisValue;
+    global lowerBound;
+    global upperBound;
+    global methodChoice;
+    global axisOri;
     axis_input = str2double(get(hObject,'String'));
    
     if(isnan(axis_input))
         d = errordlg('Axis Value must be a Real number', 'Domain Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+    elseif(methodChoice == "Shell" && str2double(axis_input) < upperBound && str2double(axis_input) > lowerBound)
+        d = errordlg('Axis of revolution for shell method cannot be between bounds.', 'Axis Error');
+        disp("Wa")
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
     else
@@ -330,7 +360,7 @@ function axisEditbox_Callback(hObject, eventdata, handles)
     end
 % Hints: get(hObject,'String') returns contents of axisEditbox as text
 %        str2double(get(hObject,'String')) returns contents of axisEditbox as a double
-
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 % --- Executes during object creation, after setting all properties.
 function axisEditbox_CreateFcn(hObject, eventdata, handles)
@@ -349,11 +379,25 @@ end
 % --- Executes when selected object is changed in axisButtonGroup.
 function axisButtonGroup_SelectionChangedFcn(hObject, eventdata, handles)
 global axisOri;
+global methodChoice;
 % hObject    handle to the selected object in axisButtonGroup 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Get selected axis from radio button. If Disk method selected, bound
+% statement in perspective of opposite axis
 axisPicked = get(get(handles.axisButtonGroup,'SelectedObject'),'string');
-bound_statement = "<= " + axisPicked(1) + " <=";
+
+if (methodChoice == "Disk")
+    if (axisPicked == "x")
+         bound_statement = "<= y <=";
+    else
+         bound_statement = "<= x <=";
+    end
+else
+    bound_statement = "<= " + axisPicked(1) + " <=";
+end
+    
 set(handles.boundStatement, 'string', bound_statement);
 
 position = get(handles.axisEditbox,'Position');
@@ -365,6 +409,7 @@ if (axisPicked == "x")
     set(handles.axisEditbox, 'Position', position)
     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
     set(handles.yAxisRadio,'string',"y")
+    
 else
     position(2) = 1;
     set(handles.axisEditbox, 'Position', position)
@@ -372,4 +417,20 @@ else
     set(handles.xAxisRadio,'string',"x")
 end
 axisOri = axisPicked;
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
+end
+
+% Function that returns two-value vector representing bounds for a function 
+% with y as the input variable instead of x. For example, if origFunctionText 
+% = x^2 and bounds are 0 and 4, returns [0 2] since sqrt(4) = 2, so show 
+% graph up to point where finverse(y) = 2.
+function boundVector = inverseFunctionBounds(origFunctionText, lowBound, upBound)
+syms x 
+g(x) = finverse(str2sym(origFunctionText));
+
+boundVector = double([g(lowBound) g(upBound)]);
+end
+
+function inverseString = inverseString(origFunction)
+inverseString = char(finverse(str2sym(origFunction)));
 end
