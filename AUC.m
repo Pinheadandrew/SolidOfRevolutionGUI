@@ -52,6 +52,7 @@ function AreaUnderCurve_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to AreaUnderCurve (see VARARGIN)
 
 % Choose default command line output for AreaUnderCurve
+startup
 handles.output = hObject;
 
 % Update handles structure

@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 07-Feb-2018 13:04:47
+% Last Modified by GUIDE v2.5 21-Mar-2018 09:26:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,7 @@ function VUC_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to VUC (see VARARGIN)
 
 % Choose default command line output for VUC
+startup
 handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
@@ -430,7 +431,6 @@ g(x) = finverse(str2sym(origFunctionText));
 boundVector = double([g(lowBound) g(upBound)]);
 end
 
-% function inverseString = functionInverseString(origFunction)
-% 
-% 
-% 
+function inverseString = inverseString(origFunction)
+inverseString = char(finverse(str2sym(origFunction)));
+end
