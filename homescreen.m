@@ -54,7 +54,8 @@ function homescreen_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for homescreen
 handles.output = hObject;
-
+AUCimage = imread('img/AUC.jpg');
+set(handles.pushbutton1, 'CData', AUCimage);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -78,11 +79,11 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-AUC
+close(homescreen);
+run('AUC');
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-VUC

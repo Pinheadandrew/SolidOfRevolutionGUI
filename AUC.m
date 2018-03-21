@@ -22,7 +22,7 @@ function varargout = AUC(varargin)
 
 % Edit the above text to modify the response to help AreaUnderCurve
 
-% Last Modified by GUIDE v2.5 27-Jan-2018 10:03:41
+% Last Modified by GUIDE v2.5 28-Feb-2018 10:27:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,9 +52,9 @@ function AreaUnderCurve_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to AreaUnderCurve (see VARARGIN)
 
 % Choose default command line output for AreaUnderCurve
-startup
 handles.output = hObject;
-
+AUCimage = imread('img/homebutton.jpg');
+set(handles.pushbutton2, 'CData', AUCimage);
 % Update handles structure
 guidata(hObject, handles);
 guidata(hObject, handles);
@@ -66,7 +66,7 @@ global rectCount;
 rectCount = 5;
 global methodPicked;
 methodPicked = 'trapz';
-maxNumberOfRect = 50;
+maxNumberOfRect = 100;
 set(handles.slider3, 'Min', 5);
 set(handles.slider3, 'Max', maxNumberOfRect);
 set(handles.slider3, 'Value', 5);
@@ -146,10 +146,11 @@ else
         newString = 'Fix domain';
         set(handles.text4, 'string', newString);
         plot(0,0);
-        d = errordlg('Fix Upper Bound', 'Domain Error');
+        d = errordlg('Upper Bound must be LARGER than Lower Bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
+        set(handles.edit2, 'string', upperBound);
     end
     slider3_Callback(handles.slider3, eventdata, handles)
 end
@@ -274,7 +275,7 @@ if(not(strcmp(functionChoice, 'Select a function')))
             %   -Set bounds to 0 and 1.
             %   -Set the function so that it's e^x (first and second boxes = 1)
             rectCount = ceil(get(handles.slider3, 'Value'));
-            set(handles.text5, 'string', 'a*e^(bx) + c');
+            set(handles.text5, 'string', 'a*e^bx + c');
             set(handles.edit4,'Visible','on');
             set(handles.edit5,'Visible','on');
             set(handles.edit6,'Visible','on');
@@ -288,7 +289,7 @@ if(not(strcmp(functionChoice, 'Select a function')))
             a = char(str2sym(get(handles.edit4, 'String')));
             b = char(str2sym(get(handles.edit5, 'String')));
             c = char(str2sym(get(handles.edit6, 'String')));
-            funcText = a + "* e^{" + b + "*x} + " + c;
+            funcText = a + "* e^" + b + "*x + " + c;
             symFunc = a + "*exp(" + b + "*q)+" + c;
         elseif(strcmp(functionChoice, 'Polynomial'))
             % Makes the forms for the coefficients and their captions visible.
@@ -329,12 +330,16 @@ if(not(strcmp(functionChoice, 'Select a function')))
         x = lowerBound:step:upperBound;
         funcSelected = double(f(x));
         h = fplot(f(q), [lowerBound, upperBound], 'r');
+        xAxis = xlabel(strcat(num2str(lowerBound), char(3), '< X <', char(3), num2str(upperBound)));
+        yAxis = ylabel('f(x)');
+        set(xAxis, 'fontSize', 16);
+        set(yAxis, 'fontSize', 16);
         set(h, 'LineWidth', 2);
         if(lower(methodPicked) == 'trapz')
             xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
             yverts = [zeros(1,length(x)-1); funcSelected(1:end-1);...
                 funcSelected(2:end); zeros(1,length(x)-1)];
-            patch(xverts,yverts,'b','LineWidth',1)
+            p = patch(xverts,yverts,'b','LineWidth',1);
             uistack(h, 'top');
             AUC = trapz(x, funcSelected);
         else
@@ -355,24 +360,24 @@ if(not(strcmp(functionChoice, 'Select a function')))
                      x(2:end); x(2:end)];
             yverts = [zeros(1,length(riemannsPoints)); rectHeights(1:end); rectHeights(1:end);...
                     zeros(1,length(riemannsPoints))];
-            patch(xverts,yverts,'b','LineWidth',1)
+            p = patch(xverts,yverts,'b','LineWidth',1);
             uistack(h, 'top');
         end
-
-        errorPerc = abs(((actual_area - AUC)/actual_area)*100);
-        set(handles.estVolText, 'string', strcat({'  Estimated Volume: '}, sprintf('%0.3f', AUC)));
-        set(handles.actVolText, 'string', strcat({'  Actual Volume: '}, sprintf('%0.3f', actual_area)));
+        format shortG
+        errorPerc = ((AUC - actual_area)/actual_area)*100;
+        set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.2f', AUC)));
+        set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.2f', actual_area)));
         if(isnan(errorPerc))
             set(handles.errorText, 'string', strcat({'  Error: '}, {'0%'}));
         else
-            set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.6f', errorPerc), {'%'}));
+            set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%g', errorPerc), {'%'}));
         end
-        legend(funcText, 'location', 'northwest');
-        string = 'Estimated Area Under the Curve for';
-         newString = strcat(string, {' '}, funcText, {' with ' }, int2str(rectCount), ...
-             {' intervals from '}, num2str(lowerBound), {' to '}, int2str(upperBound),...
-             {' is '}, sprintf('%0.3f.', AUC), {' The actual area is '}, sprintf('%0.3f.', actual_area));
-        set(handles.text4, 'string', newString);
+        areaString = 'Area Under f(x)=';
+        funcString = 'f(x)=';
+        lineLeg = strcat(funcString, char(3), funcText);
+        patchLeg = strcat(areaString, char(3), funcText);
+        leg = legend([h, p], lineLeg, patchLeg, 'location', 'northwest');
+        leg.FontSize = 14;
     end
 end
 
@@ -640,10 +645,10 @@ function stepEdit_Callback(hObject, eventdata, handles)
 
 global rectCount;
 tempRectCount = str2double(get(hObject,'String'));
-if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 50)
+if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 101)
     % set(handles.text4, 'string', newString);
     plot(0,0);
-    d = errordlg('Subinterval count must be positive integer below 50', 'Rectangle Error');
+    d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.stepEdit, 'string', rectCount);
@@ -687,3 +692,12 @@ function constantEdit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(AUC);
+run('homescreen');
