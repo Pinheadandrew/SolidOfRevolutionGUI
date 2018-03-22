@@ -3,7 +3,6 @@ function drawDisksAsRects(funcString, lowbound, upbound, subdivs, axisOri, axisV
 % Test file that draws rectangles representing disks viewed from the side, 
 % their heights are the diameters of the disks. Flexible for any arbitrary 
 % value as y-axis to rotate area around. Only works with 
-clf
 syms x
 f(x) = str2sym(funcString);
 
@@ -20,11 +19,10 @@ if(axisOri =="y")
     yverts = [axisVal-diskRadii; axisVal + diskRadii;...
                 axisVal + diskRadii; axisVal - diskRadii];
 %     fplot(axisVal, [lowbound upbound], "g");
-    fplot(f(x), [lowbound, upbound], "r"), hold on;
 else
     g(x) = finverse(f(x));
     diskRadii = abs(double(g(midpoints)-axisVal));
-    fplot(f(x), [double(g(lowbound)), double(g(upbound))], "r"), hold on;
+%     fplot(f(x), [double(g(lowbound)), double(g(upbound))], "r"), hold on;
     xverts = [axisVal-diskRadii; axisVal-diskRadii;...
                 axisVal + diskRadii; axisVal + diskRadii];
     yverts = [rectAxisPoints(1:end-1); rectAxisPoints(2:end);...

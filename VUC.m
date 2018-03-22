@@ -71,7 +71,7 @@ global axisValue;
 axisValue = 0;
 global axisOri;
 axisOri = "x";
-
+set(handles.axisEditbox, 'string', int2str(axisValue));
 end
 
 % UIWAIT makes VUC wait for user response (see UIRESUME)
@@ -132,34 +132,32 @@ global axisValue;
 global axisOri;
 
 if (strcmp(funcChoice, "Select a function"))
+  disp("Hi")
     plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
-else
+else 
     syms x
     simple_exp = funcChoice(6:end);
     axisString = strcat(axisOri, {' = '}, num2str(axisValue));
+    funcLine = fplot(str2sym(simple_exp), [lowerBound upperBound], "r");
     
-    % Calls different methods depending on method picked. Also set bounds
-    if (strcmp(methodChoice, "Disk"))
+    % Calls different volume calculation methods depending on method picked. 
+    if(strcmp(methodChoice, "Disk"))
         estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = diskmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
         
-        if(axisOri == "x")
-            fplot(str2sym(simple_exp), inverseFunctionBounds(simple_exp, lowerBound, upperBound));
-        else
-            fplot(str2sym(simple_exp), [lowerBound upperBound]);
-            % Testing for way to plot 2D rectangles to represent disks from
-            % side-view.
-            drawDisksAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue); 
-        end
+        % Function that adds rectangles representing disks in 2D
+        % perspective.
+        drawDisksAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue)
+        uistack(funcLine, "top");
+       
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = shellmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
         fplot(str2sym(simple_exp), [lowerBound upperBound]);
     end
- 
     % functionString = char(finverse(str2sym(simple_exp)))
     string1 = 'The volume under the function of ';
     statementString = strcat(string1, {' '}, funcChoice, {' rotated about '}, ...
