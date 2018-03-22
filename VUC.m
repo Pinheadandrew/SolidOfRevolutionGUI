@@ -146,14 +146,14 @@ else
         estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = diskmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
         
-        % TESTING for setting of bounds of plot based on axis's
-        % orientation.
         if(axisOri == "x")
             fplot(str2sym(simple_exp), inverseFunctionBounds(simple_exp, lowerBound, upperBound));
         else
             fplot(str2sym(simple_exp), [lowerBound upperBound]);
+            % Testing for way to plot 2D rectangles to represent disks from
+            % side-view.
+            drawDisksAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue); 
         end
-        % END TEST
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = shellmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
