@@ -72,6 +72,8 @@ axisValue = 0;
 global axisOri;
 axisOri = "x";
 set(handles.axisEditbox, 'string', int2str(axisValue));
+global methodChoice;
+methodChoice = "Disk";
 end
 
 % UIWAIT makes VUC wait for user response (see UIRESUME)
@@ -148,9 +150,20 @@ else
         estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = diskmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
         
-        % Function that adds rectangles representing disks in 2D
-        % perspective.
+        % Function that adds rectangles representing disks in 2D perspective.
         drawDisksAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue)
+        
+        % TESTING FOR SETTINGS OF PLOTTING BOUNDS FOR WHEN AXIS ROTATED IS
+        % PARALLEL TO Y-AXIS
+        if(axisOri == "x")
+            g(x) = finverse(str2sym(simple_exp));
+            
+            % This needs work
+            xLimits = [-double(g(abs(axisValue + upperBound))) double(g(axisValue + upperBound))];
+            xlim(xLimits)
+        end
+        
+        % END TEST
         uistack(funcLine, "top");
        
     elseif (strcmp(methodChoice, "Shell"))
