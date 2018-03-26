@@ -170,6 +170,8 @@ else
         estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = shellmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
         fplot(str2sym(simple_exp), [lowerBound upperBound]);
+        
+        drawShellsAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue)
     end
     % functionString = char(finverse(str2sym(simple_exp)))
     string1 = 'The volume under the function of ';
