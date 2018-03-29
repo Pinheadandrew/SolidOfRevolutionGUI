@@ -1,8 +1,9 @@
-
+ 
 function drawShellsAsRects(funcString, lowbound, upbound, subdivs, axisOri, axisVal)
 % Test file that draws rectangles representing shells viewed from the side, 
 % their heights are evaluations at the point of the point's function. Flexible for any arbitrary 
-% value as x-axis to rotate area around. 
+% value as x-axis to rotate area around.
+
 syms x
 f(x) = str2sym(funcString);
 
@@ -17,12 +18,13 @@ if(axisVal <= lowbound)
 elseif(axisVal >= upbound)
   axis_bound_distance = abs(axisVal - upbound);
   reverseBasePoints = orig_shellBasePoints(end):-delta:orig_shellBasePoints(1);
+  % Below are x-vertices of rectangles flipped across the axis from the
+  % original bounds.
   mirror_shellBasePoints = reverseBasePoints + axisVal + axis_bound_distance;
 else
    return
 end
 
-%FOR TESTING FUNCTION BY ITSELF:
 if(axisOri =="x")
     shellHeights = abs(double(f(midpoints)));
 
@@ -37,13 +39,21 @@ if(axisOri =="x")
     patch(orig_xverts, yverts, "b");
     patch(mirror_xverts, yverts, "r");
 else
-   % Incomplete, in progress
+   % In progress
     g(x) = finverse(f(x));
-    diskRadii = abs(double(g(midpoints)-axisVal));
-    xverts = [axisVal-diskRadii; axisVal-diskRadii;...
-                axisVal + diskRadii; axisVal + diskRadii];
-    yverts = [rectAxisPoints(1:end-1); rectAxisPoints(2:end);...
-                          rectAxisPoints(2:end); rectAxisPoints(1:end-1)];
+    shellLengths = abs(double(g(midpoints)));
+    
+    % In this case, x-verts are the same when flipped across the axis, but
+    % y-vertices are different.
+    xverts = [zeros(1, length(shellLengths)); shellLengths(1:end);...
+                shellLengths(1:end); zeros(1, length(shellLengths))];
+    yverts = [orig_shellBasePoints(1:end-1); orig_shellBasePoints(1:end-1);...
+                          orig_shellBasePoints(2:end); orig_shellBasePoints(2:end)];
+    mirror_yverts = [mirror_shellBasePoints(1:end-1); mirror_shellBasePoints(1:end-1);... 
+        mirror_shellBasePoints(2:end); mirror_shellBasePoints(2:end)];
+    
+    patch(xverts, yverts, "b");
+    patch(xverts, mirror_yverts, "r");
 end
 end
 

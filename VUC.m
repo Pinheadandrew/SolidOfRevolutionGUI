@@ -156,14 +156,15 @@ else
         % TESTING FOR SETTINGS OF PLOTTING BOUNDS FOR WHEN AXIS ROTATED IS
         % PARALLEL TO Y-AXIS
         if(axisOri == "x")
-            g(x) = finverse(str2sym(simple_exp));
+            f(x) = str2sym(simple_exp);
+            g(x) = finverse(f);
             
             % This needs work
-            xLimits = [-double(g(abs(axisValue + upperBound))) double(g(axisValue + upperBound))];
-            xlim(xLimits)
+%             xLimits = [-double(g(abs(axisValue-lowerBound))) double(g(abs(upperBound)))];
+%             xlim(xLimits)
         end
-        
         % END TEST
+        
         uistack(funcLine, "top");
        
     elseif (strcmp(methodChoice, "Shell"))
