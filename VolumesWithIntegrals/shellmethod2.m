@@ -28,8 +28,8 @@ if (lower(axisOri) == 'y')
     f(x) = finverse(f);
 end
 
-shellHeights = double(f(xpoints));
-shellVols = shellHeights.*(xpoints-axisValue)*delta;
+shellHeights = abs(double(f(xpoints)));
+shellVols = shellHeights.*abs(xpoints-axisValue)*delta;
 sumShellVols = 2*pi*sum(shellVols);
 
 end

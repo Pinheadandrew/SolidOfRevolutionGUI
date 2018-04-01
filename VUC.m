@@ -70,7 +70,7 @@ steps = 5;
 global axisValue;
 axisValue = 0;
 global axisOri;
-axisOri = "x";
+axisOri = "y";
 set(handles.axisEditbox, 'string', int2str(axisValue));
 global methodChoice;
 methodChoice = "Disk";
@@ -97,9 +97,20 @@ function functionMenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global funcChoice;
+global lowerBound;
+global upperBound;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 funcChoice = functionContents{get(hObject, 'Value')};
+
+% Sets default bounds of revolution according to function picked. i.e when
+% x^2 selected, bounds change to 0<=x<=2.
+if (funcChoice == "f(x)=x^2")
+    lowerBound = 0;
+    upperBound = 1;
+    set(handles.lowerBoundEdit, 'String', lowerBound);
+    set(handles.upperBoundEdit, 'String', upperBound);
+end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 % Hints: contents = cellstr(get(hObject,'String')) returns functionMenu contents as cell array
@@ -134,47 +145,57 @@ global axisValue;
 global axisOri;
 
 if (strcmp(funcChoice, "Select a function"))
-  disp("Hi")
     plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else 
     syms x
-    simple_exp = funcChoice(6:end);
+    simple_exp_string = funcChoice(6:end);
     axisString = strcat(axisOri, {' = '}, num2str(axisValue));
-    funcLine = fplot(str2sym(simple_exp), [lowerBound upperBound], "r");
+    % funcLine = fplot(str2sym(simple_exp), [lowerBound upperBound], "r");
     
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
-        estimated_volume = diskmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
-        actual_volume = diskmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
+        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue);
+        actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
-        % Function that adds rectangles representing disks in 2D perspective.
-        drawDisksAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue)
-        
+        if(axisOri == "y")
+            funcLine = fplot(str2sym(simple_exp_string), [lowerBound upperBound], "r");
+            
         % TESTING FOR SETTINGS OF PLOTTING BOUNDS FOR WHEN AXIS ROTATED IS
         % PARALLEL TO Y-AXIS
-        if(axisOri == "x")
-            f(x) = str2sym(simple_exp);
+        else
+            f(x) = str2sym(simple_exp_string);
             g(x) = finverse(f);
+            inverseFunctionBounds(simple_exp_string, lowerBound, upperBound)
+            funcLine = fplot(f(x), [double(g(lowerBound)) double(g(upperBound))], "r");
             
-            % This needs work
 %             xLimits = [-double(g(abs(axisValue-lowerBound))) double(g(abs(upperBound)))];
 %             xlim(xLimits)
         end
         % END TEST
-        
+        drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
         uistack(funcLine, "top");
        
     elseif (strcmp(methodChoice, "Shell"))
-        estimated_volume = shellmethod2(simple_exp, steps, lowerBound, upperBound, axisOri, axisValue);
-        actual_volume = shellmethod1(simple_exp, lowerBound, upperBound, axisOri, axisValue);
-        fplot(str2sym(simple_exp), [lowerBound upperBound]);
+        estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue);
+        actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
-        drawShellsAsRects(simple_exp, lowerBound, upperBound, steps, axisOri, axisValue)
+        if(axisOri == "x")
+            funcLine = fplot(str2sym(simple_exp_string), [lowerBound upperBound], "r");
+            
+        % TESTING FOR SETTINGS OF PLOTTING BOUNDS FOR WHEN AXIS ROTATED IS
+        % PARALLEL TO Y-AXIS
+        else
+            f(x) = str2sym(simple_exp_string);
+            g(x) = finverse(f);
+            inverseFunctionBounds(simple_exp_string, lowerBound, upperBound)
+            funcLine = fplot(f(x), [double(g(lowerBound)) double(g(upperBound))], "r");
+        end
+        drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
     end
-    % functionString = char(finverse(str2sym(simple_exp)))
+    
     string1 = 'The volume under the function of ';
     statementString = strcat(string1, {' '}, funcChoice, {' rotated about '}, ...
         axisString, {' with '}, num2str(steps), ...
@@ -438,12 +459,6 @@ end
 % with y as the input variable instead of x. For example, if origFunctionText 
 % = x^2 and bounds are 0 and 4, returns [0 2] since sqrt(4) = 2, so show 
 % graph up to point where finverse(y) = 2.
-function boundVector = inverseFunctionBounds(origFunctionText, lowBound, upBound)
-syms x 
-g(x) = finverse(str2sym(origFunctionText));
-
-boundVector = double([g(lowBound) g(upBound)]);
-end
 
 function inverseString = inverseString(origFunction)
 inverseString = char(finverse(str2sym(origFunction)));
