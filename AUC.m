@@ -378,6 +378,7 @@ if(not(strcmp(functionChoice, 'Select a function')))
         patchLeg = strcat(areaString, char(3), funcText);
         leg = legend([h, p], lineLeg, patchLeg, 'location', 'northwest');
         leg.FontSize = 14;
+        uistack(leg,"top")
     end
 end
 
