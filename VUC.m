@@ -153,7 +153,7 @@ else
     syms x
     simple_exp_string = funcChoice(6:end);
     axisString = strcat(axisOri, {' = '}, num2str(axisValue));
-    % funcLine = fplot(str2sym(simple_exp), [lowerBound upperBound], "r");
+    f(x) = str2sym(simple_exp_string);
     
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
@@ -161,20 +161,16 @@ else
         actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         if(axisOri == "y")
-            funcLine = fplot(str2sym(simple_exp_string), [lowerBound upperBound], "r");
-            
-        % TESTING FOR SETTINGS OF PLOTTING BOUNDS FOR WHEN AXIS ROTATED IS
-        % PARALLEL TO Y-AXIS
+            xPlotBounds = [lowerBound upperBound];
         else
-            f(x) = str2sym(simple_exp_string);
             g(x) = finverse(f);
-            inverseFunctionBounds(simple_exp_string, lowerBound, upperBound)
-            funcLine = fplot(f(x), [double(g(lowerBound)) double(g(upperBound))], "r");
-            
+            xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
 %             xLimits = [-double(g(abs(axisValue-lowerBound))) double(g(abs(upperBound)))];
 %             xlim(xLimits)
         end
-        % END TEST
+        
+        funcLine = fplot(f(x), xPlotBounds, "r");
+        set(funcLine, 'LineWidth',2)
         drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
         uistack(funcLine, "top");
        
@@ -182,18 +178,20 @@ else
         estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
-        if(axisOri == "x")
-            funcLine = fplot(str2sym(simple_exp_string), [lowerBound upperBound], "r");
-            
-        % TESTING FOR SETTINGS OF PLOTTING BOUNDS FOR WHEN AXIS ROTATED IS
-        % PARALLEL TO Y-AXIS
+        if(axisOri == "x") %Draws line of axis of rotation too.
+            xPlotBounds = [lowerBound upperBound];
+%             yL = ylim;
+%             line([axisValue axisValue], yL);  %x-axis
         else
-            f(x) = str2sym(simple_exp_string);
-            g(x) = finverse(f);
-            inverseFunctionBounds(simple_exp_string, lowerBound, upperBound)
-            funcLine = fplot(f(x), [double(g(lowerBound)) double(g(upperBound))], "r");
+            g(x) = finverse(f)
+            xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
+%             xL = xlim;
+%             line(xL, [axisValue axisValue]);
         end
+        funcLine = fplot(f(x), xPlotBounds, "r");
+        set(funcLine, 'LineWidth',2)
         drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+        uistack(funcLine, "top");
     end
     
     string1 = 'The volume under the function of ';
