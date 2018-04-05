@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 21-Mar-2018 09:26:05
+% Last Modified by GUIDE v2.5 04-Apr-2018 01:02:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,6 +59,8 @@ function VUC_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for VUC
 startup
 handles.output = hObject;
+VUCimage = imread('img/homebutton.jpg');
+set(handles.pushbutton2, 'CData', VUCimage);
 % Update handles structure
 guidata(hObject, handles);
 global lowerBound;
@@ -152,7 +154,7 @@ if (strcmp(funcChoice, "Select a function"))
 else 
     syms x
     simple_exp_string = funcChoice(6:end);
-    axisString = strcat(axisOri, {' = '}, num2str(axisValue));
+    fplot(0)
     f(x) = str2sym(simple_exp_string);
     
     % Calls different volume calculation methods depending on method picked. 
@@ -170,8 +172,23 @@ else
         end
         
         funcLine = fplot(f(x), xPlotBounds, "r");
-        set(funcLine, 'LineWidth',2)
+        hold on
+        set(funcLine, 'LineWidth',2);
         drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+       
+        % TESTING DRAWING OF AXIS WITH DISK METHOD
+        if(axisOri == "y") 
+          xL = xlim;
+          yL = [axisValue axisValue];
+        else
+          xL = [axisValue axisValue];
+          yL = ylim;
+        end
+        
+        axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
+        hold on
+        uistack(axisPlot, 'top')
+        % END TESTING
         uistack(funcLine, "top");
        
     elseif (strcmp(methodChoice, "Shell"))
@@ -180,30 +197,42 @@ else
         
         if(axisOri == "x") %Draws line of axis of rotation too.
             xPlotBounds = [lowerBound upperBound];
-%             yL = ylim;
-%             line([axisValue axisValue], yL);  %x-axis
         else
-            g(x) = finverse(f)
+            g(x) = finverse(f);
             xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
-%             xL = xlim;
-%             line(xL, [axisValue axisValue]);
+            % WILL ADD AXIS LINE USING THE FOLLOWING CODE UNTIL THE END
         end
+        
         funcLine = fplot(f(x), xPlotBounds, "r");
-        set(funcLine, 'LineWidth',2)
+        set(funcLine, 'LineWidth',2);
         drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+        
+        if(axisOri == "x") 
+          xL = [axisValue axisValue];
+          yL = ylim;
+        else
+          xL = xlim;
+          yL = [axisValue axisValue];
+        end
+        
+        axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
+        hold on
+        uistack(axisPlot, 'top')
         uistack(funcLine, "top");
     end
     
-    string1 = 'The volume under the function of ';
-    statementString = strcat(string1, {' '}, funcChoice, {' rotated about '}, ...
-        axisString, {' with '}, num2str(steps), ...
-        {' steps between the interval of '}, num2str(lowerBound), {' to '},...
-        num2str(upperBound), {' is '}, sprintf('%0.4f', estimated_volume));
-    
-    statementString2 = strcat("Actual Volume:", {' '}, sprintf('%0.4f', actual_volume));
-
+    statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
+    statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     set(handles.statementText, 'string', statementString);
     set(handles.actualVolumeText, 'string', statementString2);
+    
+    % Makes legend, one entry for function line and one for axis line.
+    % lineLeg = strcat(funcChoice);
+    axisString = strcat(axisOri, {' = '}, num2str(axisValue));
+    leg = legend([funcLine, axisPlot], funcChoice, axisString, 'location', 'northwest');
+    leg.FontSize = 14;
+    uistack(leg,"top")
+    hold off
 end
 end
 
@@ -349,6 +378,9 @@ global methodChoice;
 methodContents = cellstr(get(handles.methodMenu, 'String'));
 methodChoice = methodContents{get(hObject, 'Value')};
 
+subIntsLabelString = "Number of " + methodChoice + "s";
+set(handles.subIntsLabel, 'string', subIntsLabelString);
+
 % Hints: contents = cellstr(get(hObject,'String')) returns methodMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from methodMenu
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -385,7 +417,6 @@ function axisEditbox_Callback(hObject, eventdata, handles)
         uiwait(d);
     elseif(methodChoice == "Shell" && str2double(axis_input) < upperBound && str2double(axis_input) > lowerBound)
         d = errordlg('Axis of revolution for shell method cannot be between bounds.', 'Axis Error');
-        disp("Wa")
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
     else
@@ -461,3 +492,22 @@ end
 function inverseString = inverseString(origFunction)
 inverseString = char(finverse(str2sym(origFunction)));
 end
+
+
+% --- Executes on button press in pushbutton2.
+function pushbutton2_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(VUC);
+run('homescreen');
+end
+
+
+% --- Executes on button press in threeDButton.
+function threeDButton_Callback(hObject, eventdata, handles)
+% hObject    handle to threeDButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+end
+
