@@ -509,5 +509,18 @@ function threeDButton_Callback(hObject, eventdata, handles)
 % hObject    handle to threeDButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global upperBound;
+global lowerBound;
+global funcChoice;
+global steps;
+global methodChoice;
+global axisValue;
+global axisOri;
+global viewMode;
+
+funcString = funcChoice(6:end);
+if (methodChoice == "Disk" && axisOri == "y")
+    plotDiscs(funcString, lowerBound, upperBound, steps, axisValue), rotate3d on
+end
 end
 

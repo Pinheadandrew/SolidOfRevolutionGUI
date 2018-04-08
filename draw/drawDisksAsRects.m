@@ -1,4 +1,4 @@
-function drawDisksAsRects(funcString, lowbound, upbound, subdivs, axisOri, axisVal)
+function rectSet = drawDisksAsRects(funcString, lowbound, upbound, subdivs, axisOri, axisVal)
 % Function to draw rectangles representing 2D perspective of disks
 % comprising an approximate volume of a solid generated using integration,
 % used by the disk method.
@@ -31,6 +31,6 @@ else
     yverts = [rectBasePoints(1:end-1); rectBasePoints(2:end);...
                           rectBasePoints(2:end); rectBasePoints(1:end-1)];
 end
-patch(xverts, yverts, "b");
+rectSet = patch(xverts, yverts, "b");
 end
 
