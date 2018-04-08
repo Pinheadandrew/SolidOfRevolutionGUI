@@ -183,10 +183,10 @@ plot3(xpoints, zeros(1, length(ypoints)), zeros(1, length(ypoints)))
 clf
 
 C = [50,55, 60] ;   % center of circle 
-R = 1. ;    % Radius of circle 
+radius = 1. ;    % Radius of circle 
 teta=0:0.01:2*pi ;
-x=C(1)+R*cos(teta);
-y=C(2)+R*sin(teta) ;
+x=C(1)+radius*cos(teta);
+y=C(2)+radius*sin(teta) ;
 z = C(3)+zeros(size(x)) ;
 patch(x,y,z,'k')
 hold on
@@ -196,11 +196,11 @@ plot3(C(1),C(2),C(3),'*r')
 clf
 
 C = [50,55, 60] ;   % center of circle 
-R = 1. ;    % Radius of circle 
+radius = 1. ;    % Radius of circle 
 teta=0:0.01:2*pi ;
-x=C(1)+R*cos(teta);
+x=C(1)+radius*cos(teta);
 y=C(2)+zeros(size(x));
-z = C(3)+ R*sin(teta);
+z = C(3)+ radius*sin(teta);
 patch(x,y,z,'k')
 hold on
 plot3(C(1),C(2),C(3),'*r')
@@ -212,25 +212,27 @@ zlabel('Z')
 %% Using code for circle and cylinder to draw a face on a rotated cylinder.
 clf
 
-[c1X,c1Y,c1Z] = cylinder(1, 50);
+teta=0:pi/10:2*pi;
+[c1X,c1Y,c1Z] = cylinder(1, length(teta));
 cyl = surf(c1X, c1Y, c1Z), hold on;   % <? RETURN HANDLE
 rotate(cyl, [0 1 0], 90)
 
+cyl.YData
+
 C = [-.5, 0, .5] ;   % center of circle, in sync with front face of cylinder
-R = 1;    % Radius of circle 
-teta=0:.01:2*pi;
-x=C(1)+zeros(size(x));
-y=C(2)+R*cos(teta); % Circle along yz plane, x-coords are all the same.
-z = C(3)+ R*sin(teta);
+radius = 1;    % Radius of circle 
+x=C(1)+zeros(1,length(teta));
+y=C(2)+radius*cos(teta); % Circle along yz plane, x-coords are all the same.
+z = C(3)+ radius*sin(teta);
 patch(x,y,z,'b')
 hold on
 
 C = [.5, 0, .5] ;   % center of circle, in sync with back face of cylinder
-R = 1;    % Radius of circle 
+radius = 1;    % Radius of circle 
 teta=0:.01:2*pi;
 x=C(1)+zeros(size(x));
-y=C(2)+R*cos(teta); % Circle along yz plane, x-coords are all the same.
-z = C(3)+ R*sin(teta);
+y=C(2)+radius*cos(teta); % Circle along yz plane, x-coords are all the same.
+z = C(3)+ radius*sin(teta);
 patch(x,y,z,'b')
 hold on
 
@@ -255,11 +257,11 @@ for i = 1:length(ypoints)
     cyl.XData(2, :) = i;
     
     C = [i, 0, .5] ;      % Center of circle, in sync with front face of cylinder
-    R = ypoints(i);         % Radius of circle, which is the function's height.
+    radius = ypoints(i);         % Radius of circle, which is the function's height.
     teta=0:.01:2*pi;
     cir_x = C(1)+zeros(size(teta));
-    cir_y = C(2)+R*cos(teta);     % Circle along yz plane, x-coords are all the same.
-    cir_z = C(3)+ R*sin(teta);
+    cir_y = C(2)+radius*cos(teta);     % Circle along yz plane, x-coords are all the same.
+    cir_z = C(3)+ radius*sin(teta);
     patch(cir_x,cir_y,cir_z,'b')
     hold on
     
@@ -296,15 +298,15 @@ for i = 1:length(diskRadii)
     
     cyl.XData(1, :) = i-1;
     cyl.XData(2, :) = i;
-    
+    length(cyl.ZData(1, :))
     set(cyl,'edgecolor','none')
     
     C = [i, 0, .5] ;      % Center of circle, in sync with front face of cylinder
-    R = diskRadii(i);         % Radius of circle, which is the function's height.
+    radius = diskRadii(i);         % Radius of circle, which is the function's height.
     teta=0:.01:2*pi;
     cir_x = C(1)+zeros(size(teta));
-    cir_y = C(2)+R*cos(teta);     % Circle along yz plane, x-coords are all the same.
-    cir_z = C(3)+ R*sin(teta);
+    cir_y = C(2)+radius*cos(teta);     % Circle along yz plane, x-coords are all the same.
+    cir_z = C(3)+ radius*sin(teta);
     patch(cir_x,cir_y,cir_z,'b')
     hold on
     
@@ -346,3 +348,93 @@ ringPixels = array2D >= innerRadius.^2 & array2D <= outerRadius.^2;
 image(ringPixels) ;
 colormap([0 0 0; 1 1 1]);
 title('Binary Image of a Ring', 'FontSize', 25);
+
+%% Set points of cylinder's edges equal distance from axis, with use of trigonometric defintion of circle in xy-plane.
+    clf
+    theta=0:pi/30:2*pi;
+   [x, y, z] = cylinder(1, length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
+   cyl = surf(x, y, z); 
+    hold on
+    rotate(cyl, [0 1 0], 90)
+    
+    
+    cyl.XData(1, :) = 1;
+    cyl.XData(2, :) = 2;
+    
+    %set(cyl,'edgecolor','none')
+    
+    centerOfFace = [1, -3, 0] ;      % Center of circle, in sync with front face of cylinder
+    radius = 3;         % Radius of circle, which is the function's height. Also the hypotenuse of 
+                   % of the right triangle in the unit circle within the
+                   % cylinder face.
+    
+    % Drawing cylinder's faces
+    cir_x = centerOfFace(1)+zeros(size(theta));
+    cir_y = centerOfFace(2)+radius*cos(theta)
+    cir_z = centerOfFace(3)+ radius*sin(theta)
+    patch(cir_x,cir_y,cir_z,'b')
+    hold on
+    
+    disp("Y and Z-points in Circle and Cylinder face:")
+    
+    % Setting Z and Y coords so the points of cylinder's edge are equal
+    % distance from the axis of rotation.
+    
+     cyl.YData(1, :) = centerOfFace(2)+ radius*cos(theta);
+     cyl.YData(2, :) = centerOfFace(2)+ radius*cos(theta);
+     cyl.ZData(1, :) = centerOfFace(3)+ radius*sin(theta);
+     cyl.ZData(2, :) = centerOfFace(3)+ radius*sin(theta);
+     
+    patch(cir_x,cir_y,cir_z,'b')
+    
+    xlabel('X')
+    ylabel('Y')
+    zlabel('Z')
+    
+    %% Testing inductively on cyl points and adjusting the radius. Starting with 4 points(like a rectangular prism)
+    clf
+    theta=0:2*pi/4:2*pi;
+    angleCount = length(theta)
+    
+    C = [0, 0, 0] ;      
+    radius = 1;         
+    
+    % Drawing cylinder's faces
+    cir_x = C(1)+zeros(size(theta));
+    cir_y = C(2)+radius*cos(theta);
+    cir_z = C(3)+ radius*sin(theta);
+    
+    patch(cir_x,cir_y,cir_z,'b')
+    hold on
+    
+    % Now drawing cylinder
+   [x, y, z] = cylinder(1, length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
+   cyl = surf(x, y, z);
+   cyl.YData
+   cyl.ZData
+   hold on
+   rotate(cyl, [0 1 0], 90)
+   
+   %% Testing inductively on cyl points and adjusting the radius. Starting with 4 points(like a rectangular prism)
+    clf
+    theta=0:2*pi/4:2*pi;
+    angleCount = length(theta)
+    
+    C = [0, 0, 0] ;      
+    radius = 1;         
+    
+    % Drawing cylinder's faces
+    cir_x = C(1)+zeros(size(theta));
+    cir_y = C(2)+radius*cos(theta);
+    cir_z = C(3)+ radius*sin(theta);
+    
+    patch(cir_x,cir_y,cir_z,'b')
+    hold on
+    
+    % Now drawing cylinder
+   [x, y, z] = cylinder(1, length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
+   cyl = surf(x, y, z);
+   cyl.YData
+   cyl.ZData
+   hold on
+   rotate(cyl, [0 1 0], 90)
