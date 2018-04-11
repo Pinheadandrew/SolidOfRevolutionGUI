@@ -76,6 +76,10 @@ axisOri = "y";
 set(handles.axisEditbox, 'string', int2str(axisValue));
 global methodChoice;
 methodChoice = "Disk";
+global viewMode;
+viewMode = "2D";
+
+%get(handles.axe1, "
 end
 
 % UIWAIT makes VUC wait for user response (see UIRESUME)
@@ -145,7 +149,11 @@ global steps;
 global methodChoice;
 global axisValue;
 global axisOri;
+global viewMode;
 
+ % If 3D selected, plot volume using 3D functions. Else, draw patches in
+ % 2D. Nothing changes about calculations though, so nest it right.
+    % plotDiscs(funcString, lowerBound, upperBound, steps, axisValue), rotate3d on
 if (strcmp(funcChoice, "Select a function"))
     plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
@@ -154,7 +162,6 @@ if (strcmp(funcChoice, "Select a function"))
 else 
     syms x
     simple_exp_string = funcChoice(6:end);
-    fplot(0)
     f(x) = str2sym(simple_exp_string);
     
     % Calls different volume calculation methods depending on method picked. 
@@ -167,30 +174,39 @@ else
         else
             g(x) = finverse(f);
             xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
-%             xLimits = [-double(g(abs(axisValue-lowerBound))) double(g(abs(upperBound)))];
-%             xlim(xLimits)
         end
         
-        funcLine = fplot(f(x), xPlotBounds, "r");
-        hold on
-        set(funcLine, 'LineWidth',2);
-        drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
-       
-        % TESTING DRAWING OF AXIS WITH DISK METHOD
-        if(axisOri == "y") 
+        % If 3D selected, plot volume using 3D functions. Else, draw patches in
+        % 2D. Nothing changes about calculations though, so nest it right.
+        delete(handles.axes1.Children)
+        cla reset, rotate3d off
+        if(viewMode == "3D")
+            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisValue), rotate3d on
+            funcLine = fplot(f(x), xPlotBounds, "r"), hold on;
+        else
+            funcLine = fplot(f(x), xPlotBounds, "r");
+            hold on
+            set(funcLine, 'LineWidth',2);
+            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+
+      %Vertices for axis of rotation, which is vertical or horizontal.
+%             if(axisOri == "y")
+%               xL = xlim;
+%               yL = [axisValue axisValue];
+%             else
+%               xL = [axisValue axisValue];
+%               yL = ylim;
+%             end
+%             axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
+        end
+        if(axisOri == "y")
           xL = xlim;
           yL = [axisValue axisValue];
         else
           xL = [axisValue axisValue];
           yL = ylim;
         end
-        
         axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
-        hold on
-        uistack(axisPlot, 'top')
-        % END TESTING
-        uistack(funcLine, "top");
-       
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
@@ -200,7 +216,6 @@ else
         else
             g(x) = finverse(f);
             xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
-            % WILL ADD AXIS LINE USING THE FOLLOWING CODE UNTIL THE END
         end
         
         funcLine = fplot(f(x), xPlotBounds, "r");
@@ -214,13 +229,12 @@ else
           xL = xlim;
           yL = [axisValue axisValue];
         end
-        
         axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
-        hold on
-        uistack(axisPlot, 'top')
-        uistack(funcLine, "top");
     end
     
+%     axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
+    uistack(axisPlot, 'top')
+    uistack(funcLine, "top");
     statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
     statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     set(handles.statementText, 'string', statementString);
@@ -509,18 +523,13 @@ function threeDButton_Callback(hObject, eventdata, handles)
 % hObject    handle to threeDButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global upperBound;
-global lowerBound;
-global funcChoice;
-global steps;
-global methodChoice;
-global axisValue;
-global axisOri;
 global viewMode;
 
-funcString = funcChoice(6:end);
-if (methodChoice == "Disk" && axisOri == "y")
-    plotDiscs(funcString, lowerBound, upperBound, steps, axisValue), rotate3d on
-end
+if (viewMode == "3D")
+    viewMode = "2D";
+else
+    viewMode = "3D";
 end
 
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
+end

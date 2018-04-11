@@ -3,7 +3,6 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, y_axis_val)
 % f(x) = x rotated around y=0. Input bounds of solid, along with number of
 % discs to approximate the volume.
     
-    clf
     syms x
     f(x) = str2sym(funcString);
     theta=0:pi/30:2*pi;
@@ -47,8 +46,8 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, y_axis_val)
        set(cyl,'edgecolor','none')
     end
     
-    plot3(midpoints, zeros(1, length(midpoints)), double(f(midpoints)), ...
-      "LineWidth", 2, "Color", "r");
+%     plot3(cylMargins, zeros(1, length(cylMargins)), double(f(cylMargins)), ...
+%       "LineWidth", 2, "Color", "r");
     % Draws axis of rotation
     axisLims = [cylMargins(1)-1 cylMargins(end)+1];
     plot3(axisLims, zeros(1, length(axisLims)), y_axis_val*ones(1, length(axisLims)),...
