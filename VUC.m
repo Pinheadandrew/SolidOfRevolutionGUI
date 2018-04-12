@@ -181,24 +181,15 @@ else
         delete(handles.axes1.Children)
         cla reset, rotate3d off
         if(viewMode == "3D")
-            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisValue), rotate3d on
+            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue), rotate3d on
             funcLine = fplot(f(x), xPlotBounds, "r"), hold on;
         else
             funcLine = fplot(f(x), xPlotBounds, "r");
             hold on
             set(funcLine, 'LineWidth',2);
             drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
-
-      %Vertices for axis of rotation, which is vertical or horizontal.
-%             if(axisOri == "y")
-%               xL = xlim;
-%               yL = [axisValue axisValue];
-%             else
-%               xL = [axisValue axisValue];
-%               yL = ylim;
-%             end
-%             axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
         end
+        
         if(axisOri == "y")
           xL = xlim;
           yL = [axisValue axisValue];
