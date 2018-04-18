@@ -209,18 +209,36 @@ else
             xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
         end
         
-        funcLine = fplot(f(x), xPlotBounds, "r");
-        set(funcLine, 'LineWidth',2);
-        drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+        delete(handles.axes1.Children)
+        cla reset, rotate3d off
+        % Sets axes to either 2D representation or 3D volumes.
+        if(viewMode == "3D")
+            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, 0), rotate3d on
+            funcLine = fplot(f(x), xPlotBounds, "r"), hold on;
+        else
+            funcLine = fplot(f(x), xPlotBounds, "r");
+            hold on
+            set(funcLine, 'LineWidth',2);
+            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+        end
+        
+        % Commented out for now, whie testing. This block draws function
+        % line and shells as rectangles .
+        % funcLine = fplot(f(x), xPlotBounds, "r");
+        %set(funcLine, 'LineWidth',2);
+        %drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
         
         if(axisOri == "x") 
           xL = [axisValue axisValue];
-          yL = ylim;
+          zL = zlim;
+          %axis line parallel to z-axis.
+          axisPlot = plot3(xL, [0 0], zL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'b');  
         else
           xL = xlim;
-          yL = [axisValue axisValue];
+          zL = [axisValue axisValue];
+          %axis line parallel to x-axis.
+          axisPlot = plot3(xL, [0 0], zL,  'LineWidth', 2, 'LineStyle', '--', 'color', 'b');  %x-axis
         end
-        axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
     end
     
 %     axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
@@ -518,8 +536,10 @@ global viewMode;
 
 if (viewMode == "3D")
     viewMode = "2D";
+    set(handles.threeDButton, 'String', "View in 3D");
 else
     viewMode = "3D";
+    set(handles.threeDButton, 'String', "View in 2D");
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);

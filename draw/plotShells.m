@@ -5,10 +5,10 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
     syms x
     f(x) = str2sym(funcString);
     
-    if (fullCircles == 0)
+    if (fullCircles == 1)
       theta=0:pi/30:2*pi;
     else
-      theta=0:pi/30:pi;
+      theta=0:pi/60:pi;
     end
 
     delta= (upbound - lowbound)/subdivs;
@@ -19,11 +19,13 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
       shellHeights = double(f(midpoints));
     
       for i=1:length(shellHeights)
-          [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
-          [x2, y2, z2] = cylinder(shellWidthMargins(i+1), length(theta)-1);
+          [x1, y1, z1] = cylinder(shellWidthMargins(1), length(theta)-1);
+          [x2, y2, z2] = cylinder(shellWidthMargins(2), length(theta)-1);
 
-          innerFace = surf(x1, y1, z1, "FaceColor", "g", "edgecolor", "none"); hold on
-          outerFace = surf(x2, y2, z2, "FaceColor", "g", "edgecolor", "none"); hold on
+%           innerFace = surf(x1, y1, z1, "FaceColor", "g", "edgecolor", "none"); hold on
+%           outerFace = surf(x2, y2, z2, "FaceColor", "g", "edgecolor", "none"); hold on
+          innerFace = surf(x1, y1, z1, "FaceColor", "g"); hold on
+          outerFace = surf(x2, y2, z2, "FaceColor", "g"); hold on
           cylHeight = shellHeights(i);
           
           % Coordinate for axis-line. Used to determine radius and
@@ -45,17 +47,19 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
 
           outerFace.XData(1, :)= outer_x;
           outerFace.XData(2, :)= outer_x;
-          outerFace.YData(2, :)= outer_y;
+          outerFace.YData(1, :)= outer_y;
           outerFace.YData(2, :)= outer_y;
           outerFace.ZData = [zeros(1, length(outerFace.ZData));
               cylHeight*ones(1, length(outerFace.ZData(2, :)))];
 
-          bottomRing = patch([outer_x,inner_x], ...
-                 [outer_y,inner_y], zeros(1, 2*length(theta)),'g');
-          topRing = patch([outer_x,inner_x], ...
-                 [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
+           bottomRing = patch([outer_x,inner_x], ...
+                  [outer_y,inner_y], zeros(1, 2*length(theta)),'g');
+           bottomRing.EdgeColor = 'none';
+           topRing = patch([outer_x,inner_x], ...
+                  [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
+           topRing.EdgeColor = 'none';
       end
-      plot3(shellWidthMargins, zeros(1, length(shellWidthMargins)), double(f(shellWidthMargins)), "LineWidth", 5)
+      plot3(shellWidthMargins, zeros(1, length(shellWidthMargins)), double(f(shellWidthMargins)), "LineWidth", 5, "color", "r")
     else
       g(x) = finverse(f);
       shellLengths = double(g(midpoints));
@@ -98,16 +102,17 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
           outerFace.XData = [zeros(1, length(outerFace.ZData));
               cylLength*ones(1, length(outerFace.ZData(2, :)))];
 
-%           leftRing = patch([outer_x,inner_x], ...
-%                  [outer_y,inner_y], zeros(1, 2*length(theta)),'g');
-%           rightRing = patch([outer_x,inner_x], ...
-%                  [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
-          baseRing = patch(zeros(1, 2*length(theta)), ...
-                 [outer_y,inner_y], [outer_y,inner_y], 'g');
-          endRing = patch(cylLength*ones(1, 2*length(theta)),[outer_y,inner_y], ...
-                 [outer_z,inner_z], 'g');
+           leftRing = patch([outer_x,inner_x], ...
+                  [outer_y,inner_y], zeros(1, 2*length(theta)),'g');
+           leftRing.EdgeColor = 'none';
+           rightRing = patch([outer_x,inner_x], ...
+                  [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
+%            baseRing = patch(zeros(1, 2*length(theta)), ...
+%                   [outer_y,inner_y], [outer_y,inner_y], 'g');
+%            endRing = patch(cylLength*ones(1, 2*length(theta)),[outer_y,inner_y], ...
+%                   [outer_z,inner_z], 'g');
       end
-      plot3(double(g(shellWidthMargins)), zeros(1, length(shellWidthMargins)), double(f(g(shellWidthMargins))), "LineWidth", 5)
+      plot3(double(g(shellWidthMargins)), zeros(1, length(shellWidthMargins)), double(f(g(shellWidthMargins))), "LineWidth", 5, "color", "r")
     end
     %Plot function line too.
 end
