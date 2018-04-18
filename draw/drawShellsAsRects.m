@@ -24,7 +24,6 @@ end
 if(axisOri =="x")  
     % In this case, y-verts are the same when flipped across the axis, but
     % x-vertices are different.
-%     shellHeights = abs(double(f(midpoints)));
     shellHeights = double(f(midpoints));
 
     orig_xverts = [orig_shellBasePoints(1:end-1); orig_shellBasePoints(1:end-1);... 
