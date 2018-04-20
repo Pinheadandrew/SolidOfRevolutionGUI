@@ -95,8 +95,5 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal)
             "LineWidth", 2, "Color", "b")
         zlim(axisLims);
     end
-    xlabel('X')
-    ylabel('Z')
-    zlabel('f(X)')
 end
 

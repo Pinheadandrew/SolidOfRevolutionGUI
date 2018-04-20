@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 04-Apr-2018 01:02:18
+% Last Modified by GUIDE v2.5 20-Apr-2018 19:09:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,7 +78,8 @@ global methodChoice;
 methodChoice = "Disk";
 global viewMode;
 viewMode = "2D";
-
+global solidView;
+solidView = 1;
 %get(handles.axe1, "
 end
 
@@ -117,6 +118,7 @@ if (funcChoice == "f(x)=x^2")
     set(handles.lowerBoundEdit, 'String', lowerBound);
     set(handles.upperBoundEdit, 'String', upperBound);
 end
+
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 % Hints: contents = cellstr(get(hObject,'String')) returns functionMenu contents as cell array
@@ -150,6 +152,7 @@ global methodChoice;
 global axisValue;
 global axisOri;
 global viewMode;
+global solidView;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
@@ -183,6 +186,9 @@ else
         if(viewMode == "3D")
             plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue), rotate3d on
             funcLine = fplot(f(x), xPlotBounds, "r"), hold on;
+            xlabel('X')
+            ylabel('Z')
+            zlabel('f(X)')
         else
             funcLine = fplot(f(x), xPlotBounds, "r");
             hold on
@@ -213,8 +219,11 @@ else
         cla reset, rotate3d off
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
-            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, 0), rotate3d on
-            funcLine = fplot(f(x), xPlotBounds, "r"), hold on;
+            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView), rotate3d on
+            funcLine = fplot(f(x), xPlotBounds, "r"); hold on
+            xlabel('X')
+            ylabel('Z')
+            zlabel('f(X)')
         else
             funcLine = fplot(f(x), xPlotBounds, "r");
             hold on
@@ -224,9 +233,6 @@ else
         
         % Commented out for now, whie testing. This block draws function
         % line and shells as rectangles .
-        % funcLine = fplot(f(x), xPlotBounds, "r");
-        %set(funcLine, 'LineWidth',2);
-        %drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
         
         if(axisOri == "x") 
           xL = [axisValue axisValue];
@@ -242,7 +248,7 @@ else
     end
     
 %     axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
-    uistack(axisPlot, 'top')
+    uistack(axisPlot, 'top');
     uistack(funcLine, "top");
     statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
     statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
@@ -397,6 +403,7 @@ function methodMenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global methodChoice;
+global viewMode;
 
 methodContents = cellstr(get(handles.methodMenu, 'String'));
 methodChoice = methodContents{get(hObject, 'Value')};
@@ -404,6 +411,11 @@ methodChoice = methodContents{get(hObject, 'Value')};
 subIntsLabelString = "Number of " + methodChoice + "s";
 set(handles.subIntsLabel, 'string', subIntsLabelString);
 
+if(methodChoice == "Shell" && viewMode == "3D")
+      set(handles.fullSolidRadio, 'Value', 1.0);
+      set(handles.solidViewRadiogroup, 'Visible', "on");
+end
+    
 % Hints: contents = cellstr(get(hObject,'String')) returns methodMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from methodMenu
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -507,16 +519,6 @@ axisOri = axisPicked;
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
-% Function that returns two-value vector representing bounds for a function 
-% with y as the input variable instead of x. For example, if origFunctionText 
-% = x^2 and bounds are 0 and 4, returns [0 2] since sqrt(4) = 2, so show 
-% graph up to point where finverse(y) = 2.
-
-function inverseString = inverseString(origFunction)
-inverseString = char(finverse(str2sym(origFunction)));
-end
-
-
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
@@ -533,14 +535,43 @@ function threeDButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global viewMode;
+global methodChoice;
 
 if (viewMode == "3D")
     viewMode = "2D";
     set(handles.threeDButton, 'String', "View in 3D");
+    set(handles.solidViewRadiogroup, 'Visible', "off");
 else
     viewMode = "3D";
     set(handles.threeDButton, 'String', "View in 2D");
+    if(methodChoice == "Shell")
+      set(handles.fullSolidRadio, 'Value', 1.0);
+      set(handles.solidViewRadiogroup, 'Visible', "on");
+    end
 end
 
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
+end
+
+
+% --- Executes when selected object is changed in solidViewRadiogroup.
+function solidViewRadiogroup_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in solidViewRadiogroup 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global solidView;
+% hObject    handle to the selected object in axisButtonGroup 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get selected axis from radio button. If Disk method selected, bound
+% statement in perspective of opposite axis
+solidViewPicked = get(get(handles.solidViewRadiogroup,'SelectedObject'),'string');
+
+if(solidViewPicked == "Half Solid")
+  solidView = 0;
+else
+  solidView = 1;
+end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
