@@ -1,4 +1,4 @@
-function approxVol = diskmethod2(funcString, diskcount, lowerBound, upperBound, axisOri, axisValue)
+function approxVol = diskmethod2(funcString, diskcount, lowerBound, upperBound, axisOri, axisValue, radiusMethod)
 %DISKMETHOD2
 %   Input:
 %       1. A single-variable function in string form.
@@ -17,8 +17,14 @@ function approxVol = diskmethod2(funcString, diskcount, lowerBound, upperBound, 
 
 delta = (upperBound-lowerBound)/diskcount;
 
-%X-points separated by disk width, using midpoints.
-xpoints = lowerBound+(delta/2):delta:upperBound-(delta/2);
+%X-points separated by disk width, which determine radii of shells.
+if (radiusMethod == "m")
+    xpoints = lowerBound+(delta/2):delta:upperBound-(delta/2);
+elseif (radiusMethod == "l")
+    xpoints = lowerBound:delta:upperBound-delta;
+elseif (radiusMethod == "r")
+    xpoints = lowerBound+delta:delta:upperBound;
+end
 
 syms x
 f(x) = str2sym(funcString);

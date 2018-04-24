@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 20-Apr-2018 19:09:55
+% Last Modified by GUIDE v2.5 23-Apr-2018 20:06:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,7 +80,8 @@ global viewMode;
 viewMode = "2D";
 global solidView;
 solidView = 1;
-%get(handles.axe1, "
+global radiusChoice;
+radiusChoice = "m";
 end
 
 % UIWAIT makes VUC wait for user response (see UIRESUME)
@@ -153,6 +154,7 @@ global axisValue;
 global axisOri;
 global viewMode;
 global solidView;
+global radiusChoice;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
@@ -169,7 +171,7 @@ else
     
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
-        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue);
+        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         if(axisOri == "y")
@@ -184,8 +186,8 @@ else
         delete(handles.axes1.Children)
         cla reset, rotate3d off
         if(viewMode == "3D")
-            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue), rotate3d on
-            funcLine = fplot(f(x), xPlotBounds, "r"), hold on;
+            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice), rotate3d on
+            funcLine = fplot(f(x), xPlotBounds, "r"); hold on
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
@@ -193,7 +195,7 @@ else
             funcLine = fplot(f(x), xPlotBounds, "r");
             hold on
             set(funcLine, 'LineWidth',2);
-            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice)
         end
         
         if(axisOri == "y")
@@ -205,7 +207,7 @@ else
         end
         axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
     elseif (strcmp(methodChoice, "Shell"))
-        estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue);
+        estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         if(axisOri == "x") %Draws line of axis of rotation too.
@@ -219,7 +221,7 @@ else
         cla reset, rotate3d off
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
-            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView), rotate3d on
+            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
             funcLine = fplot(f(x), xPlotBounds, "r"); hold on
             xlabel('X')
             ylabel('Z')
@@ -228,7 +230,7 @@ else
             funcLine = fplot(f(x), xPlotBounds, "r");
             hold on
             set(funcLine, 'LineWidth',2);
-            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue)
+            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice)
         end
         
         % Commented out for now, whie testing. This block draws function
@@ -574,4 +576,35 @@ else
   solidView = 1;
 end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
+end
+
+
+% --- Executes on selection change in radiusMethodMenu.
+function radiusMethodMenu_Callback(hObject, eventdata, handles)
+global radiusChoice;
+
+radiusContents = cellstr(get(handles.radiusMethodMenu, 'String'));
+
+if (radiusContents{get(hObject, 'Value')} == "Left")
+    radiusChoice = "l";
+elseif (radiusContents{get(hObject, 'Value')} == "Midpoint")
+    radiusChoice = "m";
+elseif (radiusContents{get(hObject, 'Value')} == "Right")
+    radiusChoice = "r";
+end
+
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function radiusMethodMenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radiusMethodMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end

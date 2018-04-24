@@ -1,4 +1,4 @@
-function sumShellVols = shellmethod2(funcString, shellcount, lowerBound, upperBound, axisOri, axisValue)
+function sumShellVols = shellmethod2(funcString, shellcount, lowerBound, upperBound, axisOri, axisValue, radiusMethod)
 %SHELLMETHOD2 Returns the , the volume under a function retrieved by rotating the
 % area under the function around the axis perpendicular to the axis of revolution. 
 % The volume approaches the approximate volume as the number of shells increases.
@@ -19,7 +19,15 @@ function sumShellVols = shellmethod2(funcString, shellcount, lowerBound, upperBo
 %       3. Add them together, multiply their sum by 2*pi.
 
 delta = (upperBound-lowerBound)/shellcount;
-xpoints = lowerBound+delta/2:delta:upperBound-delta/2;
+
+%X-points separated by disk width, which determine radii of shells.
+if (radiusMethod == "m")
+    xpoints = lowerBound+(delta/2):delta:upperBound-(delta/2);
+elseif (radiusMethod == "l")
+    xpoints = lowerBound:delta:upperBound-delta;
+elseif (radiusMethod == "r")
+    xpoints = lowerBound+delta:delta:upperBound;
+end
 
 syms x
 f(x) = str2sym(funcString);

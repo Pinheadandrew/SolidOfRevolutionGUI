@@ -1,4 +1,4 @@
-function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fullCircles)
+function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fullCircles, radiusMethod)
 % Function that plots solid of revolution as hollow 3D cylinders rotated
 % parallel to the axis specified. Choice of whether to show the whole solid
 % or cut half of it across the x-z plane.
@@ -6,8 +6,16 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
     f(x) = str2sym(funcString);
     
     delta= (upbound - lowbound)/subdivs;
-    midpoints = lowbound+(delta/2):delta:upbound-(delta/2);     %<- Used for getting heights of rectangles
     shellWidthMargins = (lowbound:delta:upbound);
+    
+    %X-points separated by disk width, which determine radii of shells.
+    if (radiusMethod == "m")
+        xpoints = lowbound+(delta/2):delta:upbound-(delta/2);
+    elseif (radiusMethod == "l")
+        xpoints = lowbound:delta:upbound-delta;
+    elseif (radiusMethod == "r")
+        xpoints = lowbound+delta:delta:upbound;
+    end
     
     if (fullCircles == 1)
       theta=0:pi/30:2*pi;
@@ -36,7 +44,7 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
     % subintervals of the area under/above the function are rotated around,
     % parallel to the axis of rotation. 
     if(lower(axisOri) == "x")
-      shellHeights = double(f(midpoints));
+      shellHeights = double(f(xpoints));
     
       for i=1:length(shellHeights)
         [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
@@ -87,8 +95,8 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         orig_xverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
           shellWidthMargins(2:end); shellWidthMargins(2:end)];
         
-        yverts = [zeros(1,length(midpoints)); shellHeights(1:end);...
-          shellHeights(1:end); zeros(1,length(midpoints))];
+        yverts = [zeros(1,length(xpoints)); shellHeights(1:end);...
+          shellHeights(1:end); zeros(1,length(xpoints))];
         
         mirror_xverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);...
           mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
@@ -100,7 +108,7 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
     else
       % Condition for cases where axis is one parallel to x-axis.
       g(x) = finverse(f);
-      shellLengths = double(g(midpoints));
+      shellLengths = double(g(xpoints));
     
       for i=1:length(shellLengths)
           [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);

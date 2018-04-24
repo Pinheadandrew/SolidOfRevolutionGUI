@@ -1,4 +1,4 @@
-function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal)
+function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, radiusMethod)
 % Drawing of solids of revolution using disc method, with area under function
 % argument funcString rotated perpendicularly around axis. Input are bounds of solid, 
 % number of discs to approximate the volume, axis orientation and axis value.
@@ -9,12 +9,18 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal)
     
     diskWidth = (upbound-lowbound)/cylsCount; %<- Thickness of each disk
     cylMargins = lowbound:diskWidth:upbound;
-    midpoints = lowbound+(diskWidth/2):diskWidth:upbound-(diskWidth/2);
-    % Using midpoint rule of each subinterval along axis to get radius of
-    % disc using height of function at the midpoint.
+    
+    %X-points separated by disk width, which determine radii of shells.
+    if (radiusMethod == "m")
+        xpoints = lowbound+(diskWidth/2):diskWidth:upbound-(diskWidth/2);
+    elseif (radiusMethod == "l")
+        xpoints = lowbound:diskWidth:upbound-diskWidth;
+    elseif (radiusMethod == "r")
+        xpoints = lowbound+diskWidth:diskWidth:upbound;
+    end
     
     if (axisOri == "y")
-        diskRadii = abs(double(f(midpoints)-axisVal)); % Vector storing radius of each disc.
+        diskRadii = abs(double(f(xpoints)-axisVal)); % Vector storing radius of each disc.
         
         for i = 1:length(diskRadii)
             [x, y, z] = cylinder(diskRadii(i), length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
@@ -58,7 +64,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal)
         xlim(axisLims);
     else
         g(x) = finverse(f);
-        diskRadii = double(g(midpoints)-axisVal); % Vector storing radius of each disc.
+        diskRadii = double(g(xpoints)-axisVal); % Vector storing radius of each disc.
         
         for i = 1:length(diskRadii)
             [x, y, z] = cylinder(diskRadii(i), length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
