@@ -43,8 +43,8 @@ if(axisOri =="x")
     mirror_xverts = [mirror_shellBasePoints(1:end-1); mirror_shellBasePoints(1:end-1);... 
         mirror_shellBasePoints(2:end); mirror_shellBasePoints(2:end)];
                 
-    origRectSet = patch(orig_xverts, yverts, "b");
-    mirrorRectSet = patch(mirror_xverts, yverts, "b");
+    origRectSet = patch(orig_xverts, yverts, "b"); hold on
+    mirrorRectSet = patch(mirror_xverts, yverts, "b"); hold on
 else
     g(x) = finverse(f(x));
     shellLengths = double(g(xpoints));
@@ -60,8 +60,8 @@ else
     mirror_yverts = [mirror_shellBasePoints(1:end-1); mirror_shellBasePoints(1:end-1);... 
         mirror_shellBasePoints(2:end); mirror_shellBasePoints(2:end)];
     
-    origRectSet = patch(xverts, yverts, "b");
-    mirrorRectSet = patch(xverts, mirror_yverts, "b");
+    origRectSet = patch(xverts, yverts, "b"); hold on
+    mirrorRectSet = patch(xverts, mirror_yverts, "b"); hold on
 end
 end
 

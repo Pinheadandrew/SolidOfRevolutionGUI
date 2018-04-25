@@ -104,7 +104,7 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         patch(orig_xverts, zeros(size(orig_xverts)), yverts, "g");
         patch(mirror_xverts, zeros(size(orig_xverts)), yverts, "g");
       end
-      plot3(shellWidthMargins, zeros(1, length(shellWidthMargins)), double(f(shellWidthMargins)), "LineWidth", 5, "color", "r")
+%       plot3(shellWidthMargins, zeros(1, length(shellWidthMargins)), double(f(shellWidthMargins)), "LineWidth", 5, "color", "r")
     else
       % Condition for cases where axis is one parallel to x-axis.
       g(x) = finverse(f);
@@ -171,7 +171,7 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
              patch(xverts, zeros(size(xverts)), mirror_yverts, "g"); hold on
       end
           
-      plot3(double(g(shellWidthMargins)), zeros(1, length(shellWidthMargins)), double(f(g(shellWidthMargins))), "LineWidth", 5, "color", "r")
+%       plot3(double(g(shellWidthMargins)), zeros(1, length(shellWidthMargins)), double(f(g(shellWidthMargins))), "LineWidth", 5, "color", "r")
     end
 end
 

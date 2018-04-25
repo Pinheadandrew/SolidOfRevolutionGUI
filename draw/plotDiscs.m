@@ -55,12 +55,10 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, r
             set(cyl,'edgecolor','none')
         end
         
-        %     plot3(cylMargins, zeros(1, length(cylMargins)), double(f(cylMargins)), ...
-        %       "LineWidth", 2, "Color", "r");
         % Draws axis of rotation
         axisLims = [cylMargins(1)-1 cylMargins(end)+1];
         plot3(axisLims, zeros(1, length(axisLims)), axisVal*ones(1, length(axisLims)),...
-            "LineWidth", 2, "Color", "b")
+            "LineWidth", 2, "Color", "g")
         xlim(axisLims);
     else
         g(x) = finverse(f);
@@ -98,7 +96,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, r
         end
         axisLims = [cylMargins(1)-1 cylMargins(end)+1];
         plot3(axisVal*ones(1,2), zeros(1, length(axisLims)), axisLims,...
-            "LineWidth", 2, "Color", "b")
+            "LineWidth", 2, "Color", "b", "--")
         zlim(axisLims);
     end
 end
