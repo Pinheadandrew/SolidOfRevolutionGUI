@@ -95,8 +95,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, r
             set(cyl,'edgecolor','none')
         end
         axisLims = [cylMargins(1)-1 cylMargins(end)+1];
-        plot3(axisVal*ones(1,2), zeros(1, length(axisLims)), axisLims,...
-            "LineWidth", 2, "Color", "b", "--")
+        plot3(axisVal*ones(1,2), zeros(1, length(axisLims)), axisLims)
         zlim(axisLims);
     end
 end

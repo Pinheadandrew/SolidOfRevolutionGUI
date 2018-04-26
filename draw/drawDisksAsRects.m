@@ -40,5 +40,6 @@ else
                           rectBasePoints(2:end); rectBasePoints(1:end-1)];
 end
 rectSet = patch(xverts, yverts, "b");
+hold on
 end
 

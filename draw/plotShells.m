@@ -81,12 +81,10 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         %Drawing rings to fill top and bottom of shells.
         bottomRing = patch([outer_x,inner_x], ...
           [outer_y,inner_y], zeros(1, 2*length(theta)),'g');
-%         bottomRing.EdgeColor = 'none';
+        bottomRing.EdgeColor = 'none';
         topRing = patch([outer_x,inner_x], ...
-          [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
-%         topRing.EdgeColor = 'none';
-        innerFace.EdgeColor = 'none';
-        outerFace.EdgeColor = 'none';
+        [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
+        topRing.EdgeColor = 'none';
       end
       
       %Drawing rectangles to fill faces of shells' as they're cut on

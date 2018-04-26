@@ -169,6 +169,8 @@ else
     simple_exp_string = funcChoice(6:end);
     f(x) = str2sym(simple_exp_string);
     
+    delete(handles.axes1.Children)
+        cla reset, rotate3d off
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
         estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
@@ -183,18 +185,17 @@ else
         
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
-        delete(handles.axes1.Children)
-        cla reset, rotate3d off
         if(viewMode == "3D")
             plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice), rotate3d on
-            funcLine = fplot(f(x), xPlotBounds, "r"); hold on
+            %funcLine = fplot(f(x), xPlotBounds, "r"); hold on
+            % plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue)
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
         else
-            funcLine = fplot(f(x), xPlotBounds, "r");
-            hold on
-            set(funcLine, 'LineWidth',2);
+%             funcLine = fplot(f(x), xPlotBounds, "r");
+%             hold on
+%             set(funcLine, 'LineWidth',2);
             drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice)
         end
         
@@ -205,7 +206,8 @@ else
           xL = [axisValue axisValue];
           yL = ylim;
         end
-        axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
+        %axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  hold on%x-axis
+        %uistack(axisPlot, 'top');
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
@@ -217,41 +219,39 @@ else
             xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
         end
         
-        delete(handles.axes1.Children)
-        cla reset, rotate3d off
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
             plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
-            funcLine = fplot(f(x), xPlotBounds, "r"); hold on
+            %funcLine = fplot(f(x), xPlotBounds, "r"); hold on
+            % plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue)
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
         else
-            funcLine = fplot(f(x), xPlotBounds, "r");
-            hold on
-            set(funcLine, 'LineWidth',2);
+%             funcLine = fplot(f(x), xPlotBounds, "r");
+%             hold on
+%             set(funcLine, 'LineWidth',2);
             drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice)
         end
-        
-        % Commented out for now, whie testing. This block draws function
-        % line and shells as rectangles .
-        
+       
         if(axisOri == "x") 
           xL = [axisValue axisValue];
           zL = zlim;
           %axis line parallel to z-axis.
-          axisPlot = plot3(xL, [0 0], zL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'b');  
+          %axisPlot = plot3(xL, [0 0], zL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'b'); hold on 
+          %uistack(axisPlot, 'top');
         else
           xL = xlim;
           zL = [axisValue axisValue];
           %axis line parallel to x-axis.
-          axisPlot = plot3(xL, [0 0], zL,  'LineWidth', 2, 'LineStyle', '--', 'color', 'b');  %x-axis
+          %axisPlot = plot3(xL, [0 0], zL,  'LineWidth', 2, 'LineStyle', '--', 'color', 'b'); hold on  %x-axis
+          %uistack(axisPlot, 'top');
         end
     end
     
 %     axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
-    uistack(axisPlot, 'top');
-    uistack(funcLine, "top");
+    plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+    %uistack(funcLine, "top");
     statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
     statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     set(handles.statementText, 'string', statementString);
@@ -259,10 +259,10 @@ else
     
     % Makes legend, one entry for function line and one for axis line.
     % lineLeg = strcat(funcChoice);
-    axisString = strcat(axisOri, {' = '}, num2str(axisValue));
-    leg = legend([funcLine, axisPlot], funcChoice, axisString, 'location', 'northwest');
-    leg.FontSize = 14;
-    uistack(leg,"top")
+%     axisString = strcat(axisOri, {' = '}, num2str(axisValue));
+%     leg = legend(axisPlot, axisString, 'location', 'northwest');
+%     leg.FontSize = 14;
+%     uistack(leg,"top")
     hold off
 end
 end
