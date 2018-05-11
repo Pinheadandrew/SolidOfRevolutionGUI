@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 23-Apr-2018 20:06:40
+% Last Modified by GUIDE v2.5 26-Apr-2018 21:34:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -83,10 +83,6 @@ solidView = 1;
 global radiusChoice;
 radiusChoice = "m";
 end
-
-% UIWAIT makes VUC wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = VUC_OutputFcn(hObject, eventdata, handles) 
@@ -155,6 +151,8 @@ global axisOri;
 global viewMode;
 global solidView;
 global radiusChoice;
+global az;
+global el;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
@@ -187,16 +185,12 @@ else
         % 2D. Nothing changes about calculations though, so nest it right.
         if(viewMode == "3D")
             plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice), rotate3d on
-            %funcLine = fplot(f(x), xPlotBounds, "r"); hold on
-            % plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue)
+            % [az, el] = view;
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
         else
-%             funcLine = fplot(f(x), xPlotBounds, "r");
-%             hold on
-%             set(funcLine, 'LineWidth',2);
-            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice)
+            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
         end
         
         if(axisOri == "y")
@@ -206,8 +200,7 @@ else
           xL = [axisValue axisValue];
           yL = ylim;
         end
-        %axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  hold on%x-axis
-        %uistack(axisPlot, 'top');
+        
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
@@ -221,48 +214,42 @@ else
         
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
+            %[az, el] = view;
             plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
-            %funcLine = fplot(f(x), xPlotBounds, "r"); hold on
-            % plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue)
+            %view([az el])
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
         else
-%             funcLine = fplot(f(x), xPlotBounds, "r");
-%             hold on
-%             set(funcLine, 'LineWidth',2);
-            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice)
+            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
         end
        
         if(axisOri == "x") 
           xL = [axisValue axisValue];
           zL = zlim;
-          %axis line parallel to z-axis.
-          %axisPlot = plot3(xL, [0 0], zL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'b'); hold on 
-          %uistack(axisPlot, 'top');
         else
           xL = xlim;
           zL = [axisValue axisValue];
-          %axis line parallel to x-axis.
-          %axisPlot = plot3(xL, [0 0], zL,  'LineWidth', 2, 'LineStyle', '--', 'color', 'b'); hold on  %x-axis
-          %uistack(axisPlot, 'top');
         end
     end
     
-%     axisPlot = line(xL, yL, 'LineWidth', 2, 'LineStyle', '--', 'color', 'g');  %x-axis
+    % Preserving axis limits.
+    shape_plot_xlim = xlim;
+    shape_plot_ylim = ylim;
+    shape_plot_zlim = zlim;
     plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
-    %uistack(funcLine, "top");
+    xlim(shape_plot_xlim);
+    ylim(shape_plot_ylim);
+    zlim(shape_plot_zlim);
+    
+%     if(viewMode == "3D")
+%         view([az, el]);
+%     end
+    
     statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
     statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     set(handles.statementText, 'string', statementString);
     set(handles.actualVolumeText, 'string', statementString2);
-    
-    % Makes legend, one entry for function line and one for axis line.
-    % lineLeg = strcat(funcChoice);
-%     axisString = strcat(axisOri, {' = '}, num2str(axisValue));
-%     leg = legend(axisPlot, axisString, 'location', 'northwest');
-%     leg.FontSize = 14;
-%     uistack(leg,"top")
     hold off
 end
 end
@@ -278,26 +265,18 @@ function diskEdit_Callback(hObject, eventdata, handles)
     if(isnan(stepInput))
         d = errordlg('Disk Count must be Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
+        set(handles.diskEdit, 'string', steps);
         uiwait(d);
     elseif(stepInput <= 0)
-            newString = 'Nonpositive Disk Count';
-            set(handles.boundStatement, 'string', newString);
             plot(0,0);
-            d = errordlg('Number of steps must be positive', 'Disk Error');
+            d = errordlg('Number of steps must be positive', 'Disk Count Error');
             set(d, 'WindowStyle', 'modal');
+            set(handles.diskEdit, 'string', steps);
             uiwait(d);
     else
         steps = stepInput;
         diskWidth = (upperBound - lowerBound)/steps;
     end
-
-% hObject    handle to diskEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of diskEdit as text
-%        str2double(get(hObject,'String')) returns contents of diskEdit as a double
-%end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
@@ -330,11 +309,13 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         d = errordlg('Domain must be Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
     elseif(lower_input >= upperBound)
         plot(0,0);
         d = errordlg('Fix Lower Bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
     else
         lowerBound = lower_input;
     end
@@ -369,11 +350,13 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         d = errordlg('Domain must be an Integer', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.upperBoundEdit, 'string', upperBound);
     elseif(upper_input <= lowerBound)
         newString = 'Fix domain';
         set(handles.boundStatement, 'string', newString);
         plot(0,0);
         d = errordlg('Fix Upper Bound', 'Domain Error');
+        set(handles.upperBoundEdit, 'string', upperBound);
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
     else
@@ -406,16 +389,24 @@ function methodMenu_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global methodChoice;
 global viewMode;
+global solidView;
 
 methodContents = cellstr(get(handles.methodMenu, 'String'));
 methodChoice = methodContents{get(hObject, 'Value')};
 
 subIntsLabelString = "Number of " + methodChoice + "s";
-set(handles.subIntsLabel, 'string', subIntsLabelString);
+set(handles.diskbuttongroup, 'title', subIntsLabelString);
 
 if(methodChoice == "Shell" && viewMode == "3D")
-      set(handles.fullSolidRadio, 'Value', 1.0);
-      set(handles.solidViewRadiogroup, 'Visible', "on");
+  if (viewMode == "3D")
+    solidView = 1;
+    set(handles.fullSolidRadio, 'Value', 1.0);
+    set(handles.solidViewRadiogroup, 'Visible', "on");
+  end
+  set(handles.methodHeader, 'String', 'Method of Shell Height');
+else
+  set(handles.methodHeader, 'String', 'Method of Disc Radius');
+  set(handles.solidViewRadiogroup, 'Visible', "off");
 end
     
 % Hints: contents = cellstr(get(hObject,'String')) returns methodMenu contents as cell array
@@ -506,13 +497,13 @@ position = get(handles.axisEditbox,'Position');
 % Positions the axis value box adjacent to the axis orientation selected.
 % Also sets the axis orientation parameter in the volume function.
 if (axisPicked == "x")
-    position(2) = 3.2;
+    position(2) = 2.9;
     set(handles.axisEditbox, 'Position', position)
     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
     set(handles.yAxisRadio,'string',"y")
     
 else
-    position(2) = 1;
+    position(2) = 0.76923;
     set(handles.axisEditbox, 'Position', position)
     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
     set(handles.xAxisRadio,'string',"x")

@@ -54,12 +54,6 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, r
             patch(cir_x_2,cir_y,cir_z,	[0.4660, 0.6740, 0.1880]);
             set(cyl,'edgecolor','none')
         end
-        
-        % Draws axis of rotation
-        axisLims = [cylMargins(1)-1 cylMargins(end)+1];
-        plot3(axisLims, zeros(1, length(axisLims)), axisVal*ones(1, length(axisLims)),...
-            "LineWidth", 2, "Color", "g")
-        xlim(axisLims);
     else
         g(x) = finverse(f);
         diskRadii = double(g(xpoints)-axisVal); % Vector storing radius of each disc.
@@ -94,9 +88,6 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, r
             patch(cir_x,cir_y,cir_z_2,	[0.4660, 0.6740, 0.1880])
             set(cyl,'edgecolor','none')
         end
-        axisLims = [cylMargins(1)-1 cylMargins(end)+1];
-        plot3(axisVal*ones(1,2), zeros(1, length(axisLims)), axisLims)
-        zlim(axisLims);
     end
 end
 
