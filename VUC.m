@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 26-Apr-2018 21:34:59
+% Last Modified by GUIDE v2.5 11-May-2018 11:33:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,6 +82,11 @@ global solidView;
 solidView = 1;
 global radiusChoice;
 radiusChoice = "m";
+maxNumberOfRect = 100;
+set(handles.stepSlider, 'Min', 1);
+set(handles.stepSlider, 'Max', maxNumberOfRect);
+set(handles.stepSlider, 'Value', 5);
+set(handles.stepSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -184,7 +189,7 @@ else
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
         if(viewMode == "3D")
-            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice), rotate3d on
+            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
             % [az, el] = view;
             xlabel('X')
             ylabel('Z')
@@ -242,14 +247,18 @@ else
     ylim(shape_plot_ylim);
     zlim(shape_plot_zlim);
     
-%     if(viewMode == "3D")
-%         view([az, el]);
-%     end
+    statementString = "Estimated Volume: " + sprintf('%0.3f', estimated_volume);
+    statementString2 = "Actual Volume: " + sprintf('%0.3f', actual_volume);
+    errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
     
-    statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
-    statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     set(handles.statementText, 'string', statementString);
     set(handles.actualVolumeText, 'string', statementString2);
+    % Display error percentage.
+    if(isnan(errorPerc))
+      set(handles.errorText, 'string', strcat({'  Error: '}, {'0%'}));
+    else
+      set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%g', errorPerc), {'%'}));
+    end
     hold off
 end
 end
@@ -263,19 +272,21 @@ function diskEdit_Callback(hObject, eventdata, handles)
     stepInput = str2double(get(hObject,'String'));
     
     if(isnan(stepInput))
-        d = errordlg('Disk Count must be Integer', 'Domain Error');
-        set(d, 'WindowStyle', 'modal');
-        set(handles.diskEdit, 'string', steps);
-        uiwait(d);
-    elseif(stepInput <= 0)
-            plot(0,0);
-            d = errordlg('Number of steps must be positive', 'Disk Count Error');
-            set(d, 'WindowStyle', 'modal');
-            set(handles.diskEdit, 'string', steps);
-            uiwait(d);
+      plot(0,0);
+      d = errordlg('Number of subintervals must be an integer', 'Domain Error');
+      set(d, 'WindowStyle', 'modal');
+      set(handles.diskEdit, 'string', steps);
+      uiwait(d);
+    elseif(stepInput <= 0 || stepInput > 100)
+      plot(0,0);
+      d = errordlg('Number of subintervals must be a positive integer less than 101', 'Step Count Error');
+      set(d, 'WindowStyle', 'modal');
+      set(handles.diskEdit, 'string', steps);
+      uiwait(d);
     else
-        steps = stepInput;
-        diskWidth = (upperBound - lowerBound)/steps;
+      steps = stepInput;
+      diskWidth = (upperBound - lowerBound)/steps;
+      set(handles.stepSlider, 'value', stepInput);
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -390,6 +401,7 @@ function methodMenu_Callback(hObject, eventdata, handles)
 global methodChoice;
 global viewMode;
 global solidView;
+global axisOri;
 
 methodContents = cellstr(get(handles.methodMenu, 'String'));
 methodChoice = methodContents{get(hObject, 'Value')};
@@ -397,20 +409,33 @@ methodChoice = methodContents{get(hObject, 'Value')};
 subIntsLabelString = "Number of " + methodChoice + "s";
 set(handles.diskbuttongroup, 'title', subIntsLabelString);
 
-if(methodChoice == "Shell" && viewMode == "3D")
-  if (viewMode == "3D")
-    solidView = 1;
-    set(handles.fullSolidRadio, 'Value', 1.0);
-    set(handles.solidViewRadiogroup, 'Visible', "on");
-  end
+% Upon selection of the rotation method used, make changes to UI, changing
+% some titles.
+if(viewMode == "3D")
+  solidView = 1;
+  set(handles.fullSolidRadio, 'Value', 1.0);
+  set(handles.solidViewRadiogroup, 'Visible', "on");
   set(handles.methodHeader, 'String', 'Method of Shell Height');
 else
   set(handles.methodHeader, 'String', 'Method of Disc Radius');
   set(handles.solidViewRadiogroup, 'Visible', "off");
 end
-    
-% Hints: contents = cellstr(get(hObject,'String')) returns methodMenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from methodMenu
+
+% Based on method picked, reset the bound statement in the boundary section.
+if (methodChoice == "Shell")
+  if (axisOri == "y")
+    set(handles.boundStatement, 'string', "<= y <=");
+  else
+    set(handles.boundStatement, 'string', "<= x <=");
+  end
+else
+    if (axisOri == "y")
+      set(handles.boundStatement, 'string', "<= x <=");
+    else
+      set(handles.boundStatement, 'string', "<= y <=");
+    end
+end
+
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
@@ -522,13 +547,14 @@ run('homescreen');
 end
 
 
-% --- Executes on button press in threeDButton.
+% --- Callback from button group that sets whether to view the solid of
+% revolution from a 2D perspective or as 3D volumes.
 function threeDButton_Callback(hObject, eventdata, handles)
 % hObject    handle to threeDButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global viewMode;
-global methodChoice;
+global solidView;
 
 if (viewMode == "3D")
     viewMode = "2D";
@@ -537,10 +563,9 @@ if (viewMode == "3D")
 else
     viewMode = "3D";
     set(handles.threeDButton, 'String', "View in 2D");
-    if(methodChoice == "Shell")
-      set(handles.fullSolidRadio, 'Value', 1.0);
-      set(handles.solidViewRadiogroup, 'Visible', "on");
-    end
+    set(handles.fullSolidRadio, 'Value', 1.0);
+    set(handles.solidViewRadiogroup, 'Visible', "on");
+    solidView = 1;
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -597,5 +622,32 @@ function radiusMethodMenu_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+end
+
+
+% --- Executes on slider movement.
+function stepSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to stepSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+global steps;
+steps = ceil(get(handles.stepSlider, 'Value'));
+set(handles.diskEdit, 'string', steps);
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function stepSlider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to stepSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 end
