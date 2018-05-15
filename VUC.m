@@ -172,25 +172,23 @@ else
     simple_exp_string = funcChoice(6:end);
     f(x) = str2sym(simple_exp_string);
     
+    if (viewMode == "3D")
+      [az, el] = view;
+    end
+    
     delete(handles.axes1.Children)
         cla reset, rotate3d off
+        
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
         estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
-        if(axisOri == "y")
-            xPlotBounds = [lowerBound upperBound];
-        else
-            g(x) = finverse(f);
-            xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
-        end
-        
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
         if(viewMode == "3D")
             plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
-            % [az, el] = view;
+            view([az el])
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
@@ -198,43 +196,19 @@ else
             drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
         end
         
-        if(axisOri == "y")
-          xL = xlim;
-          yL = [axisValue axisValue];
-        else
-          xL = [axisValue axisValue];
-          yL = ylim;
-        end
-        
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
-        if(axisOri == "x") %Draws line of axis of rotation too.
-            xPlotBounds = [lowerBound upperBound];
-        else
-            g(x) = finverse(f);
-            xPlotBounds = [double(g(lowerBound)) double(g(upperBound))];
-        end
-        
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
-            %[az, el] = view;
             plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
-            %view([az el])
+            view([az el])
             xlabel('X')
             ylabel('Z')
             zlabel('f(X)')
         else
             drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
-        end
-       
-        if(axisOri == "x") 
-          xL = [axisValue axisValue];
-          zL = zlim;
-        else
-          xL = xlim;
-          zL = [axisValue axisValue];
         end
     end
     
@@ -247,13 +221,15 @@ else
     ylim(shape_plot_ylim);
     zlim(shape_plot_zlim);
     
+    % Display the estimated and actual volumes and the error percenter b/w
+    % both.
     statementString = "Estimated Volume: " + sprintf('%0.3f', estimated_volume);
     statementString2 = "Actual Volume: " + sprintf('%0.3f', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
     
     set(handles.statementText, 'string', statementString);
     set(handles.actualVolumeText, 'string', statementString2);
-    % Display error percentage.
+    
     if(isnan(errorPerc))
       set(handles.errorText, 'string', strcat({'  Error: '}, {'0%'}));
     else
@@ -271,22 +247,21 @@ function diskEdit_Callback(hObject, eventdata, handles)
     
     stepInput = str2double(get(hObject,'String'));
     
-    if(isnan(stepInput))
+    if(isnan(stepInput) || stepInput <= 0)
       plot(0,0);
-      d = errordlg('Number of subintervals must be an integer', 'Domain Error');
-      set(d, 'WindowStyle', 'modal');
-      set(handles.diskEdit, 'string', steps);
-      uiwait(d);
-    elseif(stepInput <= 0 || stepInput > 100)
-      plot(0,0);
-      d = errordlg('Number of subintervals must be a positive integer less than 101', 'Step Count Error');
+      d = errordlg('Number of subintervals must be a positive integer', 'Domain Error');
       set(d, 'WindowStyle', 'modal');
       set(handles.diskEdit, 'string', steps);
       uiwait(d);
     else
       steps = stepInput;
       diskWidth = (upperBound - lowerBound)/steps;
-      set(handles.stepSlider, 'value', stepInput);
+      
+      if (stepInput > 100)
+        set(handles.stepSlider, 'value', 100);
+      else
+        set(handles.stepSlider, 'value', stepInput);
+      end
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -330,9 +305,6 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     else
         lowerBound = lower_input;
     end
-
-% Hints: get(hObject,'String') returns contents of lowerBoundEdit as text
-%        str2double(get(hObject,'String')) returns contents of lowerBoundEdit as a double
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
@@ -555,17 +527,21 @@ function threeDButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global viewMode;
 global solidView;
+global el;
+global az;
 
 if (viewMode == "3D")
     viewMode = "2D";
     set(handles.threeDButton, 'String', "View in 3D");
     set(handles.solidViewRadiogroup, 'Visible', "off");
+    [az, el] = view(2);
 else
     viewMode = "3D";
     set(handles.threeDButton, 'String', "View in 2D");
     set(handles.fullSolidRadio, 'Value', 1.0);
     set(handles.solidViewRadiogroup, 'Visible', "on");
     solidView = 1;
+    [az, el] = view(3);
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
