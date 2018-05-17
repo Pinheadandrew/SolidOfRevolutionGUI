@@ -100,7 +100,7 @@ function varargout = VUC_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 end
 
-% --- Executes on selection change in functionMenu.
+% Choosing the function to rotate the area under its curve.
 function functionMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to functionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -161,7 +161,6 @@ global el;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
-    % plotDiscs(funcString, lowerBound, upperBound, steps, axisValue), rotate3d on
 if (strcmp(funcChoice, "Select a function"))
     plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
@@ -172,6 +171,8 @@ else
     simple_exp_string = funcChoice(6:end);
     f(x) = str2sym(simple_exp_string);
     
+    % If the view option upon redrawing the plot is still 3D, store the
+    % viewpoint of the plot to preserve.
     if (viewMode == "3D")
       [az, el] = view;
     end
@@ -233,12 +234,13 @@ else
     if(isnan(errorPerc))
       set(handles.errorText, 'string', strcat({'  Error: '}, {'0%'}));
     else
-      set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%g', errorPerc), {'%'}));
+      set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}));
     end
     hold off
 end
 end
 
+% Setting the number of subintervals that comprise of the estimated volume.
 function diskEdit_Callback(hObject, eventdata, handles)
     global lowerBound;
     global upperBound;
@@ -281,7 +283,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
-
+% Setting the lower bound of the volume.
 function lowerBoundEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to lowerBoundEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -321,6 +323,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
+% Setting the upper bound of the volume.
 function upperBoundEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to upperBoundEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -365,7 +368,7 @@ end
 end
 
 
-% --- Executes on selection change in methodMenu.
+% Selecting either the disc or the shell method.
 function methodMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to methodMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -393,7 +396,8 @@ else
   set(handles.solidViewRadiogroup, 'Visible', "off");
 end
 
-% Based on method picked, reset the bound statement in the boundary section.
+% Based on method and the axis orientation picked, reset the bound 
+% statement in the boundary section.
 if (methodChoice == "Shell")
   if (axisOri == "y")
     set(handles.boundStatement, 'string', "<= y <=");
@@ -424,7 +428,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
-
+% Setting the axis line.
 function axisEditbox_Callback(hObject, eventdata, handles)
 % hObject    handle to axisEditbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB

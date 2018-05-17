@@ -9,36 +9,40 @@ function plotWithReflection(funcString, lowbound, upbound,  axisOri, axisValue, 
         mirror_xpoints = axisValue - (xpoints - axisValue);
         
         if (viewMode == "3D")
-          plot3(xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "r"), hold on
-          plot3(mirror_xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "m"), hold on
+          origPlot = plot3(xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "r"); hold on
+          mirrorPlot = plot3(mirror_xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "m"); hold on
           vertAxisBounds = zlim;
-          plot3(axisValue*ones(1,2), zeros(1, 2), [vertAxisBounds(1)-1 vertAxisBounds(2)+1], "LineWidth", 5,...
-              "color", "b", "LineStyle", "--"), hold on
+          axis = plot3(axisValue*ones(1,2), zeros(1, 2), [vertAxisBounds(1) vertAxisBounds(2)], "LineWidth", 5,...
+              "color", "b", "LineStyle", "--"); hold on
         else
-          plot(xpoints, double(f(xpoints)), "LineWidth", 2, "color", "r"), hold on
-          plot(mirror_xpoints, double(f(xpoints)), "LineWidth", 2, "color", "m"), hold on
+          origPlot = plot(xpoints, double(f(xpoints)), "LineWidth", 2, "color", "r"); hold on
+          mirrorPlot = plot(mirror_xpoints, double(f(xpoints)), "LineWidth", 2, "color", "m"); hold on
           vertAxisBounds = ylim;
-          a = plot(axisValue*ones(1,2), vertAxisBounds, "LineWidth", 2, "color", "g");
+          axis = plot(axisValue*ones(1,2), vertAxisBounds, "LineWidth", 2, "color", "g");
           hold on
-          a.LineStyle = '--';
+          axis.LineStyle = '--';
         end
     
     else %% Reflect across an axis parallel to x-axis.
         mirror_ypoints = axisValue - (double(f(xpoints)) - axisValue);
         
         if (viewMode == "3D")
-          plot3(xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "r"), hold on
-          plot3(xpoints, zeros(1, length(xpoints)),mirror_ypoints, "LineWidth", 5, "color", "m"), hold on
+          origPlot = plot3(xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "r"); hold on
+          mirrorPlot = plot3(xpoints, zeros(1, length(xpoints)),mirror_ypoints, "LineWidth", 5, "color", "m"); hold on
           horizAxisBounds = xlim;
-          plot3([horizAxisBounds(1)-1 horizAxisBounds(2)+1], zeros(1, 2), axisValue*ones(1,2), "LineWidth", 5,...
-              "color", "b", "LineStyle", "--"), hold on
+          axis = plot3([horizAxisBounds(1) horizAxisBounds(2)], zeros(1, 2), axisValue*ones(1,2), "LineWidth", 5,...
+              "color", "b", "LineStyle", "--"); hold on
         else
-          plot(xpoints, double(f(xpoints)), "LineWidth", 2, "color", "r"), hold on
-          plot(xpoints, mirror_ypoints, "LineWidth", 2, "color", "m"), hold on
+          origPlot = plot(xpoints, double(f(xpoints)), "LineWidth", 2, "color", "r"); hold on
+          mirrorPlot = plot(xpoints, mirror_ypoints, "LineWidth", 2, "color", "m"); hold on
           horizAxisBounds = xlim;
-          a = plot(horizAxisBounds, axisValue*ones(1,2), "LineWidth", 2, "color", "g"); hold on
-          a.LineStyle = '--';
+          axis = plot(horizAxisBounds, axisValue*ones(1,2), "LineWidth", 2, "color", "g"); hold on
+          axis.LineStyle = '--';
         end
     end
+    axisString = axisOri + " = " + axisValue;
+    leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "Mirrored", axisString, 'location', 'northeast');
+    leg.FontSize = 12;
+        uistack(leg,"top")
 end
 

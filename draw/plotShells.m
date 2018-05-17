@@ -50,8 +50,8 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
         [x2, y2, z2] = cylinder(shellWidthMargins(i+1), length(theta)-1);
         
-        innerFace = surf(x1, y1, z1, "FaceColor", "g"); hold on
-        outerFace = surf(x2, y2, z2, "FaceColor", "g"); hold on
+        innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0]); hold on
+        outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0]); hold on
         cylHeight = shellHeights(i);
         
         % Coordinate for axis-line. Used to determine radius and
@@ -80,10 +80,10 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         
         %Drawing rings to fill top and bottom of shells.
         bottomRing = patch([outer_x,inner_x], ...
-          [outer_y,inner_y], zeros(1, 2*length(theta)),'g');
+          [outer_y,inner_y], zeros(1, 2*length(theta)),[0 0.902 0]);
         bottomRing.EdgeColor = 'none';
         topRing = patch([outer_x,inner_x], ...
-        [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),'g');
+        [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),[0 0.902 0]);
         topRing.EdgeColor = 'none';
       end
       
@@ -99,8 +99,8 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         mirror_xverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);...
           mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
         %Patching the rectangles to "fill" the inside of the shells.
-        patch(orig_xverts, zeros(size(orig_xverts)), yverts, "g");
-        patch(mirror_xverts, zeros(size(orig_xverts)), yverts, "g");
+        patch(orig_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
+        patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
       end
     else
       % Condition for cases where axis is one parallel to x-axis.
@@ -111,9 +111,9 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
           [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
           [x2, y2, z2] = cylinder(shellWidthMargins(i+1), length(theta)-1);
 
-          innerFace = surf(x1, y1, z1, "FaceColor", "g"); hold on
+          innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0]); hold on
           rotate(innerFace, [0 1 0], 90);
-          outerFace = surf(x2, y2, z2, "FaceColor", "g"); hold on
+          outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0]); hold on
           rotate(outerFace, [0 1 0], 90);
           cylLength = shellLengths(i);
           
@@ -146,10 +146,10 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
 
           % Patching rings on the left and the right faces of the shells.
           leftRing = patch(zeros(1, 2*length(theta)), ...
-                  [outer_y,inner_y], [outer_z,inner_z],'g');
+                  [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
           leftRing.EdgeColor = 'none';
           rightRing = patch(cylLength*ones(1, 2*length(theta)), ...
-            [outer_y,inner_y], [outer_z,inner_z],'g');
+            [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
            rightRing.EdgeColor = 'none';
       end
       %Patching the rectangles to "fill" the inside of the shells, after
@@ -164,8 +164,8 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
             mirror_yverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);... 
                 mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
 
-             patch(xverts, zeros(size(xverts)), yverts, "g"); hold on
-             patch(xverts, zeros(size(xverts)), mirror_yverts, "g"); hold on
+             patch(xverts, zeros(size(xverts)), yverts, [0 0.902 0]); hold on
+             patch(xverts, zeros(size(xverts)), mirror_yverts, [0 0.902 0]); hold on
       end
     end
 end

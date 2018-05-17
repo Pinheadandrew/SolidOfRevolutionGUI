@@ -36,6 +36,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, f
         for i = 1:length(diskRadii)
             [x, y, z] = cylinder(diskRadii(i), length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
             cyl = surf(x, y, z);
+            cyl.FaceColor = [0 0.902 0];
             hold on
             rotate(cyl, [0 1 0], 90)
             
@@ -59,8 +60,8 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, f
             cir_z = z_distance;
             
             %Draws both front and back faces of each disc.
-            patch(cir_x_1,cir_y,cir_z,	[0.4660, 0.6740, 0.1880]);
-            patch(cir_x_2,cir_y,cir_z,	[0.4660, 0.6740, 0.1880]);
+            patch(cir_x_1,cir_y,cir_z, [0 0.902 0]);
+            patch(cir_x_2,cir_y,cir_z, [0 0.902 0]);
             set(cyl,'edgecolor','none')
         end
     else
@@ -70,6 +71,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, f
         for i = 1:length(diskRadii)
             [x, y, z] = cylinder(diskRadii(i), length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
             cyl = surf(x, y, z);
+            cyl.FaceColor = [0 0.902 0];
             hold on
             
             cyl.ZData(1, :) = cylMargins(i);
@@ -93,8 +95,8 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, f
             cir_y = y_distance;
             
             %Draws both front and back faces of each disc.
-            patch(cir_x,cir_y,cir_z_1,	[0.4660, 0.6740, 0.1880])
-            patch(cir_x,cir_y,cir_z_2,	[0.4660, 0.6740, 0.1880])
+            patch(cir_x,cir_y,cir_z_1, [0 0.902 0])
+            patch(cir_x,cir_y,cir_z_2,	[0 0.902 0])
             set(cyl,'edgecolor','none')
         end
     end
@@ -118,7 +120,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, f
           yverts = [cylMargins(1:end-1); cylMargins(2:end);...
                 cylMargins(2:end); cylMargins(1:end-1)];
         end
-        patch(xverts, zeros(size(xverts)), yverts, "g");
+        patch(xverts, zeros(size(xverts)), yverts, [0 0.902 0]);
       end
 end
 
