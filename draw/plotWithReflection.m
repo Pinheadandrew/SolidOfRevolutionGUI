@@ -40,8 +40,8 @@ function plotWithReflection(funcString, lowbound, upbound,  axisOri, axisValue, 
           axis.LineStyle = '--';
         end
     end
-    axisString = axisOri + " = " + axisValue;
-    leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "Mirrored", axisString, 'location', 'northeast');
+    % axisString = axisOri + " = " + axisValue;
+    leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "f(x) mirrored", "Axis of rotation", 'location', 'northeast');
     leg.FontSize = 12;
         uistack(leg,"top")
 end

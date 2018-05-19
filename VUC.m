@@ -78,8 +78,8 @@ global methodChoice;
 methodChoice = "Disk";
 global viewMode;
 viewMode = "2D";
-global solidView;
-solidView = 1;
+global fullSolid;
+fullSolid = 1;
 global radiusChoice;
 radiusChoice = "m";
 maxNumberOfRect = 100;
@@ -154,7 +154,7 @@ global methodChoice;
 global axisValue;
 global axisOri;
 global viewMode;
-global solidView;
+global fullSolid;
 global radiusChoice;
 global az;
 global el;
@@ -188,7 +188,14 @@ else
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
         if(viewMode == "3D")
-            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
+            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, fullSolid, radiusChoice), rotate3d on
+            
+         % If half solid selected, have axes bounds same as if full-solid.
+            if (fullSolid == 0)
+              yPlotBounds = ylim;
+              ylim([-yPlotBounds(2) yPlotBounds(2)])
+            end
+            
             view([az el])
             xlabel('X')
             ylabel('Z')
@@ -203,7 +210,14 @@ else
         
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
-            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, solidView, radiusChoice), rotate3d on
+            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, fullSolid, radiusChoice), rotate3d on
+            
+            % If half solid selected, have axes bounds same as if full-solid.
+            if (fullSolid == 0)
+              yPlotBounds = ylim;
+              ylim([-yPlotBounds(2) yPlotBounds(2)])
+            end
+            
             view([az el])
             xlabel('X')
             ylabel('Z')
@@ -213,14 +227,19 @@ else
         end
     end
     
-    % Preserving axis limits.
-    shape_plot_xlim = xlim;
-    shape_plot_ylim = ylim;
-    shape_plot_zlim = zlim;
-    plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
-    xlim(shape_plot_xlim);
-    ylim(shape_plot_ylim);
-    zlim(shape_plot_zlim);
+    % Preserving axis limits when the method is the shell, due to unusual
+    % plots w/o using the bounds made from plotting the volume (2D or 3D).
+    if (methodChoice == "Shell")
+      shape_plot_xlim = xlim;
+      shape_plot_ylim = ylim;
+      shape_plot_zlim = zlim;
+      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+      xlim(shape_plot_xlim);
+      ylim(shape_plot_ylim);
+      zlim(shape_plot_zlim);
+    else
+      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+    end
     
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
@@ -249,21 +268,16 @@ function diskEdit_Callback(hObject, eventdata, handles)
     
     stepInput = str2double(get(hObject,'String'));
     
-    if(isnan(stepInput) || stepInput <= 0)
-      plot(0,0);
-      d = errordlg('Number of subintervals must be a positive integer', 'Domain Error');
+    % Step input not a number, or out of range of 0<x<101, throw error.
+    if(isnan(stepInput) || stepInput <= 0 || stepInput > 100)
+      d = errordlg('Number of subintervals must be positive integer less than or equal to 100', 'Subinterval Count Error');
       set(d, 'WindowStyle', 'modal');
       set(handles.diskEdit, 'string', steps);
       uiwait(d);
     else
       steps = stepInput;
       diskWidth = (upperBound - lowerBound)/steps;
-      
-      if (stepInput > 100)
-        set(handles.stepSlider, 'value', 100);
-      else
-        set(handles.stepSlider, 'value', stepInput);
-      end
+      set(handles.stepSlider, 'value', stepInput);
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -375,7 +389,7 @@ function methodMenu_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global methodChoice;
 global viewMode;
-global solidView;
+global fullSolid;
 global axisOri;
 
 methodContents = cellstr(get(handles.methodMenu, 'String'));
@@ -387,7 +401,7 @@ set(handles.diskbuttongroup, 'title', subIntsLabelString);
 % Upon selection of the rotation method used, make changes to UI, changing
 % some titles.
 if(viewMode == "3D")
-  solidView = 1;
+  fullSolid = 1;
   set(handles.fullSolidRadio, 'Value', 1.0);
   set(handles.solidViewRadiogroup, 'Visible', "on");
   set(handles.methodHeader, 'String', 'Method of Shell Height');
@@ -399,12 +413,14 @@ end
 % Based on method and the axis orientation picked, reset the bound 
 % statement in the boundary section.
 if (methodChoice == "Shell")
+  set(handles.methodHeader, 'String', 'Method of Shell Height');
   if (axisOri == "y")
     set(handles.boundStatement, 'string', "<= y <=");
   else
     set(handles.boundStatement, 'string', "<= x <=");
   end
 else
+  set(handles.methodHeader, 'String', 'Method of Disc Radius');
     if (axisOri == "y")
       set(handles.boundStatement, 'string', "<= x <=");
     else
@@ -530,7 +546,7 @@ function threeDButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global viewMode;
-global solidView;
+global fullSolid;
 global el;
 global az;
 
@@ -544,7 +560,7 @@ else
     set(handles.threeDButton, 'String', "View in 2D");
     set(handles.fullSolidRadio, 'Value', 1.0);
     set(handles.solidViewRadiogroup, 'Visible', "on");
-    solidView = 1;
+    fullSolid = 1;
     [az, el] = view(3);
 end
 
@@ -557,19 +573,19 @@ function solidViewRadiogroup_SelectionChangedFcn(hObject, eventdata, handles)
 % hObject    handle to the selected object in solidViewRadiogroup 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global solidView;
+global fullSolid;
 % hObject    handle to the selected object in axisButtonGroup 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
-solidViewPicked = get(get(handles.solidViewRadiogroup,'SelectedObject'),'string');
+fullSolidPicked = get(get(handles.solidViewRadiogroup,'SelectedObject'),'string');
 
-if(solidViewPicked == "Half Solid")
-  solidView = 0;
+if(fullSolidPicked == "Half Solid")
+  fullSolid = 0;
 else
-  solidView = 1;
+  fullSolid = 1;
 end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
