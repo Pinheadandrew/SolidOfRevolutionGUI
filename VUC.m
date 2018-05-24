@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 11-May-2018 11:33:10
+% Last Modified by GUIDE v2.5 22-May-2018 10:02:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,12 +50,6 @@ end
 
 % --- Executes just before VUC is made visible.
 function VUC_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to VUC (see VARARGIN)
-
 % Choose default command line output for VUC
 startup
 handles.output = hObject;
@@ -102,9 +96,6 @@ end
 
 % Choosing the function to rotate the area under its curve.
 function functionMenu_Callback(hObject, eventdata, handles)
-% hObject    handle to functionMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global funcChoice;
 global lowerBound;
 global upperBound;
@@ -143,9 +134,6 @@ end
 
 % --- Executes on button press in volumeButton.
 function volumeButton_Callback(hObject, eventdata, handles)
-% hObject    handle to volumeButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global upperBound;
 global lowerBound;
 global funcChoice;
@@ -166,7 +154,11 @@ if (strcmp(funcChoice, "Select a function"))
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
-else 
+elseif (methodChoice == "Shell" && axisValue > lowerBound && axisValue < upperBound)
+    d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+    set(d, 'WindowStyle', 'modal');
+    uiwait(f);
+else
     syms x
     simple_exp_string = funcChoice(6:end);
     f(x) = str2sym(simple_exp_string);
@@ -204,6 +196,7 @@ else
             drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
         end
         
+    %Branch if volume generated via shell method.
     elseif (strcmp(methodChoice, "Shell"))
         estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
@@ -229,7 +222,7 @@ else
     
     % Preserving axis limits when the method is the shell, due to unusual
     % plots w/o using the bounds made from plotting the volume (2D or 3D).
-    if (methodChoice == "Shell")
+    if (methodChoice == "Shell" || (methodChoice == "Disk" && axisOri == "x"))
       shape_plot_xlim = xlim;
       shape_plot_ylim = ylim;
       shape_plot_zlim = zlim;
@@ -282,8 +275,6 @@ function diskEdit_Callback(hObject, eventdata, handles)
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
-
-
 % --- Executes during object creation, after setting all properties.
 function diskEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to diskEdit (see GCBO)
@@ -299,10 +290,6 @@ end
 
 % Setting the lower bound of the volume.
 function lowerBoundEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to lowerBoundEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
     global lowerBound;
     global upperBound;
     lower_input = str2double(get(hObject,'String'));
@@ -446,9 +433,6 @@ end
 
 % Setting the axis line.
 function axisEditbox_Callback(hObject, eventdata, handles)
-% hObject    handle to axisEditbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
     global axisValue;
     global lowerBound;
     global upperBound;
@@ -467,8 +451,7 @@ function axisEditbox_Callback(hObject, eventdata, handles)
     else
         axisValue = axis_input;
     end
-% Hints: get(hObject,'String') returns contents of axisEditbox as text
-%        str2double(get(hObject,'String')) returns contents of axisEditbox as a double
+    
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 % --- Executes during object creation, after setting all properties.
@@ -489,9 +472,6 @@ end
 function axisButtonGroup_SelectionChangedFcn(hObject, eventdata, handles)
 global axisOri;
 global methodChoice;
-% hObject    handle to the selected object in axisButtonGroup 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
@@ -531,9 +511,6 @@ end
 
 % --- Executes on button press in pushbutton2.
 function pushbutton2_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 close(VUC);
 run('homescreen');
 end
@@ -542,9 +519,6 @@ end
 % --- Callback from button group that sets whether to view the solid of
 % revolution from a 2D perspective or as 3D volumes.
 function threeDButton_Callback(hObject, eventdata, handles)
-% hObject    handle to threeDButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global viewMode;
 global fullSolid;
 global el;
@@ -570,13 +544,7 @@ end
 
 % --- Executes when selected object is changed in solidViewRadiogroup.
 function solidViewRadiogroup_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in solidViewRadiogroup 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global fullSolid;
-% hObject    handle to the selected object in axisButtonGroup 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
@@ -624,12 +592,6 @@ end
 
 % --- Executes on slider movement.
 function stepSlider_Callback(hObject, eventdata, handles)
-% hObject    handle to stepSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 global steps;
 steps = ceil(get(handles.stepSlider, 'Value'));
 set(handles.diskEdit, 'string', steps);
@@ -646,4 +608,51 @@ function stepSlider_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+end
+
+function valid = isValidShellVolume(axisVal, method, lowBound, upBound)
+    global methodChoice;
+    global axisValue;
+    global upperBound;
+    global lowerBound;
+
+    if (method == "Shell" && axisVal > lowBound && axisVal < upBound)
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+        set(handles.upperBoundEdit, 'string', upperBound);
+        set(handles.axisEditbox, 'string', axisValue);
+        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+        set(d, 'WindowStyle', 'modal');
+        valid = 0;
+    else
+        valid = 1;
+    end
+end
+
+
+% --- Executes on button press in resetButton.
+function resetButton_Callback(hObject, eventdata, handles)
+% hObject    handle to resetButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% global functionChoice;
+global lowerBound;
+global upperBound;
+global axisValue;
+global steps;
+global radiusMethod;
+
+lowerBound = 0;
+upperBound = 1;
+steps = 5;
+axisValue = 0;
+radiusMethod = "m";
+
+set(handles.lowerBoundEdit, 'string', lowerBound);
+set(handles.upperBoundEdit, 'string', upperBound);
+set(handles.diskEdit, 'string', steps);
+set(handles.axisEditbox, 'string', axisValue);
+set(handles.stepSlider, 'value', steps);
+set(handles.radiusMethodMenu, 'value', 2.0);
+
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
