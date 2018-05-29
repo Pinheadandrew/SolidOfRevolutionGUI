@@ -1,2 +1,3 @@
 addpath VolumesWithIntegrals
 addpath draw
+addpath img

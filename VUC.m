@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 22-May-2018 10:02:48
+% Last Modified by GUIDE v2.5 28-May-2018 13:13:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,7 +54,7 @@ function VUC_OpeningFcn(hObject, eventdata, handles, varargin)
 startup
 handles.output = hObject;
 VUCimage = imread('img/homebutton.jpg');
-set(handles.pushbutton2, 'CData', VUCimage);
+set(handles.homeButton, 'CData', VUCimage);
 % Update handles structure
 guidata(hObject, handles);
 global lowerBound;
@@ -74,8 +74,8 @@ global viewMode;
 viewMode = "2D";
 global fullSolid;
 fullSolid = 1;
-global radiusChoice;
-radiusChoice = "m";
+global radiusMethod;
+radiusMethod = "m";
 maxNumberOfRect = 100;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
@@ -143,7 +143,7 @@ global axisValue;
 global axisOri;
 global viewMode;
 global fullSolid;
-global radiusChoice;
+global radiusMethod;
 global az;
 global el;
 
@@ -174,13 +174,13 @@ else
         
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
-        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
+        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusMethod);
         actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
         if(viewMode == "3D")
-            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, fullSolid, radiusChoice), rotate3d on
+            plotDiscs(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, fullSolid, radiusMethod), rotate3d on
             
          % If half solid selected, have axes bounds same as if full-solid.
             if (fullSolid == 0)
@@ -189,21 +189,23 @@ else
             end
             
             view([az el])
-            xlabel('X')
-            ylabel('Z')
-            zlabel('f(X)')
+            xlabel('X','FontWeight','bold')
+            ylabel('Z','FontWeight','bold')
+            zlabel('Y','FontWeight','bold')
         else
-            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
+            drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
+            xlabel('X','FontWeight','bold')
+            ylabel('Y','FontWeight','bold')
         end
         
     %Branch if volume generated via shell method.
     elseif (strcmp(methodChoice, "Shell"))
-        estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusChoice);
+        estimated_volume = shellmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusMethod);
         actual_volume = shellmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         % Sets axes to either 2D representation or 3D volumes.
         if(viewMode == "3D")
-            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, fullSolid, radiusChoice), rotate3d on
+            plotShells(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, fullSolid, radiusMethod), rotate3d on
             
             % If half solid selected, have axes bounds same as if full-solid.
             if (fullSolid == 0)
@@ -212,11 +214,13 @@ else
             end
             
             view([az el])
-            xlabel('X')
-            ylabel('Z')
-            zlabel('f(X)')
+            xlabel('X','FontWeight','bold')
+            ylabel('Z','FontWeight','bold')
+            zlabel('Y','FontWeight','bold')
         else
-            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusChoice);
+            drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
+            xlabel('X','FontWeight','bold')
+            ylabel('Y','FontWeight','bold')
         end
     end
     
@@ -383,7 +387,7 @@ methodContents = cellstr(get(handles.methodMenu, 'String'));
 methodChoice = methodContents{get(hObject, 'Value')};
 
 subIntsLabelString = "Number of " + methodChoice + "s";
-set(handles.diskbuttongroup, 'title', subIntsLabelString);
+set(handles.subintervalGroup, 'title', subIntsLabelString);
 
 % Upon selection of the rotation method used, make changes to UI, changing
 % some titles.
@@ -391,23 +395,23 @@ if(viewMode == "3D")
   fullSolid = 1;
   set(handles.fullSolidRadio, 'Value', 1.0);
   set(handles.solidViewRadiogroup, 'Visible', "on");
-  set(handles.methodHeader, 'String', 'Method of Shell Height');
+  set(handles.subintervalGroup, 'title', subIntsLabelString);
 else
-  set(handles.methodHeader, 'String', 'Method of Disc Radius');
+  %set(handles.methodHeader, 'String', 'Method of Disc Radius');
   set(handles.solidViewRadiogroup, 'Visible', "off");
 end
 
 % Based on method and the axis orientation picked, reset the bound 
 % statement in the boundary section.
 if (methodChoice == "Shell")
-  set(handles.methodHeader, 'String', 'Method of Shell Height');
+  set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
   if (axisOri == "y")
     set(handles.boundStatement, 'string', "<= y <=");
   else
     set(handles.boundStatement, 'string', "<= x <=");
   end
 else
-  set(handles.methodHeader, 'String', 'Method of Disc Radius');
+  set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
     if (axisOri == "y")
       set(handles.boundStatement, 'string', "<= x <=");
     else
@@ -509,8 +513,8 @@ axisOri = axisPicked;
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
-% --- Executes on button press in pushbutton2.
-function pushbutton2_Callback(hObject, eventdata, handles)
+% --- Executes on button press in homeButton.
+function homeButton_Callback(hObject, eventdata, handles)
 close(VUC);
 run('homescreen');
 end
@@ -541,7 +545,6 @@ end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
-
 % --- Executes when selected object is changed in solidViewRadiogroup.
 function solidViewRadiogroup_SelectionChangedFcn(hObject, eventdata, handles)
 global fullSolid;
@@ -557,38 +560,6 @@ else
 end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
-
-
-% --- Executes on selection change in radiusMethodMenu.
-function radiusMethodMenu_Callback(hObject, eventdata, handles)
-global radiusChoice;
-
-radiusContents = cellstr(get(handles.radiusMethodMenu, 'String'));
-
-if (radiusContents{get(hObject, 'Value')} == "Left")
-    radiusChoice = "l";
-elseif (radiusContents{get(hObject, 'Value')} == "Midpoint")
-    radiusChoice = "m";
-elseif (radiusContents{get(hObject, 'Value')} == "Right")
-    radiusChoice = "r";
-end
-
-volumeButton_Callback(handles.volumeButton, eventdata, handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function radiusMethodMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to radiusMethodMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-end
-
 
 % --- Executes on slider movement.
 function stepSlider_Callback(hObject, eventdata, handles)
@@ -640,19 +611,39 @@ global upperBound;
 global axisValue;
 global steps;
 global radiusMethod;
+global methodChoice;
 
 lowerBound = 0;
-upperBound = 1;
+upperBound = 5;
 steps = 5;
 axisValue = 0;
 radiusMethod = "m";
+methodChoice = "Disk";
 
 set(handles.lowerBoundEdit, 'string', lowerBound);
 set(handles.upperBoundEdit, 'string', upperBound);
 set(handles.diskEdit, 'string', steps);
 set(handles.axisEditbox, 'string', axisValue);
 set(handles.stepSlider, 'value', steps);
-set(handles.radiusMethodMenu, 'value', 2.0);
+set(handles.radiusMethodRadioGroup,'SelectedObject', handles.midRadiusRadioButton)
+volumeButton_Callback(handles.volumeButton, eventdata, handles);
+set(handles.methodMenu, 'value', 1);
+end
 
+% --- Executes when selected object is changed in radiusMethodRadioGroup.
+function radiusMethodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in radiusMethodRadioGroup 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global radiusMethod;
+methodPicked = get(get(handles.radiusMethodRadioGroup,'SelectedObject'),'string');
+
+if(methodPicked == "Left")
+  radiusMethod = "l";
+elseif (methodPicked == "Midpoint")
+    radiusMethod = "m";
+elseif (methodPicked == "Right")
+    radiusMethod = "r";
+end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
