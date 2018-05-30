@@ -154,10 +154,6 @@ if (strcmp(funcChoice, "Select a function"))
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
-elseif (methodChoice == "Shell" && axisValue > lowerBound && axisValue < upperBound)
-    d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
-    set(d, 'WindowStyle', 'modal');
-    uiwait(f);
 else
     syms x
     simple_exp_string = funcChoice(6:end);
@@ -296,6 +292,8 @@ end
 function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global lowerBound;
     global upperBound;
+    global axisValue;
+    global methodChoice;
     lower_input = str2double(get(hObject,'String'));
    
     if(isnan(lower_input))
@@ -306,6 +304,11 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     elseif(lower_input >= upperBound)
         plot(0,0);
         d = errordlg('Fix Lower Bound', 'Domain Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+    elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lower_input, upperBound))
+        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
@@ -335,6 +338,8 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     global lowerBound;
     global upperBound;
+    global axisValue;
+    global methodChoice;
     upper_input = str2double(get(hObject,'String'));
     
     if(isnan(upper_input))
@@ -347,18 +352,22 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         set(handles.boundStatement, 'string', newString);
         plot(0,0);
         d = errordlg('Fix Upper Bound', 'Domain Error');
-        set(handles.upperBoundEdit, 'string', upperBound);
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.upperBoundEdit, 'string', upperBound);
+    elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upper_input))
+        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.upperBoundEdit, 'string', upperBound);
     else
         upperBound = upper_input;
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
+
 % Hints: get(hObject,'String') returns contents of upperBoundEdit as text
 %        str2double(get(hObject,'String')) returns contents of upperBoundEdit as a double
-
-
 % --- Executes during object creation, after setting all properties.
 function upperBoundEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to upperBoundEdit (see GCBO)
@@ -388,6 +397,7 @@ methodChoice = methodContents{get(hObject, 'Value')};
 
 subIntsLabelString = "Number of " + methodChoice + "s";
 set(handles.subintervalGroup, 'title', subIntsLabelString);
+
 
 % Upon selection of the rotation method used, make changes to UI, changing
 % some titles.
@@ -441,17 +451,18 @@ function axisEditbox_Callback(hObject, eventdata, handles)
     global lowerBound;
     global upperBound;
     global methodChoice;
-    global axisOri;
     axis_input = str2double(get(hObject,'String'));
    
     if(isnan(axis_input))
         d = errordlg('Axis Value must be a Real number', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
-    elseif(methodChoice == "Shell" && str2double(axis_input) < upperBound && str2double(axis_input) > lowerBound)
-        d = errordlg('Axis of revolution for shell method cannot be between bounds.', 'Axis Error');
+        set(handles.axisEditbox, 'string', axisValue);
+    elseif(methodChoice == "Shell" && ~isValidShellVolume(axis_input, lowerBound, upperBound))
+        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.axisEditbox, 'string', axisValue);
     else
         axisValue = axis_input;
     end
@@ -470,7 +481,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 end
-
 
 % --- Executes when selected object is changed in axisButtonGroup.
 function axisButtonGroup_SelectionChangedFcn(hObject, eventdata, handles)
@@ -502,7 +512,6 @@ if (axisPicked == "x")
     set(handles.axisEditbox, 'Position', position)
     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
     set(handles.yAxisRadio,'string',"y")
-    
 else
     position(2) = 0.76923;
     set(handles.axisEditbox, 'Position', position)
@@ -518,7 +527,6 @@ function homeButton_Callback(hObject, eventdata, handles)
 close(VUC);
 run('homescreen');
 end
-
 
 % --- Callback from button group that sets whether to view the solid of
 % revolution from a 2D perspective or as 3D volumes.
@@ -563,10 +571,10 @@ end
 
 % --- Executes on slider movement.
 function stepSlider_Callback(hObject, eventdata, handles)
-global steps;
-steps = ceil(get(handles.stepSlider, 'Value'));
-set(handles.diskEdit, 'string', steps);
-volumeButton_Callback(handles.volumeButton, eventdata, handles);
+    global steps;
+    steps = ceil(get(handles.stepSlider, 'Value'));
+    set(handles.diskEdit, 'string', steps);
+    volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -581,24 +589,16 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
 end
 end
 
-function valid = isValidShellVolume(axisVal, method, lowBound, upBound)
-    global methodChoice;
-    global axisValue;
-    global upperBound;
-    global lowerBound;
-
-    if (method == "Shell" && axisVal > lowBound && axisVal < upBound)
-        set(handles.lowerBoundEdit, 'string', lowerBound);
-        set(handles.upperBoundEdit, 'string', upperBound);
-        set(handles.axisEditbox, 'string', axisValue);
-        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
-        set(d, 'WindowStyle', 'modal');
+% Method used within callbacks when the volume method is set to Shell. Addresses
+% the constraint of keeping axis of rotation outside of bounds of the solid of revolution. 
+% If violated (axis between bounds), this returns false.
+function valid = isValidShellVolume(axisVal, lowBound, upBound)
+    if ((axisVal > lowBound) && (axisVal < upBound))
         valid = 0;
     else
         valid = 1;
     end
 end
-
 
 % --- Executes on button press in resetButton.
 function resetButton_Callback(hObject, eventdata, handles)
