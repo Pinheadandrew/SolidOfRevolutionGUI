@@ -160,7 +160,7 @@ else
     f(x) = str2sym(simple_exp_string);
     
     % If the view option upon redrawing the plot is still 3D, store the
-    % viewpoint of the plot to preserve.
+    % viewpoint of the plot to be reused when 3D plot redrawn.
     if (viewMode == "3D")
       [az, el] = view;
     end
@@ -261,8 +261,8 @@ function diskEdit_Callback(hObject, eventdata, handles)
     
     stepInput = str2double(get(hObject,'String'));
     
-    % Step input not a number, or out of range of 0<x<101, throw error.
-    if(isnan(stepInput) || stepInput <= 0 || stepInput > 100)
+    % Step input not an integer, or out of range of 0<x<101, throw error.
+    if(isnan(stepInput) || stepInput <= 0 || stepInput > 100 || (floor(stepInput) ~= stepInput))
       d = errordlg('Number of subintervals must be positive integer less than or equal to 100', 'Subinterval Count Error');
       set(d, 'WindowStyle', 'modal');
       set(handles.diskEdit, 'string', steps);
@@ -272,7 +272,7 @@ function diskEdit_Callback(hObject, eventdata, handles)
       diskWidth = (upperBound - lowerBound)/steps;
       set(handles.stepSlider, 'value', stepInput);
     end
-volumeButton_Callback(handles.volumeButton, eventdata, handles);
+    volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -391,9 +391,24 @@ global methodChoice;
 global viewMode;
 global fullSolid;
 global axisOri;
+global axisValue;
+global lowerBound;
+global upperBound;
 
 methodContents = cellstr(get(handles.methodMenu, 'String'));
-methodChoice = methodContents{get(hObject, 'Value')};
+methodContents = methodContents{get(hObject, 'Value')};
+
+% If switching from disc to shell method and the resulting shell volume
+% cannot be generating due to the axis constraint, revert back to the disk
+% method. Else, assign the global variable methodChoice to whatever selected.
+if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
+    d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+    set(d, 'WindowStyle', 'modal');
+    uiwait(d);
+    set(handles.methodMenu, 'value', 1);
+else
+    methodChoice = methodContents;
+end
 
 subIntsLabelString = "Number of " + methodChoice + "s";
 set(handles.subintervalGroup, 'title', subIntsLabelString);
