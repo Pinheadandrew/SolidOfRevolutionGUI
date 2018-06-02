@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 28-May-2018 13:13:46
+% Last Modified by GUIDE v2.5 31-May-2018 16:18:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,9 @@ startup
 handles.output = hObject;
 VUCimage = imread('img/homebutton.jpg');
 set(handles.homeButton, 'CData', VUCimage);
-% Update handles structure
+resetImage = imread('img/resetbutton.jpg');
+set(handles.resetButton, 'CData', resetImage);
+% Update handles structure2
 guidata(hObject, handles);
 global lowerBound;
 lowerBound = 0;
@@ -76,11 +78,17 @@ global fullSolid;
 fullSolid = 1;
 global radiusMethod;
 radiusMethod = "m";
+global functionChoice;
+functionChoice = "Select a function";
 maxNumberOfRect = 100;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
 set(handles.stepSlider, 'Value', 5);
 set(handles.stepSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
+
+% Setting some multi-line tooltips, wherever necessary.
+set(handles.stepSlider, 'TooltipString', ...
+    sprintf("Drag for a number between 0 and 100 to set the number \n of subintervals to determine the estimated volume"));
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -96,16 +104,23 @@ end
 
 % Choosing the function to rotate the area under its curve.
 function functionMenu_Callback(hObject, eventdata, handles)
-global funcChoice;
+global functionChoice;
 global lowerBound;
 global upperBound;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
-funcChoice = functionContents{get(hObject, 'Value')};
+functionContents = functionContents{get(hObject, 'Value')};
+functionChoice = functionContents;
 
 % Sets default bounds of revolution according to function picked. i.e when
 % x^2 selected, bounds change to 0<=x<=2.
-if (funcChoice == "f(x)=x^2")
+% if (functionChoice == "Select a function" && functionContents ~= "Select a function")
+%     set(handles.functionMenu, 'String', ["f(x)=x", "f(x)=x^2", "f(x)=2^x"]);
+% end
+
+% Sets default bounds of revolution according to function picked. i.e when
+% x^2 selected, bounds change to 0<=x<=2.
+if (functionChoice == "f(x)=x^2")
     lowerBound = 0;
     upperBound = 1;
     set(handles.lowerBoundEdit, 'String', lowerBound);
@@ -136,7 +151,7 @@ end
 function volumeButton_Callback(hObject, eventdata, handles)
 global upperBound;
 global lowerBound;
-global funcChoice;
+global functionChoice;
 global steps;
 global methodChoice;
 global axisValue;
@@ -149,14 +164,21 @@ global el;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
-if (strcmp(funcChoice, "Select a function"))
+if (strcmp(functionChoice, "Select a function"))
     plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
+% If trying to generate volume with negative bounds that shouldn't be used,
+% produce error message. Uses isValidVolume method at bottom of program.
+elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri))
+    plot(0,0);
+    f = errordlg('Cannot enter negative bounds, given the current configuration', 'Invalid Volume Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
 else
     syms x
-    simple_exp_string = funcChoice(6:end);
+    simple_exp_string = functionChoice(6:end);
     f(x) = str2sym(simple_exp_string);
     
     % If the view option upon redrawing the plot is still 3D, store the
@@ -308,7 +330,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
     elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lower_input, upperBound))
-        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+        d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
@@ -356,7 +378,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
     elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upper_input))
-        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+        d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
@@ -402,7 +424,7 @@ methodContents = methodContents{get(hObject, 'Value')};
 % cannot be generating due to the axis constraint, revert back to the disk
 % method. Else, assign the global variable methodChoice to whatever selected.
 if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
-    d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+    d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.methodMenu, 'value', 1);
@@ -474,7 +496,8 @@ function axisEditbox_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
     elseif(methodChoice == "Shell" && ~isValidShellVolume(axis_input, lowerBound, upperBound))
-        d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+        % d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
+        d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
@@ -621,28 +644,36 @@ function resetButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % global functionChoice;
-global lowerBound;
-global upperBound;
-global axisValue;
-global steps;
-global radiusMethod;
-global methodChoice;
+close(VUC);
+run('VUC');
 
-lowerBound = 0;
-upperBound = 5;
-steps = 5;
-axisValue = 0;
-radiusMethod = "m";
-methodChoice = "Disk";
-
-set(handles.lowerBoundEdit, 'string', lowerBound);
-set(handles.upperBoundEdit, 'string', upperBound);
-set(handles.diskEdit, 'string', steps);
-set(handles.axisEditbox, 'string', axisValue);
-set(handles.stepSlider, 'value', steps);
-set(handles.radiusMethodRadioGroup,'SelectedObject', handles.midRadiusRadioButton)
-volumeButton_Callback(handles.volumeButton, eventdata, handles);
-set(handles.methodMenu, 'value', 1);
+% global lowerBound;
+% global upperBound;
+% global axisValue;
+% global steps;
+% global radiusMethod;
+% global methodChoice;
+% global functionChoice;
+% 
+% lowerBound = 0;
+% upperBound = 5;
+% steps = 5;
+% axisValue = 0;
+% radiusMethod = "m";
+% methodChoice = "Disk";
+% functionChoice = "Select a function";
+% 
+% set(handles.lowerBoundEdit, 'string', lowerBound);
+% set(handles.upperBoundEdit, 'string', upperBound);
+% set(handles.diskEdit, 'string', steps);
+% set(handles.axisEditbox, 'string', axisValue);
+% set(handles.stepSlider, 'value', steps);
+% set(handles.radiusMethodRadioGroup,'SelectedObject', handles.midRadiusRadioButton)
+% %volumeButton_Callback(handles.volumeButton, eventdata, handles);
+% set(handles.methodMenu, 'value', 1);
+% set(handles.functionMenu, 'value', 1);
+% % set(handles.functionMenu, 'String', ["Select a function", "f(x)=x", "f(x)=x^2", "f(x)=2^x"]);
+% plot(0,0);
 end
 
 % --- Executes when selected object is changed in radiusMethodRadioGroup.
@@ -662,3 +693,35 @@ elseif (methodPicked == "Right")
 end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
+
+% Function used to check for weird cases, like when function used to collect
+% radius/height is x^(1/2) and a negative bound is used, which is awkward
+% since x^(1/2) doesn't accept negative values.
+function valid = isValidVolume(funcChoice, methChoice, lowBound, upBound, axisOrient)
+% Cases
+valid = 1;
+if (axisOrient == "y")
+    % Cases where shell method rotating area parallel to axis parallel to
+    % x-axis. Here, can't enter a negative bound when the function
+    % selected is x^2 or 2^x.
+    if (methChoice == "Shell")
+       if (funcChoice == "x^2" || funcChoice == "2^x")
+           if (lowBound < 0 || upBound < 0)
+               valid = 0;
+           end
+       end
+    end
+    % Cases where disk method rotating area perpendicular to axis parallel
+    % to y-axis. Here, can't enter a negative bound when the function
+    % selected is x^2 or 2^x.
+else
+    if (methChoice == "Disk")
+       if (funcChoice == "x^2" || funcChoice == "2^x")
+           if (lowBound < 0 || upBound < 0)
+               valid = 0;
+           end
+       end
+    end
+end
+end
+
