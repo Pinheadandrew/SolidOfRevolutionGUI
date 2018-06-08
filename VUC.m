@@ -25,7 +25,7 @@ function varargout = VUC(varargin)
 
 % Edit the above text to modify the response to help VUC
 
-% Last Modified by GUIDE v2.5 31-May-2018 16:18:22
+% Last Modified by GUIDE v2.5 06-Jun-2018 13:13:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,7 +80,7 @@ global radiusMethod;
 radiusMethod = "m";
 global functionChoice;
 functionChoice = "Select a function";
-maxNumberOfRect = 100;
+maxNumberOfRect = 75;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
 set(handles.stepSlider, 'Value', 5);
@@ -88,7 +88,11 @@ set(handles.stepSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ])
 
 % Setting some multi-line tooltips, wherever necessary.
 set(handles.stepSlider, 'TooltipString', ...
-    sprintf("Drag for a number between 0 and 100 to set the number \n of subintervals to determine the estimated volume"));
+    sprintf("Drag for a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
+set(handles.upperBoundEdit, 'TooltipString', ...
+    sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
+set(handles.lowerBoundEdit, 'TooltipString', ...
+    sprintf("Enter the lower bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -258,17 +262,25 @@ else
     
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
-    statementString = "Estimated Volume: " + sprintf('%0.3f', estimated_volume);
-    statementString2 = "Actual Volume: " + sprintf('%0.3f', actual_volume);
+    statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
+    statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
     
+    % Text added on to displayed error percentage, stating estimation type.
+    if (errorPerc < 0)
+        estimate_type = " (Underestimate)";
+    elseif (errorPerc > 0)
+        estimate_type = " (Overestimate)";
+    else
+        estimate_type = "";
+    end
     set(handles.statementText, 'string', statementString);
     set(handles.actualVolumeText, 'string', statementString2);
     
     if(isnan(errorPerc))
-      set(handles.errorText, 'string', strcat({'  Error: '}, {'0%'}));
+      set(handles.errorText, 'string', strcat({'  Error: '}, {'0% '}));
     else
-      set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}));
+      set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}, estimate_type));
     end
     hold off
 end
@@ -284,8 +296,8 @@ function diskEdit_Callback(hObject, eventdata, handles)
     stepInput = str2double(get(hObject,'String'));
     
     % Step input not an integer, or out of range of 0<x<101, throw error.
-    if(isnan(stepInput) || stepInput <= 0 || stepInput > 100 || (floor(stepInput) ~= stepInput))
-      d = errordlg('Number of subintervals must be positive integer less than or equal to 100', 'Subinterval Count Error');
+    if(isnan(stepInput) || stepInput <= 0 || stepInput > 75 || (floor(stepInput) ~= stepInput))
+      d = errordlg('Number of subintervals must be positive integer less than or equal to 75', 'Subinterval Count Error');
       set(d, 'WindowStyle', 'modal');
       set(handles.diskEdit, 'string', steps);
       uiwait(d);
@@ -319,13 +331,19 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     lower_input = str2double(get(hObject,'String'));
    
     if(isnan(lower_input))
-        d = errordlg('Domain must be Integer', 'Domain Error');
+        d = errordlg('The bound must be a real number.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
     elseif(lower_input >= upperBound)
         plot(0,0);
-        d = errordlg('Fix Lower Bound', 'Domain Error');
+        d = errordlg('The upper bound must be greater than the lower bound.', 'Bound Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+    elseif(lower_input < -50 || lower_input > 50)
+        plot(0,0);
+        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
@@ -365,15 +383,19 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     upper_input = str2double(get(hObject,'String'));
     
     if(isnan(upper_input))
-        d = errordlg('Domain must be an Integer', 'Domain Error');
+        d = errordlg('The bound must be a real number.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
     elseif(upper_input <= lowerBound)
-        newString = 'Fix domain';
-        set(handles.boundStatement, 'string', newString);
         plot(0,0);
-        d = errordlg('Fix Upper Bound', 'Domain Error');
+        d = errordlg('The upper bound must be greater than the lower bound.', 'Bound Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.upperBoundEdit, 'string', upperBound);
+    elseif(upper_input < -50 || upper_input > 50)
+        plot(0,0);
+        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
@@ -405,7 +427,7 @@ end
 
 
 % Selecting either the disc or the shell method.
-function methodMenu_Callback(hObject, eventdata, handles)
+function methodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
 % hObject    handle to methodMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -417,8 +439,7 @@ global axisValue;
 global lowerBound;
 global upperBound;
 
-methodContents = cellstr(get(handles.methodMenu, 'String'));
-methodContents = methodContents{get(hObject, 'Value')};
+methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 
 % If switching from disc to shell method and the resulting shell volume
 % cannot be generating due to the axis constraint, revert back to the disk
@@ -724,4 +745,3 @@ else
     end
 end
 end
-
