@@ -40,7 +40,7 @@ ypoints = double(f(xpoints) - axisValue);
 % Checks for any NaNs, as result of problems such as logarithm function of
 % negative number.
 for x = 1:length(ypoints)
-    if (isnan(ypoints(x)))
+    if (isnan(ypoints(x)) || ~isreal(ypoints(x)))
         ypoints(x) = 0;
     end
 end
