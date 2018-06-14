@@ -36,7 +36,16 @@ if (lower(axisOri) == 'y')
     f(x) = finverse(f);
 end
 
-shellHeights = abs(double(f(xpoints)));
+shellHeights = abs(double(f(xpoints))); % Heights of the individual shells.
+
+% Checks for any NaNs, as result of problems such as logarithm function of
+% negative number.
+for x = 1:length(shellHeights)
+    if (isnan(shellHeights(x)))
+        shellHeights(x) = 0;
+    end
+end
+
 shellVols = shellHeights.*abs(xpoints-axisValue)*delta;
 sumShellVols = 2*pi*sum(shellVols);
 

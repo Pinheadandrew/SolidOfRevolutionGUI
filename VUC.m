@@ -2,29 +2,6 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% VUC MATLAB code for VUC.fig
-%      VUC, by itself, creates a new VUC or raises the existing
-%      singleton*.
-%
-%      H = VUC returns the handle to a new VUC or the handle to
-%      the existing singleton*.
-%
-%      VUC('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in VUC.M with the given input arguments.
-%
-%      VUC('Property','Value',...) creates a new VUC or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before VUC_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to VUC_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help VUC
-
 % Last Modified by GUIDE v2.5 06-Jun-2018 13:13:27
 
 % Begin initialization code - DO NOT EDIT
@@ -111,16 +88,38 @@ function functionMenu_Callback(hObject, eventdata, handles)
 global functionChoice;
 global lowerBound;
 global upperBound;
+global methodChoice;
+global axisOri;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 functionContents = functionContents{get(hObject, 'Value')};
-functionChoice = functionContents;
 
-% Sets default bounds of revolution according to function picked. i.e when
-% x^2 selected, bounds change to 0<=x<=2.
-% if (functionChoice == "Select a function" && functionContents ~= "Select a function")
-%     set(handles.functionMenu, 'String', ["f(x)=x", "f(x)=x^2", "f(x)=2^x"]);
-% end
+% Check for case where switching function and function not one-to-one given
+% axis and boundary configurations.
+if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound, axisOri))
+    plot(0,0);
+    f = errordlg(sprintf('Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.')...
+        , 'Invalid Volume Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+    
+    % Find the index of previous function that was working in the function
+    % menu, to reset the selected function to that. Cycle through that
+    % menu to match the global Function choice and if match found, set the
+    % function menu to that selection.
+    functionStrings = handles.functionMenu.String;
+    functionIndex = 1;
+    for i=1:length(functionStrings)
+        currentFuncString = functionStrings(i);
+        currentFuncString = currentFuncString{1};
+        if (strcmp(currentFuncString, functionChoice))
+            functionIndex = i;
+        end
+    end
+    set(handles.functionMenu, 'Value', functionIndex);
+else
+    functionChoice = functionContents;
+end
 
 % Sets default bounds of revolution according to function picked. i.e when
 % x^2 selected, bounds change to 0<=x<=2.
@@ -173,14 +172,20 @@ if (strcmp(functionChoice, "Select a function"))
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
-% If trying to generate volume with negative bounds that shouldn't be used,
-% produce error message. Uses isValidVolume method at bottom of program.
-elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri))
-    plot(0,0);
-    f = errordlg('Cannot enter negative bounds, given the current configuration', 'Invalid Volume Error');
-    set(f, 'WindowStyle', 'modal');
-    uiwait(f);
 else
+    set(handles.figure1, 'pointer', 'watch')
+    drawnow;
+    if (viewMode == "2D")
+        set(handles.threeDButton, 'String', "View in 3D");
+        set(handles.solidViewRadiogroup, 'Visible', "off");
+        [az, el] = view(2);
+    else
+        set(handles.threeDButton, 'String', "View in 2D");
+        % set(handles.fullSolidRadio, 'Value', 1.0);
+        set(handles.solidViewRadiogroup, 'Visible', "on");
+        [az, el] = view(3);
+    end
+    
     syms x
     simple_exp_string = functionChoice(6:end);
     f(x) = str2sym(simple_exp_string);
@@ -189,6 +194,7 @@ else
     % viewpoint of the plot to be reused when 3D plot redrawn.
     if (viewMode == "3D")
       [az, el] = view;
+      % waitMessage = msgbox('Generating Volume...');
     end
     
     delete(handles.axes1.Children)
@@ -207,7 +213,17 @@ else
          % If half solid selected, have axes bounds same as if full-solid.
             if (fullSolid == 0)
               yPlotBounds = ylim;
-              ylim([-yPlotBounds(2) yPlotBounds(2)])
+              
+              % Handling plot bounds of function 2^x rotating around y-axis
+              if (simple_exp_string ~= "2^x" && axisOri ~= "x" && methodChoice ~= "Disk")
+                ylim([-yPlotBounds(2) yPlotBounds(2)]) %% THIS LINE HAS SOME PROBLEMS SUCH AS F(X) = 2^X && bounds 0<x<1
+              else
+                  if (abs(yPlotBounds(1)) < yPlotBounds(2))
+                      ylim([-yPlotBounds(2) yPlotBounds(2)])
+                  else
+                      ylim([yPlotBounds(1) -yPlotBounds(1)])
+                  end
+              end
             end
             
             view([az el])
@@ -259,12 +275,22 @@ else
     else
       plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
     end
-    
+    set(handles.figure1, 'pointer', 'arrow')
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
-    statementString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
-    statementString2 = "Actual Volume: " + sprintf('%0.4f', actual_volume);
+    estVolumeString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
+    actVolumeString = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
+    
+    % New line for volume statements so that string in textboxes aren't
+    % overflowing.
+    
+    if (length(estVolumeString) > 40)
+        estVolumeString = "Estimated Volume:\n" + sprintf('%0.4f', estimated_volume);
+    end
+    if (length(actVolumeString) > 40)
+        estVolumeString = "Actual Volume:\n" + sprintf('%0.4f', estimated_volume);
+    end
     
     % Text added on to displayed error percentage, stating estimation type.
     if (errorPerc < 0)
@@ -274,15 +300,22 @@ else
     else
         estimate_type = "";
     end
-    set(handles.statementText, 'string', statementString);
-    set(handles.actualVolumeText, 'string', statementString2);
+    set(handles.statementText, 'string', estVolumeString);
+    set(handles.actualVolumeText, 'string', actVolumeString);
     
     if(isnan(errorPerc))
       set(handles.errorText, 'string', strcat({'  Error: '}, {'0% '}));
     else
       set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}, estimate_type));
     end
+    
+%     if (viewMode == "3D")
+%         delete(waitMessage);
+%     end
+    % d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+    
     hold off
+    set(handles.figure1, 'pointer', 'arrow')
 end
 end
 
@@ -328,6 +361,8 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global upperBound;
     global axisValue;
     global methodChoice;
+    global functionChoice;
+    global axisOri;
     lower_input = str2double(get(hObject,'String'));
    
     if(isnan(lower_input))
@@ -341,12 +376,24 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
+    % Lower bound must be within range of -50 and 50.
     elseif(lower_input < -50 || lower_input > 50)
         plot(0,0);
         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
+    % If entering lower bound to create invalid instance, produce error
+    % message and reset bound to what it was previously.
+    elseif (~isValidVolume(functionChoice(6:end), methodChoice, lower_input, upperBound, axisOri))
+        plot(0,0);
+        f = errordlg(sprintf('Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.')...
+        , 'Invalid Volume Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+    % Lower bound is such that: lower bound < axis value < upper bound,
+    % which is invalid for creating shell volumes.
     elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lower_input, upperBound))
         d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
@@ -373,13 +420,12 @@ end
 
 % Setting the upper bound of the volume.
 function upperBoundEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to upperBoundEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
     global lowerBound;
     global upperBound;
     global axisValue;
     global methodChoice;
+    global functionChoice;
+    global axisOri;
     upper_input = str2double(get(hObject,'String'));
     
     if(isnan(upper_input))
@@ -398,6 +444,13 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.upperBoundEdit, 'string', upperBound);
+    elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upper_input, axisOri))
+        plot(0,0);
+        f = errordlg(sprintf('Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.')...
+        , 'Invalid Volume Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
         set(handles.upperBoundEdit, 'string', upperBound);
     elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upper_input))
         d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
@@ -428,9 +481,6 @@ end
 
 % Selecting either the disc or the shell method.
 function methodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to methodMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global methodChoice;
 global viewMode;
 global fullSolid;
@@ -448,7 +498,7 @@ if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(a
     d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
-    set(handles.methodMenu, 'value', 1);
+    set(handles.discRadio, 'Value', 1.0);
 else
     methodChoice = methodContents;
 end
@@ -591,22 +641,14 @@ end
 % revolution from a 2D perspective or as 3D volumes.
 function threeDButton_Callback(hObject, eventdata, handles)
 global viewMode;
-global fullSolid;
-global el;
-global az;
+global fullSolid
 
 if (viewMode == "3D")
     viewMode = "2D";
-    set(handles.threeDButton, 'String', "View in 3D");
-    set(handles.solidViewRadiogroup, 'Visible', "off");
-    [az, el] = view(2);
 else
     viewMode = "3D";
-    set(handles.threeDButton, 'String', "View in 2D");
     set(handles.fullSolidRadio, 'Value', 1.0);
-    set(handles.solidViewRadiogroup, 'Visible', "on");
     fullSolid = 1;
-    [az, el] = view(3);
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -661,47 +703,12 @@ end
 
 % --- Executes on button press in resetButton.
 function resetButton_Callback(hObject, eventdata, handles)
-% hObject    handle to resetButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% global functionChoice;
 close(VUC);
 run('VUC');
-
-% global lowerBound;
-% global upperBound;
-% global axisValue;
-% global steps;
-% global radiusMethod;
-% global methodChoice;
-% global functionChoice;
-% 
-% lowerBound = 0;
-% upperBound = 5;
-% steps = 5;
-% axisValue = 0;
-% radiusMethod = "m";
-% methodChoice = "Disk";
-% functionChoice = "Select a function";
-% 
-% set(handles.lowerBoundEdit, 'string', lowerBound);
-% set(handles.upperBoundEdit, 'string', upperBound);
-% set(handles.diskEdit, 'string', steps);
-% set(handles.axisEditbox, 'string', axisValue);
-% set(handles.stepSlider, 'value', steps);
-% set(handles.radiusMethodRadioGroup,'SelectedObject', handles.midRadiusRadioButton)
-% %volumeButton_Callback(handles.volumeButton, eventdata, handles);
-% set(handles.methodMenu, 'value', 1);
-% set(handles.functionMenu, 'value', 1);
-% % set(handles.functionMenu, 'String', ["Select a function", "f(x)=x", "f(x)=x^2", "f(x)=2^x"]);
-% plot(0,0);
 end
 
 % --- Executes when selected object is changed in radiusMethodRadioGroup.
 function radiusMethodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in radiusMethodRadioGroup 
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 global radiusMethod;
 methodPicked = get(get(handles.radiusMethodRadioGroup,'SelectedObject'),'string');
 
@@ -744,4 +751,12 @@ else
        end
     end
 end
+end
+
+% Function that tries to reset viewing angle to what it was before some
+% error messages that, for example, views a 3D object from the top.
+function resetViewAngle
+    global az;
+    global el;
+    [az, el] = view;
 end

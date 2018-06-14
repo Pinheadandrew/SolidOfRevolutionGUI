@@ -37,6 +37,14 @@ end
 
 ypoints = double(f(xpoints) - axisValue);
 
+% Checks for any NaNs, as result of problems such as logarithm function of
+% negative number.
+for x = 1:length(ypoints)
+    if (isnan(ypoints(x)))
+        ypoints(x) = 0;
+    end
+end
+
 % Vector to hold volumes of each disk, then add them all up to return the
 % volume for the solid.
 
