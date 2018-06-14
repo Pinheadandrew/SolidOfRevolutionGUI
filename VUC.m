@@ -57,6 +57,8 @@ global radiusMethod;
 radiusMethod = "m";
 global functionChoice;
 functionChoice = "Select a function";
+global viewModeChanged;
+viewModeChanged = 0;
 maxNumberOfRect = 75;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
@@ -90,6 +92,7 @@ global lowerBound;
 global upperBound;
 global methodChoice;
 global axisOri;
+global viewModeChanged;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 functionContents = functionContents{get(hObject, 'Value')};
@@ -98,10 +101,12 @@ functionContents = functionContents{get(hObject, 'Value')};
 % axis and boundary configurations.
 if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound, axisOri))
     plot(0,0);
-    f = errordlg(sprintf('Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.')...
+    f = errordlg(sprintf(...
+            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
+    viewModeChanged = 1;
     
     % Find the index of previous function that was working in the function
     % menu, to reset the selected function to that. Cycle through that
@@ -132,9 +137,6 @@ end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
-% Hints: contents = cellstr(get(hObject,'String')) returns functionMenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from functionMenu
-
 
 % --- Executes during object creation, after setting all properties.
 function functionMenu_CreateFcn(hObject, eventdata, handles)
@@ -164,11 +166,12 @@ global fullSolid;
 global radiusMethod;
 global az;
 global el;
+global viewModeChanged;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
 if (strcmp(functionChoice, "Select a function"))
-    plot(0,0);
+    % plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
@@ -178,13 +181,23 @@ else
     if (viewMode == "2D")
         set(handles.threeDButton, 'String', "View in 3D");
         set(handles.solidViewRadiogroup, 'Visible', "off");
-        [az, el] = view(2);
+        
+        % If plot result of changing view mode from 3D to 2d, set angle to
+        % default of 2D plot.
+        if (viewModeChanged == 1)
+            [az, el] = view(2);
+        end
     else
         set(handles.threeDButton, 'String', "View in 2D");
-        % set(handles.fullSolidRadio, 'Value', 1.0);
         set(handles.solidViewRadiogroup, 'Visible', "on");
-        [az, el] = view(3);
+        
+        % If plot result of changing view mode from 2D to 3D, set angle to
+        % default of 3D plot.
+        if (viewModeChanged == 1)
+            [az, el] = view(3);
+        end
     end
+    viewModeChanged = 0;
     
     syms x
     simple_exp_string = functionChoice(6:end);
@@ -194,7 +207,6 @@ else
     % viewpoint of the plot to be reused when 3D plot redrawn.
     if (viewMode == "3D")
       [az, el] = view;
-      % waitMessage = msgbox('Generating Volume...');
     end
     
     delete(handles.axes1.Children)
@@ -275,7 +287,6 @@ else
     else
       plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
     end
-    set(handles.figure1, 'pointer', 'arrow')
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
     estVolumeString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
@@ -285,11 +296,9 @@ else
     % New line for volume statements so that string in textboxes aren't
     % overflowing.
     
-    if (length(estVolumeString) > 40)
-        estVolumeString = "Estimated Volume:\n" + sprintf('%0.4f', estimated_volume);
-    end
-    if (length(actVolumeString) > 40)
-        estVolumeString = "Actual Volume:\n" + sprintf('%0.4f', estimated_volume);
+    if (length(estVolumeString) > 40 || length(actVolumeString) > 40)
+        estVolumeString = sprintf("Estimated Volume:\n" + sprintf('%0.4f', estimated_volume));
+        actVolumeString = sprintf("Actual Volume:\n" + sprintf('%0.4f', actual_volume));
     end
     
     % Text added on to displayed error percentage, stating estimation type.
@@ -308,11 +317,6 @@ else
     else
       set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}, estimate_type));
     end
-    
-%     if (viewMode == "3D")
-%         delete(waitMessage);
-%     end
-    % d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
     
     hold off
     set(handles.figure1, 'pointer', 'arrow')
@@ -363,6 +367,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global methodChoice;
     global functionChoice;
     global axisOri;
+    global viewModeChanged;
     lower_input = str2double(get(hObject,'String'));
    
     if(isnan(lower_input))
@@ -376,6 +381,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
+        viewModeChanged = 1;
     % Lower bound must be within range of -50 and 50.
     elseif(lower_input < -50 || lower_input > 50)
         plot(0,0);
@@ -383,15 +389,18 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
+        viewModeChanged = 1;
     % If entering lower bound to create invalid instance, produce error
     % message and reset bound to what it was previously.
     elseif (~isValidVolume(functionChoice(6:end), methodChoice, lower_input, upperBound, axisOri))
         plot(0,0);
-        f = errordlg(sprintf('Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.')...
+        f = errordlg(sprintf(...
+            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
         set(f, 'WindowStyle', 'modal');
         uiwait(f);
         set(handles.lowerBoundEdit, 'string', lowerBound);
+        viewModeChanged = 1;
     % Lower bound is such that: lower bound < axis value < upper bound,
     % which is invalid for creating shell volumes.
     elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lower_input, upperBound))
@@ -426,6 +435,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     global methodChoice;
     global functionChoice;
     global axisOri;
+    global viewModeChanged;
     upper_input = str2double(get(hObject,'String'));
     
     if(isnan(upper_input))
@@ -439,19 +449,23 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
+        viewModeChanged = 1;
     elseif(upper_input < -50 || upper_input > 50)
         plot(0,0);
         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
+        viewModeChanged = 1;
     elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upper_input, axisOri))
         plot(0,0);
-        f = errordlg(sprintf('Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.')...
+        f = errordlg(sprintf(...
+            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
         set(f, 'WindowStyle', 'modal');
         uiwait(f);
         set(handles.upperBoundEdit, 'string', upperBound);
+        viewModeChanged = 1;
     elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upper_input))
         d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
@@ -488,6 +502,7 @@ global axisOri;
 global axisValue;
 global lowerBound;
 global upperBound;
+global functionChoice;
 
 methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 
@@ -499,6 +514,18 @@ if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(a
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.discRadio, 'Value', 1.0);
+    
+% Switching between methods and the new volume uses a function that is not
+% one-to-one given the domain specified by the defined lower and upper
+% bound, so produce an error message. After message cleared, return
+% selected method to what it was previously that was working.
+elseif (~isValidVolume(functionChoice, methodContents, lowerBound, upperBound, axisOri))
+    f = errordlg(sprintf(...
+            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
+        , 'Invalid Volume Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+        set(handles.discRadio, 'Value', 1.0);
 else
     methodChoice = methodContents;
 end
@@ -515,7 +542,6 @@ if(viewMode == "3D")
   set(handles.solidViewRadiogroup, 'Visible', "on");
   set(handles.subintervalGroup, 'title', subIntsLabelString);
 else
-  %set(handles.methodHeader, 'String', 'Method of Disc Radius');
   set(handles.solidViewRadiogroup, 'Visible', "off");
 end
 
@@ -567,7 +593,6 @@ function axisEditbox_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
     elseif(methodChoice == "Shell" && ~isValidShellVolume(axis_input, lowerBound, upperBound))
-        % d = errordlg('Cannot generate a shell volume given the bound and axis configuration', 'Shell Volume Error');
         d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -641,7 +666,8 @@ end
 % revolution from a 2D perspective or as 3D volumes.
 function threeDButton_Callback(hObject, eventdata, handles)
 global viewMode;
-global fullSolid
+global fullSolid;
+global viewModeChanged;
 
 if (viewMode == "3D")
     viewMode = "2D";
@@ -650,6 +676,8 @@ else
     set(handles.fullSolidRadio, 'Value', 1.0);
     fullSolid = 1;
 end
+
+viewModeChanged = 1;
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
