@@ -276,16 +276,23 @@ else
     
     % Preserving axis limits when the method is the shell, due to unusual
     % plots w/o using the bounds made from plotting the volume (2D or 3D).
+    % Draw the function line, it's mirror and the axis of rotation, then
+    % reuse the axis limits.
     if (methodChoice == "Shell" || (methodChoice == "Disk" && axisOri == "x"))
       shape_plot_xlim = xlim;
       shape_plot_ylim = ylim;
       shape_plot_zlim = zlim;
-      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+
+      if (methodChoice == "Shell" && axisOri == "x")
+        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x") 
+      else
+        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+      end
       xlim(shape_plot_xlim);
       ylim(shape_plot_ylim);
       zlim(shape_plot_zlim);
     else
-      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x")
     end
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
@@ -510,30 +517,10 @@ methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 % cannot be generating due to the axis constraint, revert back to the disk
 % method. Else, assign the global variable methodChoice to whatever selected.
 if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
-    opts.Interpreter = 'tex';
-    opts.Default = 'Cancel';
-    fontSettings = '\fontsize{12}';
-    warningMessage = strcat(fontSettings, {'Warning: by switching to the Shell method, a volume '}, ...
-        {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
-        {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
-    
-    lowBoundAxis = axisOri + "=" + num2str(lowerBound);
-    upperBoundAxis = axisOri + "=" + num2str(upperBound);
-    
-    answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
-        upperBoundAxis, 'Cancel', opts);
-    switch answer
-        case lowBoundAxis
-            methodChoice = "Shell";
-            axisValue = lowerBound;
-            set(handles.axisEditbox, 'string', axisValue);
-        case upperBoundAxis
-            methodChoice = "Shell";
-            axisValue = upperBound;
-            set(handles.axisEditbox, 'string', axisValue);
-        case 'Cancel'
-            set(handles.discRadio, 'Value', 1.0);
-    end
+    d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+    set(d, 'WindowStyle', 'modal');
+    uiwait(d);
+    set(handles.discRadio, 'Value', 1.0);
     
 % Switching between methods and the new volume uses a function that is not
 % one-to-one given the domain specified by the defined lower and upper
