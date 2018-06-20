@@ -517,30 +517,10 @@ methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 % cannot be generating due to the axis constraint, revert back to the disk
 % method. Else, assign the global variable methodChoice to whatever selected.
 if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
-    opts.Interpreter = 'tex';
-    opts.Default = 'Cancel';
-    fontSettings = '\fontsize{12}';
-    warningMessage = strcat(fontSettings, {'Warning: by switching to the Shell method, a volume '}, ...
-        {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
-        {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
-    
-    lowBoundAxis = axisOri + "=" + num2str(lowerBound);
-    upperBoundAxis = axisOri + "=" + num2str(upperBound);
-    
-    answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
-        upperBoundAxis, 'Cancel', opts);
-    switch answer
-        case lowBoundAxis
-            methodChoice = "Shell";
-            axisValue = lowerBound;
-            set(handles.axisEditbox, 'string', axisValue);
-        case upperBoundAxis
-            methodChoice = "Shell";
-            axisValue = upperBound;
-            set(handles.axisEditbox, 'string', axisValue);
-        case 'Cancel'
-            set(handles.discRadio, 'Value', 1.0);
-    end
+    d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+    set(d, 'WindowStyle', 'modal');
+    uiwait(d);
+    set(handles.discRadio, 'Value', 1.0);
     
 % Switching between methods and the new volume uses a function that is not
 % one-to-one given the domain specified by the defined lower and upper
