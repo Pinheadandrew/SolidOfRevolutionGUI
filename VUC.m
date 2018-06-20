@@ -299,6 +299,7 @@ else
     estVolumeString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
     actVolumeString = "Actual Volume: " + sprintf('%0.4f', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
+    errorPerc = round(errorPerc,4);
     
     % New line for volume statements so that string in textboxes aren't
     % overflowing.
@@ -309,20 +310,26 @@ else
     end
     
     % Text added on to displayed error percentage, stating estimation type.
+    % Set color of error percent statement based on under/overestimate. 
     if (errorPerc < 0)
         estimate_type = " (Underestimate)";
+        set(handles.errorText, 'ForegroundColor', 'blue');
     elseif (errorPerc > 0)
         estimate_type = " (Overestimate)";
+        set(handles.errorText, 'ForegroundColor', 'red');
     else
         estimate_type = "";
+        set(handles.errorText, 'ForegroundColor', 'black');
     end
+    
     set(handles.statementText, 'string', estVolumeString);
     set(handles.actualVolumeText, 'string', actVolumeString);
     
+    % For undefined percentage, dispaly as 0%
     if(isnan(errorPerc))
       set(handles.errorText, 'string', strcat({'  Error: '}, {'0% '}));
     else
-      set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}, estimate_type));
+        set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}, estimate_type));
     end
     
     hold off
@@ -517,10 +524,30 @@ methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 % cannot be generating due to the axis constraint, revert back to the disk
 % method. Else, assign the global variable methodChoice to whatever selected.
 if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
-    d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
-    set(d, 'WindowStyle', 'modal');
-    uiwait(d);
-    set(handles.discRadio, 'Value', 1.0);
+    opts.Interpreter = 'tex';
+    opts.Default = 'Cancel';
+    fontSettings = '\fontsize{12}';
+    warningMessage = strcat(fontSettings, {'Warning: by switching to the Shell method, a volume '}, ...
+        {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
+        {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
+    
+    lowBoundAxis = axisOri + "=" + num2str(lowerBound);
+    upperBoundAxis = axisOri + "=" + num2str(upperBound);
+    
+    answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
+        upperBoundAxis, 'Cancel', opts);
+    switch answer
+        case lowBoundAxis
+            methodChoice = "Shell";
+            axisValue = lowerBound;
+            set(handles.axisEditbox, 'string', axisValue);
+        case upperBoundAxis
+            methodChoice = "Shell";
+            axisValue = upperBound;
+            set(handles.axisEditbox, 'string', axisValue);
+        case 'Cancel'
+            set(handles.discRadio, 'Value', 1.0);
+    end
     
 % Switching between methods and the new volume uses a function that is not
 % one-to-one given the domain specified by the defined lower and upper
