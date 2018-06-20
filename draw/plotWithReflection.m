@@ -1,9 +1,22 @@
-function plotWithReflection(funcString, lowbound, upbound,  axisOri, axisValue, viewMode)
+function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, viewMode, domain)
     syms x
     f(x) = str2sym(funcString);
     
-    step = (upbound-lowbound)/100;
-    xpoints = lowbound:step:upbound; 
+    %Points along domain that plot is result of.  If domain is y, use
+    %inverse function of f(x) to determine new bounds of the plot, along
+    %with points along domain 
+    if (domain == "x")
+        step = (upbound-lowbound)/100;
+        xpoints = lowbound:step:upbound;
+    else
+        g(x) = finverse(f);
+        lowbound = g(lowbound);
+        upbound = g(upbound);
+        step = (upbound-lowbound)/100;
+        xpoints = lowbound:step:upbound;
+    end
+%     step = (upbound-lowbound)/100; 
+%     xpoints = lowbound:step:upbound; %Points along domain that plot is result of.
     
     if (axisOri == "x") %% Reflect function plot across an axis parallel to y-axis.
         mirror_xpoints = axisValue - (xpoints - axisValue);

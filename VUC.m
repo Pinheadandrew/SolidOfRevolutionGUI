@@ -276,16 +276,23 @@ else
     
     % Preserving axis limits when the method is the shell, due to unusual
     % plots w/o using the bounds made from plotting the volume (2D or 3D).
+    % Draw the function line, it's mirror and the axis of rotation, then
+    % reuse the axis limits.
     if (methodChoice == "Shell" || (methodChoice == "Disk" && axisOri == "x"))
       shape_plot_xlim = xlim;
       shape_plot_ylim = ylim;
       shape_plot_zlim = zlim;
-      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+
+      if (methodChoice == "Shell" && axisOri == "x")
+        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x") 
+      else
+        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+      end
       xlim(shape_plot_xlim);
       ylim(shape_plot_ylim);
       zlim(shape_plot_zlim);
     else
-      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode)
+      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x")
     end
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
