@@ -10,13 +10,16 @@ function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, v
         xpoints = lowbound:step:upbound;
     else
         g(x) = finverse(f);
+        
+        if(isnan(double(g(lowbound))))
+            lowbound = .0000001;
+        end
+        
         lowbound = g(lowbound);
         upbound = g(upbound);
         step = (upbound-lowbound)/100;
         xpoints = lowbound:step:upbound;
     end
-%     step = (upbound-lowbound)/100; 
-%     xpoints = lowbound:step:upbound; %Points along domain that plot is result of.
     
     if (axisOri == "x") %% Reflect function plot across an axis parallel to y-axis.
         mirror_xpoints = axisValue - (xpoints - axisValue);
@@ -33,7 +36,7 @@ function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, v
           vertAxisBounds = ylim;
           axis = plot(axisValue*ones(1,2), vertAxisBounds, "LineWidth", 2, "color", "g");
           hold on
-          axis.LineStyle = '--';
+          axis.LineStyle = '-.';
         end
     
     else %% Reflect across an axis parallel to x-axis.
@@ -50,11 +53,11 @@ function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, v
           mirrorPlot = plot(xpoints, mirror_ypoints, "LineWidth", 2, "color", "m"); hold on
           horizAxisBounds = xlim;
           axis = plot(horizAxisBounds, axisValue*ones(1,2), "LineWidth", 2, "color", "g"); hold on
-          axis.LineStyle = '--';
+          axis.LineStyle = '-.';
         end
     end
-    leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "f(x) mirrored", "Axis of rotation", 'location', 'northeast');
-    leg.FontSize = 12;
-        uistack(leg,"top")
+     leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "f(x) mirrored", "Axis of rotation", 'location', 'northeast');
+     leg.FontSize = 12;
+     uistack(leg,"top")
 end
 

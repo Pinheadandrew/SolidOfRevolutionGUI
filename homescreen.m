@@ -56,6 +56,8 @@ function homescreen_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 AUCimage = imread('img/AUC.jpg');
 set(handles.pushbutton1, 'CData', AUCimage);
+VUCimage = imread('img/VUC3.jpg');
+set(handles.pushbutton2, 'CData', VUCimage);
 % Update handles structure
 guidata(hObject, handles);
 

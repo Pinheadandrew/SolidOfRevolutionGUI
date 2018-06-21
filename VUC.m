@@ -200,7 +200,7 @@ else
     viewModeChanged = 0;
     
     syms x
-    simple_exp_string = functionChoice(6:end);
+    simple_exp_string = functionChoice(6:end); % String of function w/o "f(x)="
     f(x) = str2sym(simple_exp_string);
     
     % If the view option upon redrawing the plot is still 3D, store the
@@ -209,6 +209,8 @@ else
       [az, el] = view;
     end
     
+    % Removes plot contents of axes and turn off 3D rotation in case volume
+    % is in 2D.
     delete(handles.axes1.Children)
         cla reset, rotate3d off
         
@@ -653,40 +655,56 @@ end
 % --- Executes when selected object is changed in axisButtonGroup.
 function axisButtonGroup_SelectionChangedFcn(hObject, eventdata, handles)
 global axisOri;
+global functionChoice;
+global lowerBound;
+global upperBound;
 global methodChoice;
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
 axisPicked = get(get(handles.axisButtonGroup,'SelectedObject'),'string');
 
-if (methodChoice == "Disk")
-    if (axisPicked == "x")
-         bound_statement = "<= y <=";
+% Switching axis orientation and the volume to be generated violates the
+% negative bounds constraint under some configurations, i.e. when y=2^x,
+% 0<y<infinity. If this occurs, make error message and switch back to
+% previous axis orientation.
+if (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisPicked))
+    f = errordlg(sprintf(...
+        'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
+        , 'Invalid Volume Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+    set(handles.yAxisRadio, 'Value', 1.0);
+else
+    if (methodChoice == "Disk")
+        if (axisPicked == "x")
+            bound_statement = "<= y <=";
+        else
+            bound_statement = "<= x <=";
+        end
     else
-         bound_statement = "<= x <=";
+        bound_statement = "<= " + axisPicked(1) + " <=";
     end
-else
-    bound_statement = "<= " + axisPicked(1) + " <=";
-end
     
-set(handles.boundStatement, 'string', bound_statement);
-
-position = get(handles.axisEditbox,'Position');
-
-% Positions the axis value box adjacent to the axis orientation selected.
-% Also sets the axis orientation parameter in the volume function.
-if (axisPicked == "x")
-    position(2) = 2.9;
-    set(handles.axisEditbox, 'Position', position)
-    set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
-    set(handles.yAxisRadio,'string',"y")
-else
-    position(2) = 0.76923;
-    set(handles.axisEditbox, 'Position', position)
-    set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
-    set(handles.xAxisRadio,'string',"x")
+    set(handles.boundStatement, 'string', bound_statement);
+    
+    position = get(handles.axisEditbox,'Position');
+    
+    % Positions the axis value box adjacent to the axis orientation selected.
+    % Also sets the axis orientation parameter in the volume function.
+    if (axisPicked == "x")
+        position(2) = 2.9;
+        set(handles.axisEditbox, 'Position', position)
+        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
+        set(handles.yAxisRadio,'string',"y")
+    else
+        position(2) = 0.76923;
+        set(handles.axisEditbox, 'Position', position)
+        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
+        set(handles.xAxisRadio,'string',"x")
+    end
+    axisOri = axisPicked;
 end
-axisOri = axisPicked;
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
