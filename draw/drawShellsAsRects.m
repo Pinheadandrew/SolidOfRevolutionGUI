@@ -18,6 +18,7 @@ elseif (radiusMethod == "r")
     xpoints = lowbound+delta:delta:upbound;
 end
 
+% Set the base points of the rectangles in the original area and the area reflected across the axis. 
 if(axisVal <= lowbound)
   axis_bound_distance = abs(orig_shellBasePoints - axisVal);
   mirror_shellBasePoints = axisVal - axis_bound_distance;
@@ -46,13 +47,26 @@ if(axisOri =="x")
     origRectSet = patch(orig_xverts, yverts, "b"); hold on
     mirrorRectSet = patch(mirror_xverts, yverts, "b"); hold on
 else
+    % Shell lengths based on difference b/w "bottom"/"top" of volume and the
+    % point along the function's inverse.
+    
     g(x) = finverse(f(x));
-    shellLengths = double(g(xpoints)-g(upbound));
+    
+    % Determine whether the volume needs a "top" of a "bottom", then 
+    if (upbound > 0)
+        volumeBaseLine = double(g(upbound));
+        shellLengths = volumeBaseLine - double(g(xpoints));
+        shellEndpoints = volumeBaseLine - shellLengths;
+    else
+        volumeBaseLine = double(g(lowbound));
+        shellLengths = volumeBaseLine - double(g(xpoints));
+        shellEndpoints = volumeBaseLine - shellLengths;
+    end
     
     % In this case, x-verts are the same when flipped across the axis, but
     % y-vertices are different. Also, evaluate w/ inverse of original function.
-    xverts = [zeros(1, length(shellLengths)); shellLengths(1:end);...
-                shellLengths(1:end); zeros(1, length(shellLengths))];
+    xverts = [shellEndpoints; volumeBaseLine*ones(1, length(shellLengths));...
+                volumeBaseLine*ones(1, length(shellLengths)); shellEndpoints];
             
     yverts = [orig_shellBasePoints(1:end-1); orig_shellBasePoints(1:end-1);...
                           orig_shellBasePoints(2:end); orig_shellBasePoints(2:end)];
