@@ -586,16 +586,16 @@ end
 if (methodChoice == "Shell")
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
   if (axisOri == "y")
-    set(handles.boundStatement, 'string', "< y <");
+    set(handles.boundStatement, 'string', "< Y <");
   else
-    set(handles.boundStatement, 'string', "< x <");
+    set(handles.boundStatement, 'string', "< X <");
   end
 else
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
     if (axisOri == "y")
-      set(handles.boundStatement, 'string', "< x <");
+      set(handles.boundStatement, 'string', "< X <");
     else
-      set(handles.boundStatement, 'string', "< y <");
+      set(handles.boundStatement, 'string', "< Y <");
     end
 end
 
@@ -659,6 +659,7 @@ global functionChoice;
 global lowerBound;
 global upperBound;
 global methodChoice;
+global axisValue;
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
@@ -676,14 +677,31 @@ if (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, 
     uiwait(f);
     set(handles.yAxisRadio, 'Value', 1.0);
 else
+    % If new orientation selected, prompt user to enter a new axis value,
+    % or go back to previous configuration. Then, update the plot and GUI
+    % based afterwards.
+    if (axisPicked ~= axisOri)
+        prompt = {'Enter a new number for the axis value to rotate the area about, or enter 0 to rotate about the x/y-axis).'};
+        title = 'Axis Change';
+        definput = {'0'};
+        opts.Interpreter = 'tex';
+        newAxisValue = inputdlg(prompt,title,[1 40],definput,opts);
+        if(isnan(str2double(newAxisValue)))
+            disp("Not a number!")
+        else
+            disp(newAxisValue)
+            axisValue = str2double(newAxisValue);
+            set(handles.axisEditbox, 'string', axisValue);
+        end
+    end
     if (methodChoice == "Disk")
         if (axisPicked == "x")
-            bound_statement = "<= y <=";
+            bound_statement = "< Y <";
         else
-            bound_statement = "<= x <=";
+            bound_statement = "< X <";
         end
     else
-        bound_statement = "<= " + axisPicked(1) + " <=";
+        bound_statement = "< " + upper(axisPicked(1)) + " <";
     end
     
     set(handles.boundStatement, 'string', bound_statement);
@@ -695,12 +713,12 @@ else
     if (axisPicked == "x")
         position(2) = 2.9;
         set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
+        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
         set(handles.yAxisRadio,'string',"y")
     else
         position(2) = 0.76923;
         set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
+        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
         set(handles.xAxisRadio,'string',"x")
     end
     axisOri = axisPicked;
@@ -831,12 +849,4 @@ else
        end
     end
 end
-end
-
-% Function that tries to reset viewing angle to what it was before some
-% error messages that, for example, views a 3D object from the top.
-function resetViewAngle
-    global az;
-    global el;
-    [az, el] = view;
 end

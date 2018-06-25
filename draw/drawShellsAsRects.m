@@ -47,7 +47,7 @@ if(axisOri =="x")
     mirrorRectSet = patch(mirror_xverts, yverts, "b"); hold on
 else
     g(x) = finverse(f(x));
-    shellLengths = double(g(xpoints));
+    shellLengths = double(g(xpoints)-g(upbound));
     
     % In this case, x-verts are the same when flipped across the axis, but
     % y-vertices are different. Also, evaluate w/ inverse of original function.
