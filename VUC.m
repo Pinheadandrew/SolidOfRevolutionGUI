@@ -522,10 +522,27 @@ global functionChoice;
 
 methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 
+% Switching between methods and the new volume uses a function that is not
+% one-to-one given the domain specified by the defined lower and upper
+% bound, so produce an error message. After message cleared, return
+% selected method to what it was previously that was working.
+if (~isValidVolume(functionChoice(6:end), methodContents, lowerBound, upperBound, axisOri))
+    f = errordlg(sprintf(...
+            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
+        , 'Invalid Volume Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+        set(handles.discRadio, 'Value', 1.0);
+        
+        if (methodChoice == "Disk")
+            set(handles.discRadio, "value", 1.0)
+        else
+            set(handles.shellRadio, "value", 1.0)
+        end
 % If switching from disc to shell method and the resulting shell volume
 % cannot be generating due to the axis constraint, revert back to the disk
 % method. Else, assign the global variable methodChoice to whatever selected.
-if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
+elseif (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
     opts.Interpreter = 'tex';
     opts.Default = 'Cancel';
     fontSettings = '\fontsize{12}';
@@ -550,18 +567,6 @@ if (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(a
         case 'Cancel'
             set(handles.discRadio, 'Value', 1.0);
     end
-    
-% Switching between methods and the new volume uses a function that is not
-% one-to-one given the domain specified by the defined lower and upper
-% bound, so produce an error message. After message cleared, return
-% selected method to what it was previously that was working.
-elseif (~isValidVolume(functionChoice, methodContents, lowerBound, upperBound, axisOri))
-    f = errordlg(sprintf(...
-            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
-        , 'Invalid Volume Error');
-        set(f, 'WindowStyle', 'modal');
-        uiwait(f);
-        set(handles.discRadio, 'Value', 1.0);
 else
     methodChoice = methodContents;
 end
@@ -659,6 +664,7 @@ global functionChoice;
 global lowerBound;
 global upperBound;
 global methodChoice;
+global axisValue;
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
@@ -676,14 +682,47 @@ if (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, 
     uiwait(f);
     set(handles.yAxisRadio, 'Value', 1.0);
 else
+    % If new orientation selected, prompt user to enter a new axis value,
+    % or go back to previous configuration. Then, update the plot and GUI
+    % based afterwards.
+    if (axisPicked ~= axisOri)
+        prompt = {'Enter a new number for the axis value to rotate the area about, or enter 0 to rotate about the x/y-axis).'};
+        title = 'Axis Change';
+        definput = {'0'};
+        opts.Interpreter = 'tex';
+        newAxisValue = inputdlg(prompt,title,[1 40],definput,opts);
+        % If value entered into new input field not a number.
+        if(isnan(str2double(newAxisValue)))
+            d = errordlg(sprintf("Not a real number!"),'Invalid Input');
+            set(d, 'WindowStyle', 'modal');
+            uiwait(d);
+            set(handles.axisEditbox, 'string', axisValue);
+            
+            % Reset axis to what it was before the invalid input.
+            if (axisValue == "x")
+                set(handles.xAxisRadio, 'Value', 1.0);
+            else
+                set(handles.yAxisRadio, 'Value', 1.0);
+            end
+        elseif (~isValidShellVolume(str2double(newAxisValue), lowerBound, upperBound))
+            d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+            set(d, 'WindowStyle', 'modal');
+            uiwait(d);
+            set(handles.axisEditbox, 'string', axisValue);
+        else
+            disp(newAxisValue)
+            axisValue = str2double(newAxisValue);
+            set(handles.axisEditbox, 'string', axisValue);
+        end
+    end
     if (methodChoice == "Disk")
         if (axisPicked == "x")
-            bound_statement = "<= y <=";
+            bound_statement = "< Y <";
         else
-            bound_statement = "<= x <=";
+            bound_statement = "< X <";
         end
     else
-        bound_statement = "<= " + axisPicked(1) + " <=";
+        bound_statement = "< " + upper(axisPicked(1)) + " <";
     end
     
     set(handles.boundStatement, 'string', bound_statement);
@@ -695,12 +734,12 @@ else
     if (axisPicked == "x")
         position(2) = 2.9;
         set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x   =")
+        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
         set(handles.yAxisRadio,'string',"y")
     else
         position(2) = 0.76923;
         set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y   =")
+        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
         set(handles.xAxisRadio,'string',"x")
     end
     axisOri = axisPicked;
