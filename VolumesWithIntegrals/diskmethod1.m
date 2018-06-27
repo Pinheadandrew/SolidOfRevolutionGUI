@@ -18,8 +18,8 @@ f(x) = str2sym(funcString);
 if (lower(axisOri) == 'y')
     A(x) = pi*(f(x) - axisValue)^2;
 elseif (lower(axisOri) == 'x')
-    f_inverse(x) = finverse(f);
-    A(x) = pi*(f_inverse(x) - axisValue)^2;
+    g(x) = finverse(f);
+    A(x) = pi*(g(x) - axisValue)^2;
 end
 volume = double(int(A(x), lowerBound, upperBound));
 end

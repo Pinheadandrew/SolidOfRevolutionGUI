@@ -20,11 +20,13 @@ f(x) = str2sym(funcString);
 radius = x - axisValue;
 
 if (lower(axisOri) == 'x')
-    A(x) = f(x);
-else
+    g(x) = finverse(f);
+    integrant = abs(radius*(double(f(upperBound))-f(x)));
+    volume = 2*pi*double(int(integrant, lowerBound, upperBound));
+else % If rotation done paralell to a vertical line, integrate function's inverse.
     A(x) = finverse(f(x));
+    integrant = abs(radius*(A(upperBound) - A(x)));
+    volume = 2*pi*double(int(integrant, lowerBound, upperBound));
 end
-    
-volume = 2*pi*double(int(abs(radius*A(x)), lowerBound, upperBound));
 end
 

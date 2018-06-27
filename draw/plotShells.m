@@ -103,9 +103,32 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
       end
     else
-      % Condition for cases where axis is one parallel to x-axis.
-      g(x) = finverse(f);
-      shellLengths = double(g(xpoints));
+        % Condition for cases where axis is horizontal line, so draw shells
+        % parallel to this line. Bounds along y-axis.
+        g(x) = finverse(f);
+        
+        if (upbound > 0)
+            volumeBaseLine = double(g(upbound)); 
+            shellLengths = volumeBaseLine - double(g(xpoints));
+            shellEndpoints = volumeBaseLine - shellLengths;
+        else
+            volumeBaseLine = double(g(lowbound));
+            shellLengths = volumeBaseLine - double(g(xpoints));
+            shellEndpoints = volumeBaseLine + shellLengths;
+        end
+        
+%         % TO COMPARE
+%         if (upbound > 0)
+%         volumeBaseLine = double(g(upbound));
+%         shellLengths = volumeBaseLine - double(g(xpoints));
+%         shellEndpoints = volumeBaseLine - shellLengths;
+%     else
+%         volumeBaseLine = double(g(lowbound));
+%         shellLengths = volumeBaseLine - double(g(xpoints));
+%         shellEndpoints = volumeBaseLine - shellLengths;
+%         end
+%     
+%         %END COMPARISON
     
       for i=1:length(shellLengths)
           [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
@@ -122,7 +145,7 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
           shellInnerRadius = abs(shellWidthMargins(i)-axisVal);
           shellOuterRadius = abs(shellWidthMargins(i+1)-axisVal);
           
-          % When rotated to axis parallel to x-axis, edges of shell edges
+          % When rotated to axis parallel to x-axis, vertices of shell edges
           % change by y and z-points. X points static among the two faces
           % of shell.
           inner_y = shellInnerRadius*cos(theta);
@@ -155,8 +178,8 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
       %Patching the rectangles to "fill" the inside of the shells, after
       %looping of drawn shells.
       if(fullCircles == 0) 
-            xverts = [zeros(1, length(shellLengths)); shellLengths(1:end);...
-                shellLengths(1:end); zeros(1, length(shellLengths))];
+            xverts = [shellEndpoints; shellLengths(1:end);...
+                shellLengths(1:end); shellEndpoints];
             
             yverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
                                   shellWidthMargins(2:end); shellWidthMargins(2:end)];

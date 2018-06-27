@@ -33,13 +33,22 @@ end
 if(axisOri =="x")  
     % In this case, y-verts are the same when flipped across the axis, but
     % x-vertices are different.
-    shellHeights = double(f(xpoints));
+    
+    if (f(upbound) > f(lowbound))
+        volumeBaseLine = double(f(upbound));                    % "Top"/"Bottom" of solid
+        shellHeights = volumeBaseLine - double(f(xpoints));     % Diff b/w function point and "top"
+        shellBottomPoints = volumeBaseLine - shellHeights;      % 
+    else
+        volumeBaseLine = double(f(lowbound));
+        shellLengths = volumeBaseLine - double(f(xpoints));
+        shellBottomPoints = volumeBaseLine - shellLengths;
+    end
 
     orig_xverts = [orig_shellBasePoints(1:end-1); orig_shellBasePoints(1:end-1);... 
         orig_shellBasePoints(2:end); orig_shellBasePoints(2:end)];
     
-    yverts = [zeros(1,length(xpoints)); shellHeights(1:end);...
-                shellHeights(1:end); zeros(1,length(xpoints))];
+    yverts = [shellBottomPoints; volumeBaseLine*ones(1, length(shellHeights));...
+                volumeBaseLine*ones(1, length(shellHeights)); shellBottomPoints];
               
     mirror_xverts = [mirror_shellBasePoints(1:end-1); mirror_shellBasePoints(1:end-1);... 
         mirror_shellBasePoints(2:end); mirror_shellBasePoints(2:end)];
