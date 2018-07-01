@@ -28,8 +28,11 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
       else
         theta=0:pi/60:pi;
       end
-      
-      if(axisVal <= lowbound)
+    end
+    
+    % Get the points perpendicular to the axis that. Two sets of points,
+    % one on each side of the axis.
+    if(axisVal <= lowbound)
         axis_bound_distance = abs(shellWidthMargins - axisVal);
         mirror_shellWidthMargins = axisVal - axis_bound_distance;
       elseif(axisVal >= upbound)
@@ -37,14 +40,23 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         mirror_shellWidthMargins = axisVal + axis_bound_distance;
       else
         return
-      end
     end
     
     % First condition for axes parallel to the y-axis that the broken-up
     % subintervals of the area under/above the function are rotated around,
     % parallel to the axis of rotation. 
     if(lower(axisOri) == "x")
-      shellHeights = double(f(xpoints));
+      g(x) = finverse(f);
+      
+      if (f(upbound) > f(lowbound))
+        volumeBaseLine = double(f(upbound)); 
+        shellHeights = volumeBaseLine - double(f(xpoints));
+        shellEndpoints = volumeBaseLine - shellHeights;
+      else
+        volumeBaseLine = double(f(lowbound));
+        shellHeights = volumeBaseLine - double(g(xpoints));
+        shellEndpoints = volumeBaseLine + shellHeights;
+      end
     
       for i=1:length(shellHeights)
         [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
@@ -53,6 +65,12 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0]); hold on
         outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0]); hold on
         cylHeight = shellHeights(i);
+        
+        if (upbound > lowbound)
+            verticalCylEnd = volumeBaseLine - cylHeight;
+        else
+            verticalCylEnd = volumeBaseLine + cylHeight;
+        end
         
         % Coordinate for axis-line. Used to determine radius and
         % displacement of cylinders in 3D coordinate system.
@@ -68,22 +86,22 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         innerFace.XData(2, :)= inner_x;
         innerFace.YData(1, :)= inner_y;
         innerFace.YData(2, :)= inner_y;
-        innerFace.ZData = [zeros(1, length(innerFace.ZData));
-          cylHeight*ones(1, length(innerFace.ZData(2, :)))];
+        innerFace.ZData = [volumeBaseLine*ones(1, length(innerFace.ZData));
+          verticalCylEnd*ones(1, length(innerFace.ZData(2, :)))];
         
         outerFace.XData(1, :)= outer_x;
         outerFace.XData(2, :)= outer_x;
         outerFace.YData(1, :)= outer_y;
         outerFace.YData(2, :)= outer_y;
-        outerFace.ZData = [zeros(1, length(outerFace.ZData));
-          cylHeight*ones(1, length(outerFace.ZData(2, :)))];
+        outerFace.ZData = [volumeBaseLine*ones(1, length(outerFace.ZData));
+          verticalCylEnd*ones(1, length(outerFace.ZData(2, :)))];
         
         %Drawing rings to fill top and bottom of shells.
         bottomRing = patch([outer_x,inner_x], ...
-          [outer_y,inner_y], zeros(1, 2*length(theta)),[0 0.902 0]);
+          [outer_y,inner_y], verticalCylEnd*ones(1, 2*length(theta)),[0 0.902 0]);
         bottomRing.EdgeColor = 'none';
         topRing = patch([outer_x,inner_x], ...
-        [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),[0 0.902 0]);
+        [outer_y,inner_y], volumeBaseLine*ones(1, 2*length(theta)),[0 0.902 0]);
         topRing.EdgeColor = 'none';
       end
       
@@ -93,8 +111,8 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         orig_xverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
           shellWidthMargins(2:end); shellWidthMargins(2:end)];
         
-        yverts = [zeros(1,length(xpoints)); shellHeights(1:end);...
-          shellHeights(1:end); zeros(1,length(xpoints))];
+        yverts = [volumeBaseLine*ones(1, length(shellEndpoints)); shellEndpoints(1:end);...
+          shellEndpoints(1:end); volumeBaseLine*ones(1,length(shellEndpoints))];
         
         mirror_xverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);...
           mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
@@ -102,7 +120,38 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
         patch(orig_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
         patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
       end
-    else
+      
+       % Vertical line to rotate around.
+      if (axis_bound_distance(1) ~= 0)
+          centerCylRadius = axis_bound_distance(1);
+          % Coordinate for axis-line. Used to determine radius and
+          % displacement of cylinders.
+          centerCylPoints_x = axisVal + centerCylRadius*cos(theta);
+          centerCylPoints_y = centerCylRadius*sin(theta);
+          
+          % Patching rings on the left and the right faces of the center cylinder.
+          cir_z_1 = (volumeBaseLine-shellHeights(1))+zeros(size(theta));
+          cir_z_2 = volumeBaseLine+zeros(size(theta));
+          cir_x = centerCylPoints_x;
+          cir_y = centerCylPoints_y;
+          
+          %Draws both front and back faces of each disc.
+          patch(cir_x,cir_y,cir_z_1, [0 0.902 0]);
+          patch(cir_x,cir_y,cir_z_2, [0 0.902 0]);
+          
+          % Draw cross-section rectangle for center cylinder.
+          if(fullCircles == 0)
+              centerCylRect_xverts = [axisVal - centerCylRadius; axisVal + centerCylRadius; ...
+                  axisVal + centerCylRadius; axisVal - centerCylRadius];
+              
+              centerCylFill_zverts = [(volumeBaseLine-shellHeights(1)); ...
+                  (volumeBaseLine-shellHeights(1)); volumeBaseLine; volumeBaseLine];
+              
+              patch(centerCylRect_xverts, zeros(size(centerCylRect_xverts)), ...
+                  centerCylFill_zverts, [0 0.902 0]); hold on
+          end
+      end
+      else
         % Condition for cases where axis is horizontal line, so draw shells
         % parallel to this line. Bounds along y-axis.
         g(x) = finverse(f);
@@ -116,19 +165,6 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
             shellLengths = volumeBaseLine - double(g(xpoints));
             shellEndpoints = volumeBaseLine + shellLengths;
         end
-        
-%         % TO COMPARE
-%         if (upbound > 0)
-%         volumeBaseLine = double(g(upbound));
-%         shellLengths = volumeBaseLine - double(g(xpoints));
-%         shellEndpoints = volumeBaseLine - shellLengths;
-%     else
-%         volumeBaseLine = double(g(lowbound));
-%         shellLengths = volumeBaseLine - double(g(xpoints));
-%         shellEndpoints = volumeBaseLine - shellLengths;
-%         end
-%     
-%         %END COMPARISON
     
       for i=1:length(shellLengths)
           [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
@@ -138,16 +174,17 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
           rotate(innerFace, [0 1 0], 90);
           outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0]); hold on
           rotate(outerFace, [0 1 0], 90);
-          cylLength = shellLengths(i);
+          cylLength = shellLengths(i); % <- Current cylinder's height/length.
           
           % Coordinate for axis-line. Used to determine radius and
-          % displacement of cylinders.
+          % displacement of inner and outer cylinder that comprise shell.
           shellInnerRadius = abs(shellWidthMargins(i)-axisVal);
           shellOuterRadius = abs(shellWidthMargins(i+1)-axisVal);
           
-          % When rotated to axis parallel to x-axis, vertices of shell edges
+          % When rotated to axis parallel to x-axis, vertices of cylinder edges
           % change by y and z-points. X points static among the two faces
-          % of shell.
+          % of shell. Get the Y and Z coordinates comprising both inner and
+          % outer cylinder.
           inner_y = shellInnerRadius*cos(theta);
           outer_y = shellOuterRadius*cos(theta);
           inner_z = axisVal + shellInnerRadius*sin(theta);
@@ -157,29 +194,30 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
           innerFace.YData(2, :)= inner_y;
           innerFace.ZData(1, :)= inner_z;
           innerFace.ZData(2, :)= inner_z;
-          innerFace.XData = [zeros(1, length(innerFace.ZData));
-              cylLength*ones(1, length(innerFace.ZData(2, :)))];
+          innerFace.XData = [volumeBaseLine*ones(1, length(innerFace.ZData)); % This 2-row matrix 
+              (volumeBaseLine-cylLength)*ones(1, length(innerFace.ZData(2, :)))];
 
+          % Setting vertices of outside edge of the cylinder.
           outerFace.YData(1, :)= outer_y;
           outerFace.YData(2, :)= outer_y;
           outerFace.ZData(1, :)= outer_z;
           outerFace.ZData(2, :)= outer_z;
-          outerFace.XData = [zeros(1, length(outerFace.ZData));
-              cylLength*ones(1, length(outerFace.ZData(2, :)))];
+          outerFace.XData = [volumeBaseLine*ones(1, length(outerFace.ZData));
+              (volumeBaseLine-cylLength)*ones(1, length(outerFace.ZData(2, :)))];
 
           % Patching rings on the left and the right faces of the shells.
-          leftRing = patch(zeros(1, 2*length(theta)), ...
+          leftRing = patch((volumeBaseLine-cylLength)*ones(1, 2*length(theta)), ...
                   [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
           leftRing.EdgeColor = 'none';
-          rightRing = patch(cylLength*ones(1, 2*length(theta)), ...
+          rightRing = patch(volumeBaseLine*ones(1, 2*length(theta)), ...
             [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
            rightRing.EdgeColor = 'none';
       end
       %Patching the rectangles to "fill" the inside of the shells, after
       %looping of drawn shells.
       if(fullCircles == 0) 
-            xverts = [shellEndpoints; shellLengths(1:end);...
-                shellLengths(1:end); shellEndpoints];
+            xverts = [shellEndpoints; volumeBaseLine*ones(1, length(shellEndpoints));...
+                volumeBaseLine*ones(1, length(shellEndpoints)); shellEndpoints];
             
             yverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
                                   shellWidthMargins(2:end); shellWidthMargins(2:end)];
@@ -191,5 +229,39 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
              patch(xverts, zeros(size(xverts)), mirror_yverts, [0 0.902 0]); hold on
       end
     end
+    
+    % If there is a "hole" around the axis after generating a shell solid,
+    % plot a cylinder to "fill" it.
+    if (axis_bound_distance(1) ~= 0)
+        centerCylRadius = axis_bound_distance(1);
+        % Horizontal line to rotate around.
+        if (lower(axisOri) == "y") 
+          % Coordinate for axis-line. Used to determine radius and
+          % displacement of cylinders.
+          centerCylPoints_y = centerCylRadius*cos(theta);
+          centerCylPoints_z = axisVal + centerCylRadius*sin(theta);
+          
+          % Patching rings on the left and the right faces of the center cylinder.
+          cir_x_1 = (volumeBaseLine-shellLengths(1))+zeros(size(theta));
+          cir_x_2 = volumeBaseLine+zeros(size(theta));
+          cir_y = centerCylPoints_y;
+          cir_z = centerCylPoints_z;
+          
+          %Draws both front and back faces of each disc.
+          patch(cir_x_1,cir_y,cir_z, [0 0.902 0]);
+          patch(cir_x_2,cir_y,cir_z, [0 0.902 0]);
+          
+          % Draw cross-section rectangle for center cylinder.
+          if(fullCircles == 0)
+             centerCylRect_xverts = [(volumeBaseLine-shellLengths(1)); ...
+                 (volumeBaseLine-shellLengths(1)); volumeBaseLine; volumeBaseLine];
+                 
+             centerCylFill_yverts = [axisVal - centerCylRadius; axisVal + centerCylRadius; ...
+                 axisVal + centerCylRadius; axisVal - centerCylRadius];
+             
+             patch(centerCylRect_xverts, zeros(size(centerCylRect_xverts)), ...
+                 centerCylFill_yverts, [0 0.902 0]); hold on
+          end
+        end
+    end
 end
-

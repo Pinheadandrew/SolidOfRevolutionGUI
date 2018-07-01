@@ -279,7 +279,7 @@ else
     % Preserving axis limits when the method is the shell, due to unusual
     % plots w/o using the bounds made from plotting the volume (2D or 3D).
     % Draw the function line, it's mirror and the axis of rotation, then
-    % reuse the axis limits.
+    % reuse the axis limits.th
     if (methodChoice == "Shell" || (methodChoice == "Disk" && axisOri == "x"))
       shape_plot_xlim = xlim;
       shape_plot_ylim = ylim;
@@ -513,7 +513,6 @@ end
 function methodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
 global methodChoice;
 global viewMode;
-global fullSolid;
 global axisOri;
 global axisValue;
 global lowerBound;
@@ -563,18 +562,35 @@ elseif (~isValidVolume(functionChoice, methodContents, lowerBound, upperBound, a
         uiwait(f);
         set(handles.discRadio, 'Value', 1.0);
 else
+    % If the method changes, and the domain of the integration changes
+    % between the x and y-axis, change the bounds accordingly so same
+    % volume generated.
+    if (~strcmp(methodChoice, methodContents))
+        syms x
+        f(x) = str2sym(functionChoice(6:end));
+        
+        % Configurations in which domain for integration is in respect to dY.
+        if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
+            [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+            set(handles.lowerBoundEdit, 'string', lowerBound);
+            set(handles.upperBoundEdit, 'string', upperBound);
+        else
+        % If switching to domain in respect to dX, use regular function
+        % selected to reset the bounds.
+            [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+        end
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+        set(handles.upperBoundEdit, 'string', upperBound);
+    end
     methodChoice = methodContents;
 end
 
 subIntsLabelString = "Number of " + methodChoice + "s";
 set(handles.subintervalGroup, 'title', subIntsLabelString);
 
-
 % Upon selection of the rotation method used, make changes to UI, changing
 % some titles.
 if(viewMode == "3D")
-  fullSolid = 1;
-  set(handles.fullSolidRadio, 'Value', 1.0);
   set(handles.solidViewRadiogroup, 'Visible', "on");
   set(handles.subintervalGroup, 'title', subIntsLabelString);
 else
@@ -847,6 +863,35 @@ else
                valid = 0;
            end
        end
+    end
+end
+end
+
+function [newLower, newUpper] = inverseBounds(functionString, lowerBound, upperBound, inverse)
+    
+% If the inverse function of the current function selected needed to switch
+% bounds.
+if (inverse == 1)
+    if (functionString == "x^2")
+        newLower = lowerBound^(1/2);
+        newUpper = upperBound^(1/2);
+    elseif (functionString == "2^x")
+        newLower = log2(lowerBound);
+        newUpper = log2(upperBound);
+    else
+        newLower = lowerBound;
+        newUpper = upperBound;
+    end
+else
+    if (functionString == "x^2")
+        newLower = lowerBound^2;
+        newUpper = upperBound^2;
+    elseif (functionString == "2^x")
+        newLower = 2^lowerBound;
+        newUpper = 2^log2(upperBound);
+    else
+        newLower = lowerBound;
+        newUpper = upperBound;
     end
 end
 end
