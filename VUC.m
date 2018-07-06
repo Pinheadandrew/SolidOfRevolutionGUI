@@ -126,15 +126,6 @@ else
     functionChoice = functionContents;
 end
 
-% Sets default bounds of revolution according to function picked. i.e when
-% x^2 selected, bounds change to 0<=x<=2.
-if (functionChoice == "f(x)=x^2")
-    lowerBound = 0;
-    upperBound = 1;
-    set(handles.lowerBoundEdit, 'String', lowerBound);
-    set(handles.upperBoundEdit, 'String', upperBound);
-end
-
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
@@ -572,8 +563,6 @@ else
         % Configurations in which domain for integration is in respect to dY.
         if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
             [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-            set(handles.lowerBoundEdit, 'string', lowerBound);
-            set(handles.upperBoundEdit, 'string', upperBound);
         else
         % If switching to domain in respect to dX, use regular function
         % selected to reset the bounds.
@@ -704,8 +693,17 @@ else
         newAxisValue = inputdlg(prompt,title,[1 40],definput,opts);
         if(isnan(str2double(newAxisValue)))
             disp("Not a number!")
+        elseif (isempty(newAxisValue)) % If 'cancel' selected, revert to previous axis orientation.
+            if (axisOri == "x")
+                set(handles.xAxisRadio, 'value', 1.0)
+                axisPicked = "x";
+            else
+                set(handles.yAxisRadio, 'value', 1.0)
+                axisPicked = "y";
+            end
+            
+            set(handles.axisEditbox, 'string', axisValue);
         else
-            disp(newAxisValue)
             axisValue = str2double(newAxisValue);
             set(handles.axisEditbox, 'string', axisValue);
         end
@@ -876,19 +874,27 @@ if (inverse == 1)
         newLower = lowerBound^(1/2);
         newUpper = upperBound^(1/2);
     elseif (functionString == "2^x")
-        newLower = log2(lowerBound);
-        newUpper = log2(upperBound);
+        % Undefined case when evaluating log2(0), which is
+        % undefined/negative infinity.
+        if (lowerBound == 0)
+            lowerBound = .0001;
+        elseif (upperBound == 0)
+            upperBound = .0001;
+        end
+            
+        newLower = double(log2(lowerBound));
+        newUpper = double(log2(upperBound));
     else
         newLower = lowerBound;
         newUpper = upperBound;
     end
-else
+else % Reverting bounds back to x-axis if current function selected is used.
     if (functionString == "x^2")
         newLower = lowerBound^2;
         newUpper = upperBound^2;
     elseif (functionString == "2^x")
         newLower = 2^lowerBound;
-        newUpper = 2^log2(upperBound);
+        newUpper = 2^upperBound;
     else
         newLower = lowerBound;
         newUpper = upperBound;
