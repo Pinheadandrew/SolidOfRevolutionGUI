@@ -48,15 +48,6 @@ end
 if(lower(axisOri) == "x")
     g(x) = finverse(f);
     
-%     if (f(upbound) > f(lowbound))
-%         volumeBaseLine = double(f(upbound));
-%         shellHeights = volumeBaseLine - double(f(xpoints));
-%         shellEndpoints = volumeBaseLine - shellHeights;
-%     else
-%         volumeBaseLine = double(f(lowbound));
-%         shellHeights = volumeBaseLine - double(g(xpoints));
-%         shellEndpoints = volumeBaseLine + shellHeights;
-%     end
     if (double(g(lowbound)) >= axisVal)
         volumeBaseLine = double(f(upbound));
         shellHeights = volumeBaseLine - double(f(xpoints));
@@ -72,8 +63,8 @@ if(lower(axisOri) == "x")
         [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
         [x2, y2, z2] = cylinder(shellWidthMargins(i+1), length(theta)-1);
         
-        innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0]); hold on
-        outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0]); hold on
+        innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
+        outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
         cylHeight = shellHeights(i);
         
         if (upbound > lowbound)
@@ -113,6 +104,12 @@ if(lower(axisOri) == "x")
         topRing = patch([outer_x,inner_x], ...
             [outer_y,inner_y], volumeBaseLine*ones(1, 2*length(theta)),[0 0.902 0]);
         topRing.EdgeColor = 'none';
+        
+        % Drawing circles for edges of bottom and top ring
+        plot3(inner_x, inner_y, volumeBaseLine*ones(1, length(theta)), "black"), hold on
+        plot3(inner_x, inner_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
+        plot3(outer_x, outer_y, volumeBaseLine*ones(1, length(theta)), "black"), hold on
+        plot3(outer_x, outer_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
     end
     
     %Drawing rectangles to fill faces of shells' as they're cut on
@@ -186,23 +183,13 @@ else
         shellEndpoints = volumeBaseLine - shellLengths;
     end
     
-%     if (double(f(upbound)) <= axisVal)
-%         volumeBaseLine = double(g(lowbound));
-%         shellLengths = volumeBaseLine - double(g(xpoints));
-%         shellEndpoints = volumeBaseLine - shellLengths;
-%     elseif (double(f(lowbound)) >= axisVal)
-%         volumeBaseLine = double(g(upbound));
-%         shellLengths = volumeBaseLine - double(g(xpoints));
-%         shellEndpoints = volumeBaseLine - shellLengths;
-%     end
-    
     for i=1:length(shellLengths)
         [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
         [x2, y2, z2] = cylinder(shellWidthMargins(i+1), length(theta)-1);
         
-        innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0]); hold on
+        innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
         rotate(innerFace, [0 1 0], 90);
-        outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0]); hold on
+        outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
         rotate(outerFace, [0 1 0], 90);
         cylLength = shellLengths(i); % <- Current cylinder's height/length.
         
@@ -242,6 +229,12 @@ else
         rightRing = patch(volumeBaseLine*ones(1, 2*length(theta)), ...
             [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
         rightRing.EdgeColor = 'none';
+        
+        % Drawing circles for edges of left and right ring
+        plot3(volumeBaseLine*ones(1, length(theta)), inner_y, inner_z, "black"), hold on
+        plot3((volumeBaseLine-cylLength)*ones(1, length(theta)), inner_y, inner_z, "black"), hold on
+        plot3(volumeBaseLine*ones(1, length(theta)), outer_y, outer_z, "black"), hold on
+        plot3((volumeBaseLine-cylLength)*ones(1, length(theta)), outer_y, outer_z, "black"), hold on
     end
     
     %Patching the rectangles to "fill" the inside of the shells, after
