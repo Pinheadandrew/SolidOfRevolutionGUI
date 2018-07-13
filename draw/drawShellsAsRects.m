@@ -5,6 +5,7 @@
 
 syms x
 f(x) = str2sym(funcString);
+g(x) = finverse(f(x));
 
 delta= (upbound - lowbound)/subdivs;
 orig_shellBasePoints = (lowbound:delta:upbound);            %<- Base points for rectangles along static-changing axis.
@@ -34,11 +35,11 @@ if(axisOri =="x")
     % In this case, y-verts are the same when flipped across the axis, but
     % x-vertices are different.
     
-    if (f(upbound) > f(lowbound))
+    if (double(g(lowbound)) >= axisVal)
         volumeBaseLine = double(f(upbound));                    % "Top"/"Bottom" of solid
         shellHeights = volumeBaseLine - double(f(xpoints));     % Diff b/w function point and "top"
         shellBottomPoints = volumeBaseLine - shellHeights;      % 
-    else
+    elseif (double(g(upbound)) <= axisVal)
         volumeBaseLine = double(f(lowbound));
         shellHeights = volumeBaseLine - double(f(xpoints));
         shellBottomPoints = volumeBaseLine - shellHeights;
@@ -56,33 +57,55 @@ if(axisOri =="x")
     origRectSet = patch(orig_xverts, yverts, "b"); hold on
     mirrorRectSet = patch(mirror_xverts, yverts, "b"); hold on
     
-    axis_bound_distance(1)
     % If difference b/w axis value and lower/upper bound, draw cross-section 
     % rectangle for inner cylinder rotated around vertical line.
-    if (axis_bound_distance(1) ~= 0)
-        % Radius of the filler cylinder determined.
-        if(axisVal < lowbound)
-            centerCylRadius = axis_bound_distance(1);
-            innerCylHeight = shellHeights(1);
-        elseif(axisVal > upbound)
-            centerCylRadius = axis_bound_distance(end);
-            innerCylHeight = shellHeights(end);
-        end
-        
-        % Draw cross-section rectangle for center cylinder.
-        centerCylRect_xverts = [axisVal - centerCylRadius; axisVal + centerCylRadius;...
-            axisVal + centerCylRadius; axisVal - centerCylRadius];
-        
-        centerCylFill_yverts = [(volumeBaseLine-innerCylHeight); (volumeBaseLine-innerCylHeight); ...
-            volumeBaseLine; volumeBaseLine];
-        
-        patch(centerCylRect_xverts, centerCylFill_yverts, "b"); hold on
-    end
+%     if (axis_bound_distance(1) ~= 0)
+%         % Radius of the filler cylinder determined.
+%         if(axisVal < lowbound)
+%             centerCylRadius = axis_bound_distance(1);
+%             innerCylHeight = shellHeights(1);
+%         elseif(axisVal > upbound)
+%             centerCylRadius = axis_bound_distance(end);
+%             innerCylHeight = shellHeights(end);
+%         end
+%         
+%         % Draw cross-section rectangle for center cylinder.
+%         centerCylRect_xverts = [axisVal - centerCylRadius; axisVal + centerCylRadius;...
+%             axisVal + centerCylRadius; axisVal - centerCylRadius];
+%         
+%         centerCylFill_yverts = [(volumeBaseLine-innerCylHeight); (volumeBaseLine-innerCylHeight); ...
+%             volumeBaseLine; volumeBaseLine];
+%         
+%         patch(centerCylRect_xverts, centerCylFill_yverts, "b"); hold on
+%     end
+if (axisVal < lowbound)
+    % Radius of the filler cylinder determined.
+    
+    centerCylRadius = axis_bound_distance(1);
+    innerCylHeight = shellHeights(1);
+    % Draw cross-section rectangle for center cylinder.
+    centerCylRect_xverts = [axisVal - centerCylRadius; axisVal + centerCylRadius;...
+        axisVal + centerCylRadius; axisVal - centerCylRadius];
+    
+    centerCylFill_yverts = [(volumeBaseLine-innerCylHeight); (volumeBaseLine-innerCylHeight); ...
+        volumeBaseLine; volumeBaseLine];
+    
+    patch(centerCylRect_xverts, centerCylFill_yverts, "b"); hold on
+elseif (axisVal > upbound)
+    centerCylRadius = axis_bound_distance(end);
+    innerCylHeight = shellHeights(end);
+    % Draw cross-section rectangle for center cylinder.
+    centerCylRect_xverts = [axisVal - centerCylRadius; axisVal + centerCylRadius;...
+        axisVal + centerCylRadius; axisVal - centerCylRadius];
+    
+    centerCylFill_yverts = [(volumeBaseLine-innerCylHeight); (volumeBaseLine-innerCylHeight); ...
+        volumeBaseLine; volumeBaseLine];
+    
+    patch(centerCylRect_xverts, centerCylFill_yverts, "b"); hold on
+end
 else
     % Rotating around horizontal line.  Shell lengths based on difference b/w 
     % "bottom"/"top" of volume and the point along the function's inverse.
-    
-    g(x) = finverse(f(x));
     
     % Determine whether the volume needs a "top" of a "bottom", then 
     if (f(upbound) > f(lowbound))

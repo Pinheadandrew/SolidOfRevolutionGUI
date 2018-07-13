@@ -15,15 +15,17 @@ function volume = shellmethod1(funcString, lowerBound, upperBound, axisOri, axis
 %       3. 
 
 syms x
-assume(x >= lowerBound & x <= upperBound);
 f(x) = str2sym(funcString);
 g(x) = finverse(f);
 radius = x - axisValue;
 
 % If rotating around vertical line, 
 if (lower(axisOri) == 'x')
-    integrant = abs(radius*(double(f(upperBound))-f(x)));
-    volume = 2*pi*double(int(integrant, lowerBound, upperBound));
+    
+    % x - axisValue * f(x)
+     % integrant = abs(radius*f(x));
+     integrant = abs(radius*(double(f(upperBound))-f(x))); % |x*(
+    volume = 2*pi*double(int(integrant, lowerBound, upperBound)); 
 else % If rotation done paralell to a vertical line, integrate function's inverse.
     integrant = abs(radius*(g(upperBound) - g(x)));
     volume = 2*pi*double(int(integrant, lowerBound, upperBound));

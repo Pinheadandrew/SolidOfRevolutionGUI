@@ -693,6 +693,7 @@ else
         newAxisValue = inputdlg(prompt,title,[1 40],definput,opts);
         if(isnan(str2double(newAxisValue)))
             disp("Not a number!")
+            % CHANGE TO ERROR MESSAGE AND REVERT TO PREVIOUS
         elseif (isempty(newAxisValue)) % If 'cancel' selected, revert to previous axis orientation.
             if (axisOri == "x")
                 set(handles.xAxisRadio, 'value', 1.0)
@@ -704,10 +705,20 @@ else
             
             set(handles.axisEditbox, 'string', axisValue);
         else
+            % Configurations in which domain for integration is in respect to dY.
+            if ((methodChoice == "Shell" && axisPicked == "y") || (methodChoice == "Disk" && axisPicked == "x"))
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+            else
+            % If switching to domain in respect to dX, use regular function
+            % selected to reset the bounds.
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+            end
+            set(handles.lowerBoundEdit, 'string', lowerBound);
+            set(handles.upperBoundEdit, 'string', upperBound);
             axisValue = str2double(newAxisValue);
             set(handles.axisEditbox, 'string', axisValue);
         end
-    end
+end
     if (methodChoice == "Disk")
         if (axisPicked == "x")
             bound_statement = "< Y <";
