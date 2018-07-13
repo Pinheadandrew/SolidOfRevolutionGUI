@@ -32,15 +32,11 @@ end
 syms x
 f(x) = str2sym(funcString);
 
-if (lower(axisOri) == 'y') % Bounds along y-axis, use inverse with upperbound as "limit" of volume.
-    g(x) = finverse(f);
-    shellHeights = abs(double(g(upperBound) - g(xpoints)));
-% Bounds along x-axis, use inverse with upperbound as "limit" of volume
-% minus the function along to collect the shell's lengths (shells are
-% horizontal)
-else
-    shellHeights = abs(double(f(upperBound) - f(xpoints)));
+if (lower(axisOri) == 'y')
+    f(x) = finverse(f);
 end
+
+shellHeights = abs(double(f(xpoints))); % Heights of the individual shells.
 
 % Checks for any NaNs, as result of problems such as logarithm function of
 % negative number.
@@ -53,19 +49,4 @@ end
 shellVols = shellHeights.*abs(xpoints-axisValue)*delta;
 sumShellVols = 2*pi*sum(shellVols);
 
-% Included filler cylinder between axis of rotation and first/last shell.
-if (lowerBound > axisValue)
-    inner_radius = abs(lowerBound - axisValue);
-    inner_cyl_vol = pi*(inner_radius^2)*shellHeights(1);
-    
-elseif (upperBound < axisValue)
-   inner_radius = abs(axisValue - upperBound);
-   inner_cyl_vol = pi*(inner_radius^2)*shellHeights(end);
-    
-else
-    inner_cyl_vol = 0;
 end
-
-sumShellVols = sumShellVols + inner_cyl_vol;
-end
-

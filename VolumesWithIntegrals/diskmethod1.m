@@ -16,7 +16,7 @@ syms x
 f(x) = str2sym(funcString);
 
 if (lower(axisOri) == 'y')
-    A(x) = pi*(f(x) - axisValue)^2;
+    A(x) = pi*((f(x) - axisValue))^2;
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);
     A(x) = pi*(g(x) - axisValue)^2;
