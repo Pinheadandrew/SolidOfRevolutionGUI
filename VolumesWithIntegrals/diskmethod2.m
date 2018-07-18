@@ -29,27 +29,58 @@ end
 syms x
 f(x) = str2sym(funcString);
 
-% If axis running through x-axis, flip the function determining disk radii
-% to be the inverse function of passed expression.
-if (lower(axisOri) == 'x')
+if (lower(axisOri) == 'y')
+    if (axisValue ~= lowerBound && axisValue ~= upperBound)
+        % Axis of rotation BELOW area under curve, set outer radius to
+        % function line.
+        if(double(f(lowerBound)) > axisValue)
+            innerDisks = axisValue - f(lowerBound); 
+            outerDisks = axisValue - f(xpoints);
+            
+            % Axis of rotation ABOVE area under curve, outer radius is axis
+            % value minus minima of function within bounds.
+        elseif (double(f(upperBound)) < axisValue)
+            innerDisks = axisValue - f(xpoints);
+            outerDisks = axisValue - f(lowerBound);
+        end
+        diskAreas = pi*(outerDisks.^2 - innerDisks.^2);
+    else
+        diskAreas = pi * (f(xpoints) - axisValue).^2;
+    end
+    % If axis running through x-axis, flip the function determining disk radii
+    % to be the inverse function of passed expression.
+elseif (lower(axisOri) == 'x')
     f(x) = finverse(f);
-end
-
-ypoints = double(f(xpoints) - axisValue);
-
-% Checks for any NaNs, as result of problems such as logarithm function of
-% negative number.
-for x = 1:length(ypoints)
-    if (isnan(ypoints(x)) || ~isreal(ypoints(x)))
-        ypoints(x) = 0;
+    
+    if (axisValue ~= lowerBound && axisValue ~= upperBound)
+        % Axis of rotation BELOW area under curve, set outer radius to
+        % function line.
+        if(double(f(lowerBound)) > axisValue)
+            innerDisks = axisValue - f(lowerBound); 
+            outerDisks = axisValue - f(xpoints);
+            
+            % Axis of rotation ABOVE area under curve, outer radius is axis
+            % value minus minima of function within bounds.
+        elseif (double(f(upperBound)) < axisValue)
+            innerDisks = axisValue - f(xpoints);
+            outerDisks = axisValue - f(lowerBound);
+        end
+        diskAreas = pi*(outerDisks.^2 - innerDisks.^2);
+    else
+        diskAreas = pi * (f(xpoints) - axisValue).^2;
     end
 end
 
-% Vector to hold volumes of each disk, then add them all up to return the
-% volume for the solid.
+% Checks for any NaNs, as result of problems such as logarithm function of
+% negative number.
+for i = 1:length(diskAreas)
+    if (isnan(diskAreas(i)) || ~isreal(diskAreas(i)))
+        diskAreas(i) = 0;
+    end
+end
 
-diskVolumes = pi*(ypoints.^2)*delta;
-approxVol = sum(diskVolumes);
+diskVolumes = diskAreas*delta;
+approxVol = double(sum(diskVolumes));
 
 end
 

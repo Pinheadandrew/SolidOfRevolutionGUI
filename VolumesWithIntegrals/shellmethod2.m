@@ -32,11 +32,15 @@ end
 syms x
 f(x) = str2sym(funcString);
 
-if (lower(axisOri) == 'y')
-    f(x) = finverse(f);
+if (lower(axisOri) == 'y') % Bounds along y-axis, use inverse with upperbound as "limit" of volume.
+    g(x) = finverse(f);
+    shellHeights = abs(double(g(upperBound) - g(xpoints)));
+% Bounds along x-axis, use inverse with upperbound as "limit" of volume
+% minus the function along to collect the shell's lengths (shells are
+% horizontal)
+else
+    shellHeights = abs(double(f(upperBound) - f(xpoints)));
 end
-
-shellHeights = abs(double(f(xpoints))); % Heights of the individual shells.
 
 % Checks for any NaNs, as result of problems such as logarithm function of
 % negative number.
@@ -48,5 +52,4 @@ end
 
 shellVols = shellHeights.*abs(xpoints-axisValue)*delta;
 sumShellVols = 2*pi*sum(shellVols);
-
 end
