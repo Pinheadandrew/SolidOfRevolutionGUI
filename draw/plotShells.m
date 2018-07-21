@@ -128,8 +128,7 @@ if(lower(axisOri) == "x")
         patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
     end
 else
-    % Condition for cases where axis is horizontal line, so draw shells
-    % parallel to this line. Bounds along y-axis.
+    % When axis is horizontal line, draw shells parallel to this line, bounds along y-axis.
     g(x) = finverse(f);
     
     % If lower bound's value of f(x) higher than axis value, make solid's
