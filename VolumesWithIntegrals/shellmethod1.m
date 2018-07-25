@@ -22,7 +22,7 @@ radius = x - axisValue;
 % If rotating around vertical line, 
 if (lower(axisOri) == 'x')
      integrant = abs(radius*(double(f(upperBound))-f(x))); % |x*(
-else % If rotation done paralell to a vertical line, integrate function's inverse.
+else % If rotation done paralell to a horizontal line, integrate function's inverse.
     integrant = abs(radius*(g(upperBound) - g(x)));
 end
 

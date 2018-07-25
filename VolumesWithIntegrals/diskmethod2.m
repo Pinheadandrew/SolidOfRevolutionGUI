@@ -33,13 +33,13 @@ if (lower(axisOri) == 'y')
     if (axisValue ~= lowerBound && axisValue ~= upperBound)
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
-        if(double(f(lowerBound)) > axisValue)
+        if(double(f(lowerBound)) >= axisValue)
             innerDisks = axisValue - f(lowerBound); 
             outerDisks = axisValue - f(xpoints);
             
             % Axis of rotation ABOVE area under curve, outer radius is axis
             % value minus minima of function within bounds.
-        elseif (double(f(upperBound)) < axisValue)
+        elseif (double(f(upperBound)) <= axisValue)
             innerDisks = axisValue - f(xpoints);
             outerDisks = axisValue - f(lowerBound);
         end
@@ -50,24 +50,24 @@ if (lower(axisOri) == 'y')
     % If axis running through x-axis, flip the function determining disk radii
     % to be the inverse function of passed expression.
 elseif (lower(axisOri) == 'x')
-    f(x) = finverse(f);
+    g(x) = finverse(f);
     
-    if (axisValue ~= lowerBound && axisValue ~= upperBound)
+    if (axisValue <= g(lowerBound) && axisValue >= g(upperBound))
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
-        if(double(f(lowerBound)) > axisValue)
-            innerDisks = axisValue - f(lowerBound); 
-            outerDisks = axisValue - f(xpoints);
+        if(double(g(lowerBound)) >= axisValue)
+            innerDisks = axisValue - g(lowerBound); 
+            outerDisks = axisValue - g(xpoints);
             
             % Axis of rotation ABOVE area under curve, outer radius is axis
             % value minus minima of function within bounds.
-        elseif (double(f(upperBound)) < axisValue)
-            innerDisks = axisValue - f(xpoints);
-            outerDisks = axisValue - f(lowerBound);
+        elseif (double(g(upperBound)) <= axisValue)
+            innerDisks = axisValue - g(xpoints);
+            outerDisks = axisValue - g(lowerBound);
         end
         diskAreas = pi*(outerDisks.^2 - innerDisks.^2);
     else
-        diskAreas = pi * (f(xpoints) - axisValue).^2;
+        diskAreas = pi * (g(xpoints) - axisValue).^2;
     end
 end
 

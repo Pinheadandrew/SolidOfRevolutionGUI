@@ -46,32 +46,15 @@ end
 % subintervals of the area under/above the function are rotated around,
 % parallel to the axis of rotation.
 if(lower(axisOri) == "x")
-    g(x) = finverse(f);
+    shellHeights = double(f(xpoints));
     
-    if (double(g(lowbound)) >= axisVal)
-        volumeBaseLine = double(f(upbound));
-        shellHeights = volumeBaseLine - double(f(xpoints));
-        shellEndpoints = volumeBaseLine - shellHeights;
-    elseif (double(g(upbound)) <= axisVal)
-        volumeBaseLine = double(f(lowbound));
-        shellHeights = volumeBaseLine - double(f(xpoints));
-        shellEndpoints = volumeBaseLine - shellHeights;
-    end
-    
-    % Loop that draws all the shells
-    for i=1:length(shellHeights)
+      for i=1:length(shellHeights)
         [x1, y1, z1] = cylinder(shellWidthMargins(i), length(theta)-1);
         [x2, y2, z2] = cylinder(shellWidthMargins(i+1), length(theta)-1);
         
         innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
         outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
         cylHeight = shellHeights(i);
-        
-        if (upbound > lowbound)
-            verticalCylEnd = volumeBaseLine - cylHeight;
-        else
-            verticalCylEnd = volumeBaseLine + cylHeight;
-        end
         
         % Coordinate for axis-line. Used to determine radius and
         % displacement of cylinders in 3D coordinate system.
@@ -87,46 +70,61 @@ if(lower(axisOri) == "x")
         innerFace.XData(2, :)= inner_x;
         innerFace.YData(1, :)= inner_y;
         innerFace.YData(2, :)= inner_y;
-        innerFace.ZData = [volumeBaseLine*ones(1, length(innerFace.ZData));
-            verticalCylEnd*ones(1, length(innerFace.ZData(2, :)))];
+        innerFace.ZData = [zeros(1, length(innerFace.ZData));
+          cylHeight*ones(1, length(innerFace.ZData(2, :)))];
         
         outerFace.XData(1, :)= outer_x;
         outerFace.XData(2, :)= outer_x;
         outerFace.YData(1, :)= outer_y;
         outerFace.YData(2, :)= outer_y;
-        outerFace.ZData = [volumeBaseLine*ones(1, length(outerFace.ZData));
-            verticalCylEnd*ones(1, length(outerFace.ZData(2, :)))];
+        outerFace.ZData = [zeros(1, length(outerFace.ZData));
+          cylHeight*ones(1, length(outerFace.ZData(2, :)))];
         
         %Drawing rings to fill top and bottom of shells.
         bottomRing = patch([outer_x,inner_x], ...
-            [outer_y,inner_y], verticalCylEnd*ones(1, 2*length(theta)),[0 0.902 0]);
+          [outer_y,inner_y], zeros(1, 2*length(theta)),[0 0.902 0]);
         bottomRing.EdgeColor = 'none';
         topRing = patch([outer_x,inner_x], ...
-            [outer_y,inner_y], volumeBaseLine*ones(1, 2*length(theta)),[0 0.902 0]);
+        [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),[0 0.902 0]);
         topRing.EdgeColor = 'none';
         
-        % Drawing circles for edges of bottom and top ring
-        plot3(inner_x, inner_y, volumeBaseLine*ones(1, length(theta)), "black"), hold on
-        plot3(inner_x, inner_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
-        plot3(outer_x, outer_y, volumeBaseLine*ones(1, length(theta)), "black"), hold on
-        plot3(outer_x, outer_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
-    end
+%         plot3(inner_x, inner_y, volumeBaseLine*ones(1, length(theta)), "black"), hold on
+        plot3(inner_x, inner_y, cylHeight*ones(1, length(theta)), "black"), hold on
+        plot3(outer_x, outer_y, cylHeight*ones(1, length(theta)), "black"), hold on
+%         plot3(outer_x, outer_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
+      end
+      
+      %Drawing rectangles to fill faces of shells' as they're cut on
+      %xy-plane.
+      if (fullCircles == 0)
+        orig_xverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
+          shellWidthMargins(2:end); shellWidthMargins(2:end)];
+        
+        yverts = [zeros(1,length(xpoints)); shellHeights(1:end);...
+          shellHeights(1:end); zeros(1,length(xpoints))];
+        
+        mirror_xverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);...
+          mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
+        %Patching the rectangles to "fill" the inside of the shells.
+        patch(orig_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
+        patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
+      end
     
     %Drawing rectangles to fill faces of shells' as they're cut on
     %xy-plane.
     if (fullCircles == 0)
         orig_xverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
-            shellWidthMargins(2:end); shellWidthMargins(2:end)];
+          shellWidthMargins(2:end); shellWidthMargins(2:end)];
         
-        yverts = [volumeBaseLine*ones(1, length(shellEndpoints)); shellEndpoints(1:end);...
-            shellEndpoints(1:end); volumeBaseLine*ones(1,length(shellEndpoints))];
+        yverts = [zeros(1,length(xpoints)); shellHeights(1:end);...
+          shellHeights(1:end); zeros(1,length(xpoints))];
         
         mirror_xverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);...
-            mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
+          mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
         %Patching the rectangles to "fill" the inside of the shells.
         patch(orig_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
         patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
-    end
+      end
 else
     % When axis is horizontal line, draw shells parallel to this line, bounds along y-axis.
     g(x) = finverse(f);

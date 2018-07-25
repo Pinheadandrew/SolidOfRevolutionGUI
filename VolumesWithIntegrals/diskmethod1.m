@@ -44,7 +44,7 @@ elseif (lower(axisOri) == 'x')
 
     %If axis value not any bound and outside of the bounds, use washer
     %method.
-    if (axisValue ~= lowerBound && axisValue ~= upperBound)
+    if (axisValue < g(lowerBound) || axisValue > g(upperBound))
     
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
@@ -58,7 +58,9 @@ elseif (lower(axisOri) == 'x')
             outerArea = axisValue - g(lowerBound);
         end
         A(x) = pi*(outerArea^2 - innerArea^2);
-    else   
+    else  
+    % If no gap b/w axis and bound, regular discs w/ no inner area to
+    % subtract.
         A(x) = pi*((g(x) - axisValue))^2;
     end
 end
