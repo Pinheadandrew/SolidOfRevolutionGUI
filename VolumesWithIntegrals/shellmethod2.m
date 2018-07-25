@@ -39,7 +39,7 @@ if (lower(axisOri) == 'y') % Bounds along y-axis, use inverse with upperbound as
 % minus the function along to collect the shell's lengths (shells are
 % horizontal)
 else
-    shellHeights = abs(double(f(upperBound) - f(xpoints)));
+    shellHeights = f(xpoints);
 end
 
 % Checks for any NaNs, as result of problems such as logarithm function of
@@ -50,6 +50,7 @@ for x = 1:length(shellHeights)
     end
 end
 
-shellVols = shellHeights.*abs(xpoints-axisValue)*delta;
+shellVols = abs(shellHeights.*(xpoints-axisValue))*delta;
 sumShellVols = 2*pi*sum(shellVols);
+sumShellVols = double(sumShellVols);
 end

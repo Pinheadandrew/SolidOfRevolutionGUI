@@ -17,11 +17,12 @@ function volume = shellmethod1(funcString, lowerBound, upperBound, axisOri, axis
 syms x
 f(x) = str2sym(funcString);
 g(x) = finverse(f);
-radius = x - axisValue;
+radius = x - axisValue; % Radius for each shell, in the circumference formula to determine length of 
+                        % shell as "rectangular prism".
 
 % If rotating around vertical line, 
 if (lower(axisOri) == 'x')
-     integrant = abs(radius*(double(f(upperBound))-f(x))); % |x*(
+     integrant = abs(radius*f(x)); % |(x-radius)*f(x)|
 else % If rotation done paralell to a horizontal line, integrate function's inverse.
     integrant = abs(radius*(g(upperBound) - g(x)));
 end

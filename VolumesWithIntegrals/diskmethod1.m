@@ -20,7 +20,7 @@ if (lower(axisOri) == 'y')
     
     %If axis value not any bound and outside of the bounds, use washer
     %method.
-    if (axisValue ~= lowerBound && axisValue ~= upperBound)
+    if (axisValue < f(lowerBound) || axisValue > f(upperBound))
     
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
@@ -29,7 +29,7 @@ if (lower(axisOri) == 'y')
             outerArea = axisValue - f(x);
         % Axis of rotation ABOVE area under curve, outer radius is axis
         % value minus minima of function within bounds.
-        elseif (double(f(upperBound)) < axisValue)
+        elseif (double(f(upperBound)) < axisValue) 
             innerArea = axisValue - f(x);
             outerArea = axisValue - f(lowerBound);
         end
@@ -40,22 +40,21 @@ if (lower(axisOri) == 'y')
     
 elseif (lower(axisOri) == 'x')
      g(x) = finverse(f);
-%     A(x) = pi*(g(x) - axisValue)^2;
 
     %If axis value not any bound and outside of the bounds, use washer
     %method.
-    if (axisValue < g(lowerBound) || axisValue > g(upperBound))
+    if (axisValue <= g(lowerBound) || axisValue >= g(upperBound))
     
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
-        if(double(g(lowerBound)) > axisValue)
-            innerArea = axisValue - g(lowerBound);
-            outerArea = axisValue - g(x);
+        if(axisValue <= double(g(lowerBound))) 
+            innerArea = axisValue - g(x);
+            outerArea = axisValue - g(upperBound);
         % Axis of rotation ABOVE area under curve, outer radius is axis
         % value minus minima of function within bounds.
-        elseif (double(g(upperBound)) < axisValue)
-            innerArea = axisValue - g(x);
-            outerArea = axisValue - g(lowerBound);
+        elseif (axisValue >= double(g(upperBound)))
+            innerArea = axisValue - g(upperBound);
+            outerArea = axisValue - g(x); 
         end
         A(x) = pi*(outerArea^2 - innerArea^2);
     else  

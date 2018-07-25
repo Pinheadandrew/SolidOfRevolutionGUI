@@ -34,7 +34,7 @@ if (axisOri == "y")
     % If axis of rotation not equal to function's height at lower or
     % upperbound, use the washer method to rotate area under curve
     % around axis.
-    if (axisVal >= f(lowbound) || axisVal <= f(upbound))
+    if (axisVal > f(lowbound) || axisVal < f(upbound))
         
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
@@ -91,17 +91,16 @@ if (axisOri == "y")
                 [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
             rightFace.EdgeColor = 'none';
             
-            % Drawing rectangles to fill faces of shells' as they're cut on
-            % xy-plane. If axis parallel to x-axis, get heights of
-            % rectangles which are equal to the diameters of the disks. Else,
-            % get radius of disks which are "lengths" of rectangles.
+            % Drawing rectangles to fill inside of disks as they're cut on
+            % xy-plane. If axis perpendicular to y-axis, get inner radius,
+            % rectangles which are equal to the diameters of the disks. 
 %             if (fullCircles == 0)
-%                     xverts_left = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
+%                     xverts_top = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
 %                         axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
-%                     xverts_right
-%                     yverts_left = [cylMargins(1:end-1); cylMargins(2:end);...
+%                     xverts_bottom
+%                     yverts_top = [cylMargins(1:end-1); cylMargins(2:end);...
 %                         cylMargins(2:end); cylMargins(1:end-1)];
-%                     yverts_right = ;
+%                     yverts_bottom= ;
 %                     patch(xverts_left, zeros(size(xverts)), yverts_left, [0 0.902 0]);
 %                     patch(xverts_right, zeros(size(xverts)), yverts_right, [0 0.902 0]);
 %             end
@@ -147,7 +146,22 @@ if (axisOri == "y")
             patch(cir_x_2,cir_y,cir_z, [0 0.902 0]);
             set(cyl,'edgecolor','none')
         end
+        % Drawing rectangles to fill faces of shells' as they're cut on
+        % xy-plane. If axis parallel to x-axis, get heights of 
+        % rectangles which are equal to the diameters of the disks. Else,
+        % get radius of disks which are "lengths" of rectangles.
+        if (fullCircles == 0)
+          xverts = [cylMargins(1:end-1); cylMargins(1:end-1);...
+            cylMargins(2:end); cylMargins(2:end)];
+
+          yverts = [axisVal-diskRadii(1:end); axisVal+diskRadii(1:end);...
+            axisVal+diskRadii(1:end); axisVal-diskRadii(1:end)];
+
+          %Patching the rectangles to "fill" the inside of the discs.
+            patch(xverts, zeros(size(xverts)), yverts, "b");
+        end
     end
+    
 % Branch where the area is being rotated around a vertical axis.   
 else
     g(x) = finverse(f);
@@ -211,7 +225,8 @@ else
             plot3(outer_x, outer_y, cylMargins(i)*ones(1, length(theta)), "black"), hold on
             plot3(outer_x, outer_y, cylMargins(i+1)*ones(1, length(theta)), "black"), hold on
         end
-    else
+    else % If no difference b/w axis of rotation and a bound, plot discs without
+         % inner radius to subtract from their areas.
         diskRadii = abs(double(g(xpoints)-axisVal)); % Vector storing radius of each disc.
         
         % Draw disks w/o area subtracted from within.
@@ -246,29 +261,18 @@ else
             set(cyl,'edgecolor','none')
         end
         
-    % Drawing rectangles to fill faces of shells' as they're cut on
-    % xy-plane. If axis parallel to x-axis, get heights of
-    % rectangles which are equal to the diameters of the disks. Else,
-    % get radius of disks which are "lengths" of rectangles.
+    % Drawing rectangles to fill faces of discs as they're cut along
+    % xy-plane. If axis perpendicular to x-axis, get lengths of
+    % rectangle.
     if (fullCircles == 0)
-        if (axisOri == "y")
-            xverts = [cylMargins(1:end-1); cylMargins(1:end-1);...
-                cylMargins(2:end); cylMargins(2:end)];
-            
-            yverts = [axisVal-diskRadii(1:end); axisVal+diskRadii(1:end);...
-                axisVal+diskRadii(1:end); axisVal-diskRadii(1:end)];
-            
-            %Patching the rectangles to "fill" the inside of the shells.
-        else
-            xverts = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
-                axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
-            
-            yverts = [cylMargins(1:end-1); cylMargins(2:end);...
-                cylMargins(2:end); cylMargins(1:end-1)];
-        end
+        xverts = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
+            axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
+        
+        yverts = [cylMargins(1:end-1); cylMargins(2:end);...
+            cylMargins(2:end); cylMargins(1:end-1)];
         patch(xverts, zeros(size(xverts)), yverts, [0 0.902 0]);
     end
-    end
+end
 end
 end
 

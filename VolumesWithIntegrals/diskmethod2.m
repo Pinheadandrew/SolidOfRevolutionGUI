@@ -52,18 +52,22 @@ if (lower(axisOri) == 'y')
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);
     
-    if (axisValue <= g(lowerBound) && axisValue >= g(upperBound))
+    if (axisValue < g(lowerBound) || axisValue > g(upperBound))
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
-        if(double(g(lowerBound)) >= axisValue)
-            innerDisks = axisValue - g(lowerBound); 
-            outerDisks = axisValue - g(xpoints);
+        if(axisValue <= double(g(lowerBound)))
+%             innerDisks = axisValue - g(lowerBound); 
+%             outerDisks = axisValue - g(xpoints);
+            innerDisks = axisValue - g(xpoints); 
+            outerDisks = axisValue - g(upperBound);
             
             % Axis of rotation ABOVE area under curve, outer radius is axis
             % value minus minima of function within bounds.
-        elseif (double(g(upperBound)) <= axisValue)
-            innerDisks = axisValue - g(xpoints);
-            outerDisks = axisValue - g(lowerBound);
+        elseif (axisValue >= double(g(upperBound)))
+%             innerDisks = axisValue - g(xpoints);
+%             outerDisks = axisValue - g(lowerBound);
+            innerDisks = axisValue - g(upperBound); 
+            outerDisks = axisValue - g(xpoints);
         end
         diskAreas = pi*(outerDisks.^2 - innerDisks.^2);
     else
