@@ -30,7 +30,7 @@ syms x
 f(x) = str2sym(funcString);
 
 if (lower(axisOri) == 'y')
-    if (axisValue ~= lowerBound && axisValue ~= upperBound)
+    if (axisValue <= lowerBound || axisValue >= upperBound)
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
         if(double(f(lowerBound)) >= axisValue)
@@ -52,7 +52,7 @@ if (lower(axisOri) == 'y')
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);
     
-    if (axisValue < g(lowerBound) || axisValue > g(upperBound))
+    if (axisValue <= g(lowerBound) || axisValue >= g(upperBound))
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
         if(axisValue <= double(g(lowerBound)))

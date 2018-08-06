@@ -94,16 +94,19 @@ if (axisOri == "y")
             % Drawing rectangles to fill inside of disks as they're cut on
             % xy-plane. If axis perpendicular to y-axis, get inner radius,
             % rectangles which are equal to the diameters of the disks. 
-%             if (fullCircles == 0)
-%                     xverts_top = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
-%                         axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
-%                     xverts_bottom
-%                     yverts_top = [cylMargins(1:end-1); cylMargins(2:end);...
-%                         cylMargins(2:end); cylMargins(1:end-1)];
-%                     yverts_bottom= ;
-%                     patch(xverts_left, zeros(size(xverts)), yverts_left, [0 0.902 0]);
-%                     patch(xverts_right, zeros(size(xverts)), yverts_right, [0 0.902 0]);
-%             end
+            if (fullCircles == 0)
+                xverts = [cylMargins(i); cylMargins(i);...
+                    cylMargins(i+1); cylMargins(i+1)];
+                
+                % Rectangle for faces under and above the horizontal line.
+                yverts_top = [axisVal+innerRadius(i); axisVal+outerRadius(i);...
+                    axisVal+outerRadius(i); axisVal+innerRadius(i)];
+                yverts_bottom= [axisVal - innerRadius(i); axisVal - outerRadius(i);...
+                    axisVal - outerRadius(i); axisVal - innerRadius(i)];
+                
+                patch(xverts, zeros(size(xverts)), yverts_top, [0 0.902 0]);
+                patch(xverts, zeros(size(xverts)), yverts_bottom, [0 0.902 0]);
+            end
             
             %Drawing circles for edges of left and right sides of discs.
             plot3(cylMargins(i)*ones(1, length(theta)), inner_y, inner_z, "black"), hold on
@@ -219,6 +222,19 @@ else
                 [outer_y,inner_y], cylMargins(i+1)*ones(1, 2*length(theta)),[0 0.902 0]);
             topFace.EdgeColor = 'none';
             
+            if (fullCircles == 0)
+                % Rectangle for faces under and above the horizontal line.
+                xverts_left = [axisVal-outerRadius(i); axisVal-outerRadius(i);...
+                    axisVal-innerRadius(i); axisVal-innerRadius(i)];
+                xverts_right= [axisVal + innerRadius(i); axisVal + innerRadius(i);...
+                    axisVal + outerRadius(i); axisVal + outerRadius(i)];
+                
+                yverts = [cylMargins(i); cylMargins(i+1);...
+                    cylMargins(i+1); cylMargins(i)];
+                patch(xverts_left, zeros(size(xverts_left)), yverts, [0 0.902 0]);
+                patch(xverts_right, zeros(size(xverts_right)), yverts, [0 0.902 0]);
+            end
+
             %Drawing circles for edges of left and right sides of discs.
             plot3(inner_x, inner_y, cylMargins(i)*ones(1, length(theta)), "black"), hold on
             plot3(inner_x, inner_y, cylMargins(i+1)*ones(1, length(theta)), "black"), hold on

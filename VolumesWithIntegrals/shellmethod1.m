@@ -22,7 +22,13 @@ radius = x - axisValue; % Radius for each shell, in the circumference formula to
 
 % If rotating around vertical line, 
 if (lower(axisOri) == 'x')
+    if (g(upperBound) < 0)
+        height = f(x) - g(upperBound);
+     integrant = abs(radius*height);
+    else
+        height = f(x)
      integrant = abs(radius*f(x)); % |(x-radius)*f(x)|
+    end
 else % If rotation done paralell to a horizontal line, integrate function's inverse.
     integrant = abs(radius*(g(upperBound) - g(x)));
 end

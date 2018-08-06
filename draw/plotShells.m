@@ -132,11 +132,11 @@ else
     % If lower bound's value of f(x) higher than axis value, make solid's
     % "base" at upper bound. Else, make "base" at lower bound.
     if (double(g(lowbound)) >= axisVal)
-        volumeBaseLine = double(g(upbound));
+        volumeBaseLine = double(g(lowbound));
         shellLengths = volumeBaseLine - double(g(xpoints));
         shellEndpoints = volumeBaseLine - shellLengths;
     elseif (double(g(upbound)) <= axisVal)
-        volumeBaseLine = double(g(lowbound));
+        volumeBaseLine = double(g(upbound));
         shellLengths = volumeBaseLine - double(g(xpoints));
         shellEndpoints = volumeBaseLine - shellLengths;
     end
