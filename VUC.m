@@ -416,7 +416,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
     else
-        axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axisValue)
+        validAxis = axisOutsideBounds(functionChoice(6:end), methodChoice, lower_input, upperBound, axisOri, axisValue)
         lowerBound = lower_input;
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -480,7 +480,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
     else
-        axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axisValue);
+        validAxis = axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upper_input, axisOri, axisValue)
         upperBound = upper_input;
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -643,7 +643,7 @@ function axisEditbox_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
     else
-        axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axisValue);
+        validAxis = axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axis_input)
         axisValue = axis_input;
     end
     
@@ -892,7 +892,7 @@ if (axisOrient == "y")
     % Cases where disk method rotating area perpendicular to axis parallel
     % to y-axis. Here, can't enter a negative bound when the function
     % selected is x^2 or 2^x.
-else
+elseif (axisOrient == "x")
     if (methChoice == "Disk")
        if (funcChoice == "x^2" || funcChoice == "2^x")
            if (lowBound < 0 || upBound < 0)

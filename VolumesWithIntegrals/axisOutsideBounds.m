@@ -1,5 +1,5 @@
+% Function checking constraint that axis of rotation is outside of bounds.
 function valid = axisOutsideBounds(funcChoice, methChoice, lowBound, upBound, axisOrient, axisVal)
-% Cases
 valid = 1;
 
 syms x
