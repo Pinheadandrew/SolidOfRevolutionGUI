@@ -58,11 +58,10 @@ if(lower(axisOri) == "x")
         
         % Coordinate for axis-line. Used to determine radius and
         % displacement of cylinders in 3D coordinate system.
-        axisPoint = [axisVal 0 0];
         shellInnerRadius = abs(shellWidthMargins(i)-axisVal);
         shellOuterRadius = abs(shellWidthMargins(i+1)-axisVal);
-        inner_x = axisPoint(1) + shellInnerRadius*cos(theta);
-        outer_x = axisPoint(1) + shellOuterRadius*cos(theta);
+        inner_x = axisVal + shellInnerRadius*cos(theta);
+        outer_x = axisVal + shellOuterRadius*cos(theta);
         inner_y = shellInnerRadius*sin(theta);
         outer_y = shellOuterRadius*sin(theta);
         
@@ -93,26 +92,10 @@ if(lower(axisOri) == "x")
         plot3(outer_x, outer_y, cylHeight*ones(1, length(theta)), "black"), hold on
 %         plot3(outer_x, outer_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
       end
-      
-      %Drawing rectangles to fill faces of shells' as they're cut on
-      %xy-plane.
-      if (fullCircles == 0)
-        orig_xverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
-          shellWidthMargins(2:end); shellWidthMargins(2:end)];
-        
-        yverts = [zeros(1,length(xpoints)); shellHeights(1:end);...
-          shellHeights(1:end); zeros(1,length(xpoints))];
-        
-        mirror_xverts = [mirror_shellWidthMargins(1:end-1); mirror_shellWidthMargins(1:end-1);...
-          mirror_shellWidthMargins(2:end); mirror_shellWidthMargins(2:end)];
-        %Patching the rectangles to "fill" the inside of the shells.
-        patch(orig_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
-        patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
-      end
     
     %Drawing rectangles to fill faces of shells' as they're cut on
-    %xy-plane.
-    if (fullCircles == 0)
+      %xy-plane.
+      if (fullCircles == 0)
         orig_xverts = [shellWidthMargins(1:end-1); shellWidthMargins(1:end-1);...
           shellWidthMargins(2:end); shellWidthMargins(2:end)];
         

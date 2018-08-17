@@ -416,6 +416,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
     else
+        axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axisValue)
         lowerBound = lower_input;
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -479,6 +480,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
     else
+        axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axisValue);
         upperBound = upper_input;
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -622,6 +624,8 @@ end
 
 % Setting the axis line.
 function axisEditbox_Callback(hObject, eventdata, handles)
+    global functionChoice;
+    global axisOri;
     global axisValue;
     global lowerBound;
     global upperBound;
@@ -639,6 +643,7 @@ function axisEditbox_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
     else
+        axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axisValue);
         axisValue = axis_input;
     end
     
@@ -741,16 +746,6 @@ else
             
             set(handles.axisEditbox, 'string', axisValue);
         else
-%             % Configurations in which domain for integration is in respect to dY.
-%             if ((methodChoice == "Shell" && axisPicked == "y") || (methodChoice == "Disk" && axisPicked == "x"))
-%                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-%             else
-%             % If switching to domain in respect to dX, use regular function
-%             % selected to reset the bounds.
-%                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-%             end
-%             set(handles.lowerBoundEdit, 'string', lowerBound);
-%             set(handles.upperBoundEdit, 'string', upperBound);
             axisValue = str2double(newAxisValue);
             set(handles.axisEditbox, 'string', axisValue);
         end
@@ -837,11 +832,7 @@ function stepSlider_Callback(hObject, eventdata, handles)
     volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
-% --- Executes during object creation, after setting all properties.
 function stepSlider_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to stepSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -928,7 +919,7 @@ if (inverse == 1)
         elseif (upperBound == 0)
             upperBound = .0001;
         end
-            
+        
         newLower = double(log2(lowerBound));
         newUpper = double(log2(upperBound));
     else

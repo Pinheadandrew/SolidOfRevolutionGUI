@@ -41,7 +41,7 @@ if (axisOri == "y")
         if(double(f(lowbound)) >= axisVal)
             
             % Add difference b/w axis value and f(lowbound) to inner radius
-            if (axisVal >= 0)201
+            if (axisVal >= 0)
                 % innerArea = 0;
                 innerRadius = zeros(1,length(xpoints));
             else
@@ -174,14 +174,17 @@ if (axisOri == "y")
     end
     
 % Branch where the area is being rotated around a vertical axis.   
-else
+elseif (axisOri == "x")
     g(x) = finverse(f);
+    
+    % Axis of rotation must be outside bounds or at a bound point.
     if (axisVal <= g(lowbound) || axisVal >= g(upbound))
         
         % Axis of rotation to the left of area under curve, inner radius is
         % function line.
-        if(g(lowbound) >= axisVal)
+        if(axisVal <= g(lowbound))
             
+            % Negative bounds, inner/outer radii evaluated differently
             if (g(lowbound) <= 0 && g(upbound) <= 0 )
                 innerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
                 outerRadius = abs(double(axisVal - g(xpoints))); 
@@ -192,7 +195,7 @@ else
             
         % Axis of rotation to right of area under curve, outer radius is axis
         % value minus minima of function within bounds.
-        elseif (g(upbound) <= axisVal)
+        elseif (axisVal >= g(upbound))
             if (g(lowbound) <= 0 && g(upbound) <= 0 )
                 outerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
                 innerRadius = abs(double(axisVal - g(xpoints))); 
