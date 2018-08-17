@@ -39,7 +39,15 @@ if (axisOri == "y")
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
         if(double(f(lowbound)) >= axisVal)
-            innerRadius = abs(double(axisVal - f(lowbound)))*ones(1,length(xpoints));
+            
+            % Add difference b/w axis value and f(lowbound) to inner radius
+            if (axisVal >= 0)201
+                % innerArea = 0;
+                innerRadius = zeros(1,length(xpoints));
+            else
+                innerRadius = zeros(1,length(xpoints)) - axisVal;
+                % innerArea = 0 - axisValue;
+            end
             outerRadius = abs(double(axisVal - f(xpoints)));
             
             % Axis of rotation ABOVE area under curve, outer radius is axis
@@ -172,15 +180,26 @@ else
         
         % Axis of rotation to the left of area under curve, inner radius is
         % function line.
-        if(double(g(lowbound)) >= axisVal)
-            innerRadius = abs(double(axisVal - g(xpoints)));
-            outerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
+        if(g(lowbound) >= axisVal)
+            
+            if (g(lowbound) <= 0 && g(upbound) <= 0 )
+                innerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
+                outerRadius = abs(double(axisVal - g(xpoints))); 
+            else
+                innerRadius = abs(double(axisVal - g(xpoints)));
+                outerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
+            end
             
         % Axis of rotation to right of area under curve, outer radius is axis
         % value minus minima of function within bounds.
-        elseif (double(g(upbound)) <= axisVal)
-            innerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
-            outerRadius = abs(double(axisVal - g(xpoints)));
+        elseif (g(upbound) <= axisVal)
+            if (g(lowbound) <= 0 && g(upbound) <= 0 )
+                outerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
+                innerRadius = abs(double(axisVal - g(xpoints))); 
+            else
+                innerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
+                outerRadius = abs(double(axisVal - g(xpoints)));
+            end
         end
         
         % Loop that draws the discs that look like shells. They change

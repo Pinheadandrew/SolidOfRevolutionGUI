@@ -935,7 +935,7 @@ if (inverse == 1)
         newLower = lowerBound;
         newUpper = upperBound;
     end
-else % Reverting bounds back to x-axis if current function selected is used.
+else % Reverting bounds back to dx if current function selected is used.
     if (functionString == "x^2")
         newLower = lowerBound^2;
         newUpper = upperBound^2;

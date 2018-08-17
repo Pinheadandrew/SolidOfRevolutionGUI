@@ -25,8 +25,16 @@ if (lower(axisOri) == 'y')
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
         if(double(f(lowerBound)) >= axisValue)
-            innerArea = axisValue - f(lowerBound);
+            
+            % Add difference b/w axis value and f(lowbound) to inner radius
+            if (axisValue >= 0)
+                innerArea = 0;
+            else
+                innerArea = 0 - axisValue;
+            end
+            
             outerArea = axisValue - f(x);
+            
         % Axis of rotation ABOVE area under curve, outer radius is axis
         % value minus minima of function within bounds.
         elseif (double(f(upperBound)) <= axisValue) 
@@ -42,7 +50,7 @@ if (lower(axisOri) == 'y')
 % Area under curve rotated around vertical line.
 elseif (lower(axisOri) == 'x')
      g(x) = finverse(f);
-     % functionNotOnZero = 0;
+     functionNotOnZero = 0;
     %If axis value not any bound and outside of the bounds, use washer
     %method.
     if (axisValue <= g(lowerBound) || axisValue >= g(upperBound))
@@ -55,9 +63,14 @@ elseif (lower(axisOri) == 'x')
             if (lowerBound <= 0 && upperBound <= 0)
                 innerArea = axisValue - g(lowerBound);
                 outerArea = axisValue - g(x);
+                functionNotOnZero = 1;
             else
                 innerArea = axisValue - g(x);
                 outerArea = axisValue - g(upperBound);
+                
+                if (f(lowerBound) > 0)
+                    functionNotOnZero = 1;
+                end
             end
         % Axis of rotation to the right area under curve, outer radius is axis
         % value minus minima of function within bounds.
@@ -65,9 +78,14 @@ elseif (lower(axisOri) == 'x')
             if (lowerBound <= 0 && upperBound <= 0)
                 innerArea = axisValue - g(x);
                 outerArea = axisValue - g(lowerBound);
+                functionNotOnZero = 1;
             else
                 innerArea = axisValue - g(upperBound);
                 outerArea = axisValue - g(x); 
+                
+                if (f(lowerBound) > 0)
+                    functionNotOnZero = 1;
+                end
             end
         end
         A(x) = pi*(outerArea^2 - innerArea^2);
@@ -78,13 +96,22 @@ elseif (lower(axisOri) == 'x')
     end
     volume = double(int(A(x), lowerBound, upperBound));
     
-    if (f(lowerBound) > 0)
-        cylInnerRadius = g(lowerBound) - axisValue;
-        cylOuterRadius = g(upperBound) - axisValue;
-        cylIntegrant = pi*(cylOuterRadius^2 - cylInnerRadius^2);
-        cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
-        
-        volume = volume + cylVolumeWithBaseZero;
+    if (functionNotOnZero == 1)
+        if (f(lowerBound) > 0)
+            cylInnerRadius = g(lowerBound) - axisValue;
+            cylOuterRadius = g(upperBound) - axisValue;
+            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+            cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
+            
+            volume = volume + cylVolumeWithBaseZero;
+        elseif (f(upperBound) < 0)
+            cylInnerRadius = g(upperBound) - axisValue;
+            cylOuterRadius = g(lowerBound) - axisValue;
+            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+            cylVolumeWithBaseZero = double(int(cylIntegrant, upperBound, 0));
+            
+            volume = volume + cylVolumeWithBaseZero;
+        end
     end
 end
 % volume = double(int(A(x), lowerBound, upperBound));

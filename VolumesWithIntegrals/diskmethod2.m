@@ -34,7 +34,16 @@ if (lower(axisOri) == 'y')
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
         if(double(f(lowerBound)) >= axisValue)
-            innerDisks = axisValue - f(lowerBound); 
+            
+             if (axisValue >= 0)
+                % innerArea = 0;
+                innerDisks = zeros(1, length(xpoints));
+            else
+                % innerArea = 0 - axisValue;
+                innerDisks = zeros(1, length(xpoints)) - axisValue;
+             end
+            
+%             innerDisks = axisValue - f(lowerBound); 
             outerDisks = axisValue - f(xpoints);
             
             % Axis of rotation ABOVE area under curve, outer radius is axis
