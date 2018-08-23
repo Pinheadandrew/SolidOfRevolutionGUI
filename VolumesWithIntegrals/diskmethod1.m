@@ -51,7 +51,8 @@ if (lower(axisOri) == 'y')
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);
     functionNotOnZero = 0;
-    %If axis value not any bound and outside of the bounds, use washer
+    
+    %If axis value outside of bounds or on a bound, use washer
     %method.
     if (axisValue <= g(lowerBound) || axisValue >= g(upperBound))
         
@@ -59,8 +60,9 @@ elseif (lower(axisOri) == 'x')
         % function line, inner to the inverse function with lower bound.
         if(axisValue <= double(g(lowerBound)))
             
-            % Volume within the -x
+            % Area rotated within 
             if (lowerBound <= 0 && upperBound <= 0)
+                % Reflective Function
                 if (f(g(lowerBound)) == f(-g(lowerBound)) && f(g(lowerBound)) == f(-g(lowerBound)))
                     
                     if (abs(lowerBound) > abs(upperBound))

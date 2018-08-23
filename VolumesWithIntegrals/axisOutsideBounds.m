@@ -8,11 +8,11 @@ g(x) = finverse(f);
 
 if (axisOrient == "y") % Constraints for a horizontal line
     if (methChoice == "Shell")
-        if (axisVal > lowBound && axisVal < upBound)
+        if (axisVal > lowBound && axisVal < upBound) % Axis b/w bounds along axis, constraint violated
             valid = 0;
         end
     elseif (methChoice == "Disk")
-        if (axisVal < f(upBound) && axisVal > f(lowBound))
+        if (axisVal < f(upBound) && axisVal > f(lowBound)) % Axis b/w function heights at the bounds, constraint violated
             valid = 0;
         end
     end
