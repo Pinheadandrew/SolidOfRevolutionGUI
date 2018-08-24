@@ -221,15 +221,14 @@ else
         % Some test for flipping bounds and inverting them if the original
         % area before a method/axis switch was negative area in reflective
         % function of x^2.
-        if (axisOri == "x^2" && originallyNegativeArea)
-            temp_lower = lowerBound;
-            lowerBound = upperBound
-            upperBound = temp_lower
+        if (simple_exp_string == "x^2" && originallyNegativeArea == 1 && axisOri == "x")
+            actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, -axisValue);
+        else
+            actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         end
         
-        
         estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusMethod);
-        actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
+%         actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
@@ -607,19 +606,41 @@ else
         
         % Configurations in which domain for integration is in respect to dY.
         if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
-            [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-            [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
-        else
-        % If switching to domain in respect to dX, use regular function
+            
+            % Switching to disk dy and the function is x^2, bounds are both
+            % negative. In this case, make inverse bounds the original
+            % negative bounds, flip them and change the actual bounds using
+            % the original function.
+            if (functionChoice(6:end) == "x^2" && lowerBound <= 0 && upperBound <= 0)
+                inverseLowerBound = lowerBound
+                inverseUpperBound = upperBound
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), -upperBound, -lowerBound, 1);
+%                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), upperBound, lowerBound, 0);
+                originallyNegativeArea = 1
+            else
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+%             [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+%             [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+            end
+            
+            % If switching to domain in respect to dX, use regular function
         % selected to reset the bounds.
-        
-            [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-            [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        elseif ((methodContents == "Shell" && axisOri == "x") || (methodContents == "Disk" && axisOri == "y"))
+            if (originallyNegativeArea == 1)
+                lowerBound = inverseLowerBound;
+                upperBound = inverseUpperBound;
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), inverseUpperBound, inverseLowerBound, 0);
+                %[lowerBound, upperBound] = inverseBounds(functionChoice(6:end), inverseLowerBound, inverseUpperBound, 1);
+%                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+            else
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+            end
         end
+        
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
         set(handles.lowerBoundEdit, 'string', lowerBound);
         set(handles.upperBoundEdit, 'string', upperBound);
     end
@@ -992,7 +1013,8 @@ if (inverse == 1)
         newLower = lowerBound;
         newUpper = upperBound;
     end
-else % Reverting bounds back to dx if current function selected is used.
+% Reverting bounds back to dx if current function selected is used.
+elseif (inverse == 0) 
     if (functionString == "x^2")
         newLower = lowerBound^2;
         newUpper = upperBound^2;
