@@ -21,7 +21,8 @@ if (lower(axisOri) == 'y')
     %If axis value not any bound and outside of the bounds, use washer
     %method.
     if (axisValue <= f(lowerBound) || axisValue >= f(upperBound))
-        
+      
+         
         % Axis of rotation BELOW area under curve, set outer radius to
         % function line.
         if(double(f(lowerBound)) >= axisValue)
@@ -60,7 +61,7 @@ elseif (lower(axisOri) == 'x')
         % function line, inner to the inverse function with lower bound.
         if(axisValue <= double(g(lowerBound)))
             
-            % Area rotated within 
+            % Area rotated within negative space.
             if (lowerBound <= 0 && upperBound <= 0)
                 % Reflective Function
                 if (f(g(lowerBound)) == f(-g(lowerBound)) && f(g(lowerBound)) == f(-g(lowerBound)))

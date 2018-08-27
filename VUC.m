@@ -99,6 +99,8 @@ global upperBound;
 global methodChoice;
 global axisOri;
 global viewModeChanged;
+global inverseUpperBound;
+global inverseLowerBound;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 functionContents = functionContents{get(hObject, 'Value')};
@@ -130,6 +132,21 @@ if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound
     set(handles.functionMenu, 'Value', functionIndex);
 else
     functionChoice = functionContents;
+    
+    % Set the ivnerse bounds and its statement, according to the volume
+    % configuration and the newly selected
+    if ((methodChoice == "Shell" && axisOri == "y") || (methodChoice == "Disk" && axisOri == "x"))
+%         [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+        [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+    else
+%         [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+        [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+    end
+    
+    set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+    set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+%     set(handles.lowerBoundEdit, 'string', lowerBound);
+%     set(handles.upperBoundEdit, 'string', upperBound);
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -216,6 +233,7 @@ else
         cla reset, rotate3d off
         
     % Calls different volume calculation methods depending on method picked. 
+    originallyNegativeArea
     if(strcmp(methodChoice, "Disk"))
         
         % Some test for flipping bounds and inverting them if the original
@@ -396,7 +414,11 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global axisOri;
     global viewModeChanged;
     global originallyNegativeArea;
+    global inverseLowerBound;
+    global inverseUpperBound;
+    
     lower_input = str2double(get(hObject,'String'));
+    funcString = functionChoice(6:end);
    
     if(isnan(lower_input))
         d = errordlg('The bound must be a real number.', 'Domain Error');
@@ -420,7 +442,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         viewModeChanged = 1;
     % If entering lower bound to create invalid instance, produce error
     % message and reset bound to what it was previously.
-    elseif (~isValidVolume(functionChoice(6:end), methodChoice, lower_input, upperBound, axisOri))
+    elseif (~isValidVolume(funcString, methodChoice, lower_input, upperBound, axisOri))
         plot(0,0);
         f = errordlg(sprintf(...
             'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
@@ -433,7 +455,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     % which is invalid for creating volumes in that axis of rotation is
     % between bounds. If this occurs, error message and revert the lower
     % bound.
-    elseif (~axisOutsideBounds(functionChoice(6:end), methodChoice, lower_input, upperBound, axisOri, axisValue))
+    elseif (~axisOutsideBounds(funcString, methodChoice, lower_input, upperBound, axisOri, axisValue))
         if (methodChoice == "Shell")
             d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
             set(d, 'WindowStyle', 'modal');
@@ -445,14 +467,40 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         end
         set(handles.lowerBoundEdit, 'string', lowerBound);
         
-        % Set string of inverse lower bound. Determine if the current
-        % combiniation of axis and volume method requires currently chosen function,
-        % or its inverse function.
-%         inverseBounds = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-%         inverseLower = inverseBounds(1);
-%         set(handles.inverseLowBoundChar, 'string', inverseLower);
     else
+        % The state of the program is that the bound changed while the
+        % volume originated from negative x-bounds for shell object. In
+        % the case of changing a, change program's state so that the
+        % inverses of the disc volume's bounds are positive integers, so
+        % plot different volume.
+        if (originallyNegativeArea == 1)
+            originallyNegativeArea = 0
+            
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                lower_input, upperBound, 1);
+        
+       % Otherwise, just convert the new bound and the range of the
+       % function's inverse.
+        else
+            if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
+                useInverseFunction = 0;
+            else
+                useInverseFunction = 1;
+            end
+        
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                lower_input, upperBound, useInverseFunction);
+        end
+        
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        
+        if (sameSigns(lower_input, upperBound) == 0  && funcString ~= "2^x")
+            disp("NOT THE SAME SIGNS. DO SOMETHING")
+        end
+        
         lowerBound = lower_input;
+        
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -475,8 +523,11 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     global axisOri;
     global viewModeChanged;
     global originallyNegativeArea;
+    global inverseLowerBound;
+    global inverseUpperBound;
     
     upper_input = str2double(get(hObject,'String'));
+    funcString = functionChoice(6:end);
     
     if(isnan(upper_input))
         d = errordlg('The bound must be a real number.', 'Bound Error');
@@ -497,7 +548,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
         viewModeChanged = 1;
-    elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upper_input, axisOri))
+    elseif (~isValidVolume(funcString, methodChoice, lowerBound, upper_input, axisOri))
         plot(0,0);
         f = errordlg(sprintf(...
             'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
@@ -508,7 +559,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         viewModeChanged = 1;
     % Lower bound is such that: lower bound < axis value < upper bound,
     % which is invalid for creating volumes in that axis of rotation is between bounds.
-    elseif (~axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upper_input, axisOri, axisValue))
+    elseif (~axisOutsideBounds(funcString, methodChoice, lowerBound, upper_input, axisOri, axisValue))
         if (methodChoice == "Shell")
             d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
             set(d, 'WindowStyle', 'modal');
@@ -520,6 +571,37 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         end
         set(handles.upperBoundEdit, 'string', upperBound);
     else
+        % If switching upper bound while current or inverted bounds are
+        % negative in case of x^2, reset the thing and switch the inverted
+        % bounds to be positive numbers that are the bounds through inverse
+        % function.
+        if (originallyNegativeArea == 1)
+            disp("ORIGINAL NEGATIVE")
+            originallyNegativeArea = 0;
+            
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+            lowerBound, upper_input, 1);
+        
+        else
+            if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
+                useInverseFunction = 0;
+            else
+                useInverseFunction = 1;
+            end
+        
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                lowerBound, upper_input, useInverseFunction);
+        end
+        
+        % Set the inverse upper bound according to the new upper bound, and display the new
+        % inverse range.
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        
+        if (sameSigns(upper_input, lowerBound) == 0 && funcString ~= "2^x")
+            disp("NOT THE SAME SIGNS. DO SOMETHING")
+        end
+        
         upperBound = upper_input;
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -607,21 +689,18 @@ else
         % Configurations in which domain for integration is in respect to dY.
         if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
             
-            % Switching to disk dy and the function is x^2, bounds are both
+            % Switching to disk dY from shell dXand the function is x^2, bounds are both
             % negative. In this case, make inverse bounds the original
             % negative bounds, flip them and change the actual bounds using
             % the original function.
             if (functionChoice(6:end) == "x^2" && lowerBound <= 0 && upperBound <= 0)
                 inverseLowerBound = lowerBound
                 inverseUpperBound = upperBound
-                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), -upperBound, -lowerBound, 1);
-%                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), upperBound, lowerBound, 0);
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), -upperBound, -lowerBound, 0);
                 originallyNegativeArea = 1
             else
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-%             [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-%             [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
             end
             
             % If switching to domain in respect to dX, use regular function
@@ -631,8 +710,6 @@ else
                 lowerBound = inverseLowerBound;
                 upperBound = inverseUpperBound;
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), inverseUpperBound, inverseLowerBound, 0);
-                %[lowerBound, upperBound] = inverseBounds(functionChoice(6:end), inverseLowerBound, inverseUpperBound, 1);
-%                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
             else
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
@@ -660,20 +737,24 @@ else
 end
 
 % Based on method and the axis orientation picked, reset the bound 
-% statement in the boundary section.
+% and the inverse bound statements in the boundary section.
 if (methodChoice == "Shell")
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
   if (axisOri == "y")
     set(handles.boundStatement, 'string', "< Y <");
+    set(handles.inverseAxisBoundStatement, 'string', "< X <");
   else
     set(handles.boundStatement, 'string', "< X <");
+    set(handles.inverseAxisBoundStatement, 'string', "< Y <");
   end
 else
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
     if (axisOri == "y")
       set(handles.boundStatement, 'string', "< X <");
+      set(handles.inverseAxisBoundStatement, 'string', "< Y <");
     else
       set(handles.boundStatement, 'string', "< Y <");
+      set(handles.inverseAxisBoundStatement, 'string', "< X <");
     end
 end
 
@@ -776,28 +857,35 @@ else
         if (methodChoice == "Disk")
             if (axisPicked == "x")
                 bound_statement = "< Y <";
+                inverse_bound_statement = "< X <";
             else
                 bound_statement = "< X <";
+                inverse_bound_statement = "< Y <";
             end
         else
             bound_statement = "< " + upper(axisPicked(1)) + " <";
+            
+            if (axisPicked == "x")
+                inverse_bound_statement = "< Y <";
+            else
+                inverse_bound_statement = "< X <";
+            end
         end
         set(handles.boundStatement, 'string', bound_statement);
+        set(handles.inverseAxisBoundStatement, 'string', inverse_bound_statement);
          
         % Inverts the bounds, while the user is prompted for a new axis to
         % show the forbidden space for the new axis.
         if ((methodChoice == "Shell" && axisPicked == "y") || (methodChoice == "Disk" && axisPicked == "x"))
-                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-                set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-                set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+            [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
         else
             [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
             [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
         end
         
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
         set(handles.lowerBoundEdit, 'string', lowerBound);
         set(handles.upperBoundEdit, 'string', upperBound);
         % END SWITCHING PARAMETER ZONE
@@ -818,17 +906,16 @@ else
             if ((methodChoice == "Shell" && axisOri == "y") || (methodChoice == "Disk" && axisOri == "x"))
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-                set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-                set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
             else
             % If switching to domain in respect to dX, use regular function
             % selected to reset the bounds.
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-                set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-                set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+                
             end
             
+            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
             set(handles.lowerBoundEdit, 'string', lowerBound);
             set(handles.upperBoundEdit, 'string', upperBound);
             
@@ -849,14 +936,23 @@ end
     if (methodChoice == "Disk")
         if (axisPicked == "x")
             bound_statement = "< Y <";
+            inverse_bound_statement = "< X <";
         else
             bound_statement = "< X <";
+            inverse_bound_statement = "< Y <";
         end
     else
         bound_statement = "< " + upper(axisPicked(1)) + " <";
+            
+        if (axisPicked == "x")
+            inverse_bound_statement = "< Y <";
+        else
+            inverse_bound_statement = "< X <";
+        end
     end
     
     set(handles.boundStatement, 'string', bound_statement);
+    set(handles.inverseAxisBoundStatement, 'string', inverse_bound_statement);
     
     position = get(handles.axisEditbox,'Position');
     
@@ -990,7 +1086,8 @@ end
 
 function [newLower, newUpper] = inverseBounds(functionString, lowerBound, upperBound, inverse)
 
-% If the inverse function of the current function selected needed to switch
+% If the method/axis switches to Disk/Y or Shell/X, generate bounds using
+% function's inverse for inverse bounds along x-axis
 % bounds.
 if (inverse == 1)
     if (functionString == "x^2")
@@ -1013,7 +1110,9 @@ if (inverse == 1)
         newLower = lowerBound;
         newUpper = upperBound;
     end
-% Reverting bounds back to dx if current function selected is used.
+    
+% If the method/axis switches to Disk/X or Shell/Y, generate bounds using
+% function for inverse bounds along y-axis
 elseif (inverse == 0) 
     if (functionString == "x^2")
         newLower = lowerBound^2;
@@ -1026,4 +1125,12 @@ elseif (inverse == 0)
         newUpper = upperBound;
     end
 end
+end
+
+function sameSigns = sameSigns(bound1, bound2)
+    if bound1*bound2 < 0
+        sameSigns = 0;
+    else
+        sameSigns = 1;
+    end
 end
