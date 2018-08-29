@@ -242,7 +242,13 @@ else
         if (simple_exp_string == "x^2" && originallyNegativeArea == 1 && axisOri == "x")
             actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, -axisValue);
         else
-            actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
+            
+            % Takes care of when f(x) = 2^x rotated around vertical axis.
+            if (lowerBound == 0 && simple_exp_string == "2^x" && axisOri == "x")
+                actual_volume = diskmethod1(simple_exp_string, .0001, upperBound, axisOri, axisValue);
+            else
+                actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
+            end
         end
         
         estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusMethod);
@@ -317,7 +323,14 @@ else
       if (methodChoice == "Shell" && axisOri == "x")
         plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x") 
       else
-        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+          % Original negative area, so flip the axis of rotation across
+          % y-axis.
+%           if (originallyNegativeArea == 1)
+%               plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, -axisValue, viewMode, "y") 
+%           else
+              plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+%           end
+        
       end
       xlim(shape_plot_xlim);
       ylim(shape_plot_ylim);
@@ -579,18 +592,39 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
             disp("ORIGINAL NEGATIVE")
             originallyNegativeArea = 0;
             
-            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-            lowerBound, upper_input, 1);
-        
+            if (upper_input <= 0)
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+              upper_input, lowerBound, 1);
+              disp("YO")
+            else
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+              lowerBound, upper_input, 1);
+            end
         else
+            % Determine to use either current function or its inverse based
+            % on current volume configuration.
+            swapInverseBounds = 0;
+            
             if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
                 useInverseFunction = 0;
+                
+                % Using shell method with x^2 and the bounds <= 0, swap the
+                % lower and upper inverse bounds in the statement.
+                if (upper_input <= 0 && funcString == "x^2")
+                  swapInverseBounds = 1;
+                end
             else
                 useInverseFunction = 1;
             end
-        
-            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                lowerBound, upper_input, useInverseFunction);
+            
+            % Flip the lower and upper inverse bounds.
+            if swapInverseBounds == 1
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                upper_input, lowerBound, useInverseFunction);
+            else
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                  lowerBound, upper_input, useInverseFunction);
+            end
         end
         
         % Set the inverse upper bound according to the new upper bound, and display the new
@@ -640,7 +674,7 @@ methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 % If switching from disc to shell method and the resulting shell volume
 % cannot be generating due to the axis constraint, revert back to the disk
 % method. Else, assign the global variable methodChoice to whatever selected.
-if (methodChoice == "Disk" && ...
+if (methodChoice == "Disk" && methodContents == "Shell" && ...
         ~axisOutsideBounds(functionChoice(6:end), methodContents, lowerBound, upperBound, axisOri, axisValue))
     opts.Interpreter = 'tex';
     opts.Default = 'Cancel';
@@ -649,6 +683,9 @@ if (methodChoice == "Disk" && ...
         {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
         {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
     
+%     if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
+%         [tempInverseLower, tempInverseUpper] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+%     end
     lowBoundAxis = axisOri + "=" + num2str(lowerBound);
     upperBoundAxis = axisOri + "=" + num2str(upperBound);
     

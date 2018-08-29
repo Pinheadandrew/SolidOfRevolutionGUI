@@ -22,27 +22,50 @@ if (lower(axisOri) == 'y')
     %method.
     if (axisValue <= f(lowerBound) || axisValue >= f(upperBound))
       
-         
-        % Axis of rotation BELOW area under curve, set outer radius to
-        % function line.
-        if(double(f(lowerBound)) >= axisValue)
+         if (lowerBound <= 0 && upperBound <= 0 && funcString == "x")
             
-            % Add difference b/w axis value and f(lowbound) to inner radius
-            if (axisValue >= 0)
-                innerArea = 0;
-            else
-                innerArea = 0 - axisValue;
+            % Axis of rotation BELOW area under curve in negative space, set outer radius to
+            % f(upperbound) - aV and inner to f(x) - aV
+            if(double(f(lowerBound)) >= axisValue)
+                innerRadius = f(x) - axisValue;
+                outerRadius = f(upperBound) - axisValue;
+
+                % Axis of rotation ABOVE area under curve in negative space, outer radius is axis
+                % value minus function within bounds and inner radius is
+                % function maxima within bounds minus axis Value. 
+            elseif (f(upperBound) <= axisValue)
+                
+                % Add difference b/w axis value and f(lowbound) to inner radius
+                if (axisValue <= 0)
+                    innerRadius = 0;
+                else
+                    innerRadius = 0 - axisValue;
+                end
+                
+                outerRadius = axisValue - f(x);
             end
-            
-            outerArea = axisValue - f(x);
-            
-            % Axis of rotation ABOVE area under curve, outer radius is axis
-            % value minus minima of function within bounds.
-        elseif (double(f(upperBound)) <= axisValue)
-            innerArea = axisValue - f(x);
-            outerArea = axisValue - f(lowerBound);
-        end
-        A(x) = pi*(outerArea^2 - innerArea^2);
+         else
+            % Axis of rotation BELOW area under curve, set outer radius to
+            % function line.
+            if(double(f(lowerBound)) >= axisValue)
+
+                % Add difference b/w axis value and f(lowbound) to inner radius
+                if (axisValue >= 0)
+                    innerRadius = 0;
+                else
+                    innerRadius = 0 - axisValue;
+                end
+
+                outerRadius = axisValue - f(x);
+
+                % Axis of rotation ABOVE area under curve, outer radius is axis
+                % value minus minima of function within bounds.
+            elseif (double(f(upperBound)) <= axisValue)
+                innerRadius = axisValue - f(x);
+                outerRadius = axisValue - f(lowerBound);
+            end
+         end
+        A(x) = pi*(outerRadius^2 - innerRadius^2);
     else
         A(x) = pi*((f(x) - axisValue))^2;
     end
@@ -79,20 +102,20 @@ elseif (lower(axisOri) == 'x')
                     newAxisVal = abs(axisVal);
                     
                     if newAxisVal >= g(newUpper) % Axis to
-                        innerArea = newAxisVal - g(newUpper);
-                        outerArea = newAxisVal - g(x);
+                        innerRadius = newAxisVal - g(newUpper);
+                        outerRadius = newAxisVal - g(x);
                     elseif newAxisVal <= g(newLower)
-                        innerArea = newAxisVal - g(x);
-                        outerArea = newAxisVal - g(newUpper);
+                        innerRadius = newAxisVal - g(x);
+                        outerRadius = newAxisVal - g(newUpper);
                     end
                 else
-                    innerArea = axisValue - g(lowerBound);
-                    outerArea = axisValue - g(x);
+                    innerRadius = axisValue - g(lowerBound);
+                    outerRadius = axisValue - g(x);
                     functionNotOnZero = 1;
                 end
             else
-                innerArea = axisValue - g(x);
-                outerArea = axisValue - g(upperBound);
+                innerRadius = axisValue - g(x);
+                outerRadius = axisValue - g(upperBound);
                 
                 if (f(lowerBound) > 0)
                     functionNotOnZero = 1;
@@ -102,19 +125,19 @@ elseif (lower(axisOri) == 'x')
             % value minus minima of function within bounds.
         elseif (axisValue >= double(g(upperBound)))
             if (lowerBound <= 0 && upperBound <= 0)
-                innerArea = axisValue - g(x);
-                outerArea = axisValue - g(lowerBound);
+                innerRadius = axisValue - g(x);
+                outerRadius = axisValue - g(lowerBound);
                 functionNotOnZero = 1;
             else
-                innerArea = axisValue - g(upperBound);
-                outerArea = axisValue - g(x);
+                innerRadius = axisValue - g(upperBound);
+                outerRadius = axisValue - g(x);
                 
                 if (f(lowerBound) > 0)
                     functionNotOnZero = 1;
                 end
             end
         end
-        A(x) = pi*(outerArea^2 - innerArea^2);
+        A(x) = pi*(outerRadius^2 - innerRadius^2);
     else
         % If no gap b/w axis and bound, regular discs w/ no inner area to
         % subtract.

@@ -25,7 +25,20 @@ if (lower(axisOri) == 'x')
      integrant = abs(radius*f(x)); % |(x-radius)*f(x)|
 else % If rotation done paralell to a horizontal line, integrate function's inverse.
     integrant = abs(radius*(g(upperBound) - g(x)));
+    
+   
 end
 
 volume = 2*pi*double(int(integrant, lowerBound, upperBound));
+
+ if (lower(axisOri) == 'y' && g(lowerBound) >= axisValue)
+     % If there is gap b/w inverse lower boudn and axis, add that inner
+     % volume to the total volume.
+     if (axisValue >= 0)
+        fillerShellVolume = double(int(abs(g(lowerBound) - g(upperBound)), axisValue, g(lowerBound)));
+     else
+        fillerShellVolume = double(int(abs(g(lowerBound) - g(upperBound)), 0, g(lowerBound)));
+     end
+     volume = volume + 2*pi*fillerShellVolume;
+ end
 end
