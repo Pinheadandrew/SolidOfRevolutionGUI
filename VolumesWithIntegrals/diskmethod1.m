@@ -14,6 +14,7 @@ function volume = diskmethod1(funcString, lowerBound, upperBound, axisOri, axisV
 
 syms x
 f(x) = str2sym(funcString);
+functionNotOnZero = 0;
 
 % Rotating perpendicular to horizontal line.
 if (lower(axisOri) == 'y')
@@ -28,8 +29,8 @@ if (lower(axisOri) == 'y')
             % f(upperbound) - aV and inner to f(x) - aV
             if(double(f(lowerBound)) >= axisValue)
                 innerRadius = f(x) - axisValue;
-                outerRadius = f(upperBound) - axisValue;
-
+%                 outerRadius = f(upperBound) - axisValue;
+                outerRadius = axisValue;
                 % Axis of rotation ABOVE area under curve in negative space, outer radius is axis
                 % value minus function within bounds and inner radius is
                 % function maxima within bounds minus axis Value. 
@@ -62,7 +63,8 @@ if (lower(axisOri) == 'y')
                 % value minus minima of function within bounds.
             elseif (double(f(upperBound)) <= axisValue)
                 innerRadius = axisValue - f(x);
-                outerRadius = axisValue - f(lowerBound);
+%                 outerRadius = axisValue - f(lowerBound);
+                outerRadius = axisValue;
             end
          end
         A(x) = pi*(outerRadius^2 - innerRadius^2);
@@ -71,10 +73,26 @@ if (lower(axisOri) == 'y')
     end
     volume = double(int(A(x), lowerBound, upperBound));
     
+    if (functionNotOnZero == 1)
+        if (f(lowerBound) > 0)
+            cylInnerRadius = g(lowerBound) - axisValue;
+            cylOuterRadius = g(upperBound) - axisValue;
+            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+            cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
+            
+            volume = volume + cylVolumeWithBaseZero;
+        elseif (f(upperBound) < 0)
+            cylInnerRadius = g(upperBound) - axisValue;
+            cylOuterRadius = g(lowerBound) - axisValue;
+            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+            cylVolumeWithBaseZero = double(int(cylIntegrant, upperBound, 0));
+            
+            volume = volume + cylVolumeWithBaseZero;
+        end
+    end
     % Area under curve rotated around vertical line.
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);
-    functionNotOnZero = 0;
     
     %If axis value outside of bounds or on a bound, use washer
     %method.
@@ -132,6 +150,7 @@ elseif (lower(axisOri) == 'x')
                 innerRadius = axisValue - g(upperBound);
                 outerRadius = axisValue - g(x);
                 
+                % Function at lower bound > 0, rotate area under it.
                 if (f(lowerBound) > 0)
                     functionNotOnZero = 1;
                 end

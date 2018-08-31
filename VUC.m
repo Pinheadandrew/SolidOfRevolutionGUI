@@ -489,20 +489,39 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         if (originallyNegativeArea == 1)
             originallyNegativeArea = 0
             
-            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                lower_input, upperBound, 1);
-        
-       % Otherwise, just convert the new bound and the range of the
-       % function's inverse.
+            if (upperBound <= 0)
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+              upperBound, lower_input, 1);
+              disp("YO")
+            else
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+              lower_input, upperBound, 1);
+            end
         else
+            % Determine to use either current function or its inverse based
+            % on current volume configuration.
+            swapInverseBounds = 0;
+            
             if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
                 useInverseFunction = 0;
+                
+                % Using shell method with x^2 and the bounds <= 0, swap the
+                % lower and upper inverse bounds in the statement.
+                if (upperBound <= 0 && funcString == "x^2")
+                  swapInverseBounds = 1;
+                end
             else
                 useInverseFunction = 1;
             end
-        
-            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                lower_input, upperBound, useInverseFunction);
+            
+            % Flip the lower and upper inverse bounds.
+            if swapInverseBounds == 1
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                upperBound, lower_input, useInverseFunction);
+            else
+              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                  lower_input, upperBound, useInverseFunction);
+            end
         end
         
         set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
