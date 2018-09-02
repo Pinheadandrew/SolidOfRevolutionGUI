@@ -241,18 +241,18 @@ else
         % function of x^2.
         if (simple_exp_string == "x^2" && originallyNegativeArea == 1 && axisOri == "x")
             actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, -axisValue);
+            estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, -axisValue, radiusMethod);
         else
-            
+            temp_lowerBound = 0;
             % Takes care of when f(x) = 2^x rotated around vertical axis.
             if (lowerBound == 0 && simple_exp_string == "2^x" && axisOri == "x")
-                actual_volume = diskmethod1(simple_exp_string, .0001, upperBound, axisOri, axisValue);
+                temp_lowerBound = .0001;
             else
-                actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
+                temp_lowerBound = lowerBound;
             end
+            actual_volume = diskmethod1(simple_exp_string, temp_lowerBound, upperBound, axisOri, axisValue);
+            estimated_volume = diskmethod2(simple_exp_string, steps, temp_lowerBound, upperBound, axisOri, axisValue, radiusMethod);
         end
-        
-        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusMethod);
-%         actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
         
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
@@ -325,11 +325,7 @@ else
       else
           % Original negative area, so flip the axis of rotation across
           % y-axis.
-%           if (originallyNegativeArea == 1)
-%               plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, -axisValue, viewMode, "y") 
-%           else
               plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
-%           end
         
       end
       xlim(shape_plot_xlim);

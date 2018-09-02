@@ -64,7 +64,7 @@ if (lower(axisOri) == 'y')
         fillerShellVolume = double(int(abs(radius*innerShellLength), upperBound, 0));
     end
   elseif (upperBound <= axisValue)
-    % Volume is negative
+    % Area rotated is within negative space
     if (upperBound <= 0)
       if (axisValue <= 0)
         fillerShellVolume = double(int(abs(radius*innerShellLength), upperBound, axisValue));

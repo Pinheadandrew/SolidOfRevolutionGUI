@@ -31,15 +31,27 @@ end
 
 syms x
 f(x) = str2sym(funcString);
+g(x) = finverse(f);
 
-if (lower(axisOri) == 'y') % Bounds along y-axis, use inverse with upperbound as "limit" of volume.
-    g(x) = finverse(f);
-    shellHeights = abs(double(g(upperBound) - g(xpoints)));
 % Bounds along x-axis, use inverse with upperbound as "limit" of volume
 % minus the function along to collect the shell's lengths (shells are
 % horizontal)
-else
+if (lower(axisOri) == 'x')
     shellHeights = f(xpoints);
+    
+% Bounds along y-axis, use inverse with upperbound as "limit" of volume.
+elseif (lower(axisOri) == 'y')
+    if (g(lowerBound) <= 0 && g(upperBound) <= 0)
+        if (funcString == "x")
+            shellHeights = g(lowerBound) - g(xpoints);
+        else
+            shellHeights = g(upperBound) - g(xpoints);
+        end
+    % Otherwise, bound one end of each shell's length by constant,
+    % g(upperBound)
+    else
+        shellHeights = g(upperBound) - g(xpoints);
+    end
 end
 
 % Checks for any NaNs, as result of problems such as logarithm function of
@@ -53,4 +65,59 @@ end
 shellVols = abs(shellHeights.*(xpoints-axisValue))*delta;
 sumShellVols = 2*pi*sum(shellVols);
 sumShellVols = double(sumShellVols);
+
+% If there is gap b/w inverse lower boudn and axis, add that inner
+% volume to the total volume.
+if (lower(axisOri) == 'y') 
+    fillerShellVolume = 0;
+    innerShellLength = g(upperBound) - g(lowerBound);
+    
+    % Horizontal axis lower than lowerbound on y-axis, but greater than
+    % y=0, rotate area b/w lowerbound and axis value, in which diff b/w
+    % both is width and diff b/w counterparts of lower and upper bounds
+    % along x-axis is the length (shell height) of the shell.
+  if (lowerBound >= axisValue)
+      disp("1")
+    if (lowerBound >= 0 && upperBound >= 0)
+        disp("2")
+      % Axis between 0 and lower bound along y-axis, add up 
+      if (axisValue >= 0)
+          disp("3")
+          % The filler shell is like a basic cylinder, with radius of (lowerBound - axisValue)
+          fillerShellVolume = pi*(lowerBound - axisValue)^2*innerShellLength; 
+      else
+        disp("4")
+        % The filler shell, with radius of (lowerBound - axisValue)
+          fillerShellVolume = pi*(lowerBound - axisValue)^2*innerShellLength; 
+          fillerShellVolume = fillerShellVolume - (pi*(0 - axisValue)^2*innerShellLength);
+      end
+      
+    elseif (lowerBound <= 0 && upperBound <= 0)
+        disp("5")
+        fillerShellVolume = pi*(axisValue)^2*innerShellLength;
+        fillerShellVolume = fillerShellVolume - pi*(axisValue - upperBound)^2*innerShellLength;
+    end
+  % Horizontal axis of rotation higher than upper bound along y-axis.
+  elseif (upperBound <= axisValue)
+      disp("6")
+    % Area rotated is within negative space
+    if (upperBound <= 0)
+        disp("7")
+      if (axisValue <= 0)
+         disp("8")
+          fillerShellVolume = pi*(upperBound - axisValue)^2*innerShellLength; 
+      else
+         disp("9")
+          fillerShellVolume = pi*(axisValue - upperBound)^2*innerShellLength; 
+          fillerShellVolume = fillerShellVolume - (pi*(axisValue - 0)^2*innerShellLength);
+      end
+    % The area is positive, so rotate it
+    elseif (lowerBound >= 0)
+        disp("10")
+        fillerShellVolume = pi*(axisValue)^2*innerShellLength;
+        fillerShellVolume = fillerShellVolume - pi*(axisValue - lowerBound)^2*innerShellLength;
+    end
+  end
+  sumShellVols = sumShellVols + double(fillerShellVolume);
+end
 end

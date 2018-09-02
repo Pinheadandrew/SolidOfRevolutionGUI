@@ -22,18 +22,17 @@ if (lower(axisOri) == 'y')
     %If axis value not any bound and outside of the bounds, use washer
     %method.
     if (axisValue <= f(lowerBound) || axisValue >= f(upperBound))
-      
-         if (lowerBound <= 0 && upperBound <= 0 && funcString == "x")
+        
+        % Axis of rotation BELOW area under curve in negative space, set outer radius to
+        % f(upperbound) - aV and inner to f(x) - aV
+        if (lowerBound <= 0 && upperBound <= 0 && funcString == "x")
             
-            % Axis of rotation BELOW area under curve in negative space, set outer radius to
-            % f(upperbound) - aV and inner to f(x) - aV
             if(double(f(lowerBound)) >= axisValue)
                 innerRadius = f(x) - axisValue;
-%                 outerRadius = f(upperBound) - axisValue;
                 outerRadius = axisValue;
                 % Axis of rotation ABOVE area under curve in negative space, outer radius is axis
                 % value minus function within bounds and inner radius is
-                % function maxima within bounds minus axis Value. 
+                % function maxima within bounds minus axis Value.
             elseif (f(upperBound) <= axisValue)
                 
                 % Add difference b/w axis value and f(lowbound) to inner radius
@@ -45,58 +44,59 @@ if (lower(axisOri) == 'y')
                 
                 outerRadius = axisValue - f(x);
             end
-         else
+        % Otherwise, if area under/above curve not f(x) bounded by negative
+        % numbers along x-axis.
+        else
             % Axis of rotation BELOW area under curve, set outer radius to
             % function line.
             if(double(f(lowerBound)) >= axisValue)
-
+                
                 % Add difference b/w axis value and f(lowbound) to inner radius
                 if (axisValue >= 0)
                     innerRadius = 0;
                 else
                     innerRadius = 0 - axisValue;
                 end
-
+                
                 outerRadius = axisValue - f(x);
-
-                % Axis of rotation ABOVE area under curve, outer radius is axis
-                % value minus minima of function within bounds.
+                
+            % Axis of rotation ABOVE area under curve, outer radius is axis
+            % value minus minima of function within bounds.
             elseif (double(f(upperBound)) <= axisValue)
                 innerRadius = axisValue - f(x);
-%                 outerRadius = axisValue - f(lowerBound);
                 outerRadius = axisValue;
             end
-         end
+        end
         A(x) = pi*(outerRadius^2 - innerRadius^2);
     else
         A(x) = pi*((f(x) - axisValue))^2;
     end
     volume = double(int(A(x), lowerBound, upperBound));
     
-    if (functionNotOnZero == 1)
-        if (f(lowerBound) > 0)
-            cylInnerRadius = g(lowerBound) - axisValue;
-            cylOuterRadius = g(upperBound) - axisValue;
-            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
-            cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
-            
-            volume = volume + cylVolumeWithBaseZero;
-        elseif (f(upperBound) < 0)
-            cylInnerRadius = g(upperBound) - axisValue;
-            cylOuterRadius = g(lowerBound) - axisValue;
-            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
-            cylVolumeWithBaseZero = double(int(cylIntegrant, upperBound, 0));
-            
-            volume = volume + cylVolumeWithBaseZero;
-        end
-    end
+%     if (functionNotOnZero == 1)
+%         if (f(lowerBound) > 0)
+%             cylInnerRadius = g(lowerBound) - axisValue;
+%             cylOuterRadius = g(upperBound) - axisValue;
+%             cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+%             cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
+%             
+%             volume = volume + cylVolumeWithBaseZero;
+%         elseif (f(upperBound) < 0)
+%             cylInnerRadius = g(upperBound) - axisValue;
+%             cylOuterRadius = g(lowerBound) - axisValue;
+%             cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+%             cylVolumeWithBaseZero = double(int(cylIntegrant, upperBound, 0));
+%             
+%             volume = volume + cylVolumeWithBaseZero;
+%         end
+%     end
     % Area under curve rotated around vertical line.
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);
     
     %If axis value outside of bounds or on a bound, use washer
     %method.
-    if (axisValue <= g(lowerBound) || axisValue >= g(upperBound))
+    if (axisValue <= double(g(lowerBound)) || axisValue >= double(g(upperBound)))
         
         % Axis of rotation to the left of area under curve, set outer radius to
         % function line, inner to the inverse function with lower bound.
@@ -131,6 +131,7 @@ elseif (lower(axisOri) == 'x')
                     outerRadius = axisValue - g(x);
                     functionNotOnZero = 1;
                 end
+            %  Function is actually homogenous signs, or both positive  
             else
                 innerRadius = axisValue - g(x);
                 outerRadius = axisValue - g(upperBound);
@@ -165,6 +166,8 @@ elseif (lower(axisOri) == 'x')
     
     volume = double(int(A(x), lowerBound, upperBound));
     
+    % If rotating area, and part of area between function and axis cut out
+    % (i.e. area above area where f(x) = x and -3<y<-1), add it.
     if (functionNotOnZero == 1)
         if (f(lowerBound) > 0)
             cylInnerRadius = g(lowerBound) - axisValue;
