@@ -101,6 +101,7 @@ global axisOri;
 global viewModeChanged;
 global inverseUpperBound;
 global inverseLowerBound;
+global axisValue;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 functionContents = functionContents{get(hObject, 'Value')};
@@ -133,20 +134,33 @@ if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound
 else
     functionChoice = functionContents;
     
-    % Set the ivnerse bounds and its statement, according to the volume
+    
+    % Reset parameters of volume once function changed.
+    
+    if (functionChoice(6:end) == "2^x" && axisOri == "x")
+        lowerBound = 1;
+        upperBound = 2;
+    else
+        lowerBound = 0;
+        upperBound = 1;
+%         axisOri = "y";
+    end
+%     axisValue = 0;
+    
+%     set(handles.axisEditbox, 'string', axisValue);
+    set(handles.lowerBoundEdit, 'string', lowerBound);
+    set(handles.upperBoundEdit, 'string', upperBound);
+    
+    % Set the inverse bounds and its statement, according to the volume
     % configuration and the newly selected
     if ((methodChoice == "Shell" && axisOri == "y") || (methodChoice == "Disk" && axisOri == "x"))
-%         [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
         [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
     else
-%         [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
         [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
     end
     
     set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
     set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
-%     set(handles.lowerBoundEdit, 'string', lowerBound);
-%     set(handles.upperBoundEdit, 'string', upperBound);
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -233,7 +247,6 @@ else
         cla reset, rotate3d off
         
     % Calls different volume calculation methods depending on method picked. 
-    originallyNegativeArea
     if(strcmp(methodChoice, "Disk"))
         
         % Some test for flipping bounds and inverting them if the original
@@ -477,18 +490,18 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(handles.lowerBoundEdit, 'string', lowerBound);
         
     else
+        useInverseFunction = 0;
         % The state of the program is that the bound changed while the
         % volume originated from negative x-bounds for shell object. In
         % the case of changing a, change program's state so that the
         % inverses of the disc volume's bounds are positive integers, so
         % plot different volume.
         if (originallyNegativeArea == 1)
-            originallyNegativeArea = 0
+            originallyNegativeArea = 0;
             
             if (upperBound <= 0)
               [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
               upperBound, lower_input, 1);
-              disp("YO")
             else
               [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
               lower_input, upperBound, 1);
@@ -510,7 +523,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
                 useInverseFunction = 1;
             end
             
-            % Flip the lower and upper inverse bounds.
+            % Flip the lower and upper inverse bounds, if 
             if swapInverseBounds == 1
               [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
                 upperBound, lower_input, useInverseFunction);
@@ -523,8 +536,29 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
         set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
         
-        if (sameSigns(lower_input, upperBound) == 0  && funcString ~= "2^x")
-            disp("NOT THE SAME SIGNS. DO SOMETHING")
+        % Changed the upper bound and the bounds are not the same sign
+        % (lower bound negative whie upper bound positive), change the
+        % lower bound to 0 and alert the user this happened and why.
+        if (sameSigns(upperBound, lower_input) == 0 && funcString ~= "2^x")
+            if (upperBound > 0)
+                upperBound = 0;
+                
+                % Reset inverse bounds according to the new upper bound
+                % at 0.
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                  lower_input, upperBound, useInverseFunction);
+                set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+                set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+                
+                set(handles.upperBoundEdit, 'string', upperBound);
+                plot(0,0);
+                f = errordlg(sprintf(...
+                    'Changed the upper bound to 0 for you so that they are the same signs, because simplicity.')...
+                , 'Bounds Update');
+                set(f, 'WindowStyle', 'modal');
+                uiwait(f);
+                viewModeChanged = 1;
+            end
         end
         
         lowerBound = lower_input;
@@ -604,22 +638,20 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         % bounds to be positive numbers that are the bounds through inverse
         % function.
         if (originallyNegativeArea == 1)
-            disp("ORIGINAL NEGATIVE")
             originallyNegativeArea = 0;
             
             if (upper_input <= 0)
               [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
               upper_input, lowerBound, 1);
-              disp("YO")
             else
               [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
               lowerBound, upper_input, 1);
             end
         else
-            % Determine to use either current function or its inverse based
-            % on current volume configuration.
             swapInverseBounds = 0;
             
+            % Determines whether to use inverse of function or function
+            % depending on volume configurations 
             if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
                 useInverseFunction = 0;
                 
@@ -632,7 +664,9 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
                 useInverseFunction = 1;
             end
             
-            % Flip the lower and upper inverse bounds.
+            % Flip the lower and upper inverse bounds if state of program
+            % wants to change the automatically to the stored inverse
+            % bounds.
             if swapInverseBounds == 1
               [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
                 upper_input, lowerBound, useInverseFunction);
@@ -642,14 +676,31 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
             end
         end
         
+        
+        % Changed the upper bound and the bounds are not the same sign
+        % (lower bound negative whie upper bound positive), change the
+        % lower bound to 0 and alert the user this happened and why.
+        if (sameSigns(upper_input, lowerBound) == 0 && funcString ~= "2^x")
+            if (upper_input > 0)
+                lowerBound = 0;
+                set(handles.lowerBoundEdit, 'string', lowerBound);
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                  lowerBound, upper_input, useInverseFunction);
+                
+                plot(0,0);
+                f = errordlg(sprintf(...
+                    'Changed the bound for you so that they are the same signs, because simplicity.')...
+                , 'Bounds Update');
+                set(f, 'WindowStyle', 'modal');
+                uiwait(f);
+                viewModeChanged = 1;
+            end
+        end
+        
         % Set the inverse upper bound according to the new upper bound, and display the new
         % inverse range.
         set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
         set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
-        
-        if (sameSigns(upper_input, lowerBound) == 0 && funcString ~= "2^x")
-            disp("NOT THE SAME SIGNS. DO SOMETHING")
-        end
         
         upperBound = upper_input;
     end
@@ -698,14 +749,13 @@ if (methodChoice == "Disk" && methodContents == "Shell" && ...
         {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
         {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
     
-%     if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
-%         [tempInverseLower, tempInverseUpper] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-%     end
     lowBoundAxis = axisOri + "=" + num2str(lowerBound);
     upperBoundAxis = axisOri + "=" + num2str(upperBound);
     
     answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
         upperBoundAxis, 'Cancel', opts);
+    
+    % Pop up between selections of new values of axis of rotation.
     switch answer
         case lowBoundAxis
             methodChoice = "Shell";
