@@ -65,6 +65,16 @@ global viewModeChanged;
 viewModeChanged = 0;
 global originallyNegativeArea;
 originallyNegativeArea = 0;
+
+global boundEdit_top_y;
+boundEdit_top_y = 2.8;
+global boundEdit_bottom_y;
+boundEdit_bottom_y = 0.6;
+global inverseChar_top_y;
+inverseChar_top_y = 2.65;
+global inverseChar_bottom_y;
+inverseChar_bottom_y = 0.43;
+
 maxNumberOfRect = 75;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
@@ -734,14 +744,18 @@ global functionChoice;
 global inverseLowerBound;
 global inverseUpperBound;
 global originallyNegativeArea;
+global boundEdit_top_y;
+global boundEdit_bottom_y;
+global inverseChar_top_y;
+global inverseChar_bottom_y;
 
 methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 
 % If switching from disc to shell method and the resulting shell volume
-% cannot be generating due to the axis constraint, revert back to the disk
-% method. Else, assign the global variable methodChoice to whatever selected.
+% cannot be generating due to the axis constraint between the inverted bounds among the new axis, 
+% revert back to the disk method. Else, assign the global variable methodChoice to whatever selected.
 if (methodChoice == "Disk" && methodContents == "Shell" && ...
-        ~axisOutsideBounds(functionChoice(6:end), methodContents, lowerBound, upperBound, axisOri, axisValue))
+         ~axisOutsideBounds(functionChoice(6:end), methodContents, inverseLowerBound, inverseUpperBound, axisOri, axisValue))
     opts.Interpreter = 'tex';
     opts.Default = 'Cancel';
     fontSettings = '\fontsize{12}';
@@ -749,8 +763,8 @@ if (methodChoice == "Disk" && methodContents == "Shell" && ...
         {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
         {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
     
-    lowBoundAxis = axisOri + "=" + num2str(lowerBound);
-    upperBoundAxis = axisOri + "=" + num2str(upperBound);
+    lowBoundAxis = axisOri + "=" + num2str(inverseLowerBound);
+    upperBoundAxis = axisOri + "=" + num2str(inverseUpperBound);
     
     answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
         upperBoundAxis, 'Cancel', opts);
@@ -796,10 +810,10 @@ else
             % negative bounds, flip them and change the actual bounds using
             % the original function.
             if (functionChoice(6:end) == "x^2" && lowerBound <= 0 && upperBound <= 0)
-                inverseLowerBound = lowerBound
-                inverseUpperBound = upperBound
+                inverseLowerBound = lowerBound;
+                inverseUpperBound = upperBound;
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), -upperBound, -lowerBound, 0);
-                originallyNegativeArea = 1
+                originallyNegativeArea = 1;
             else
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
@@ -838,27 +852,55 @@ else
   set(handles.solidViewRadiogroup, 'Visible', "off");
 end
 
+lowBound_position = get(handles.lowerBoundEdit,'Position');
+upBound_position = get(handles.upperBoundEdit,'Position');
+inverseLow_position = get(handles.inverseLowBoundChar,'Position');
+inverseUp_position = get(handles.inverseUpBoundChar,'Position');
 % Based on method and the axis orientation picked, reset the bound 
-% and the inverse bound statements in the boundary section.
+% and the inverse bound statements in the boundary section. Also swap the
+% y-positions between the bound edit boxes and the inverse bound strings.
 if (methodChoice == "Shell")
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+ 
+  % Switch the bound editboxes to be with the y-axis boundaries, and the inverse chars
+  % with the x-axis boundaries
   if (axisOri == "y")
-    set(handles.boundStatement, 'string', "< Y <");
-    set(handles.inverseAxisBoundStatement, 'string', "< X <");
+     lowBound_position(2) = boundEdit_bottom_y;
+     upBound_position(2) = boundEdit_bottom_y;
+     inverseLow_position(2) = inverseChar_top_y;
+     inverseUp_position(2) = inverseChar_top_y;
   else
-    set(handles.boundStatement, 'string', "< X <");
-    set(handles.inverseAxisBoundStatement, 'string', "< Y <");
+  % Switch the bound editboxes to be with the x-axis boundaries, and the inverse chars
+  % with the y-axis boundaries
+     lowBound_position(2) = boundEdit_top_y;
+     upBound_position(2) = boundEdit_top_y;
+     inverseLow_position(2) = inverseChar_bottom_y;
+     inverseUp_position(2) = inverseChar_bottom_y;
   end
 else
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
-    if (axisOri == "y")
-      set(handles.boundStatement, 'string', "< X <");
-      set(handles.inverseAxisBoundStatement, 'string', "< Y <");
-    else
-      set(handles.boundStatement, 'string', "< Y <");
-      set(handles.inverseAxisBoundStatement, 'string', "< X <");
-    end
+  
+  % Switch the bound editboxes to be with the x-axis boundaries, and the inverse chars
+  % with the y-axis boundaries
+  if (axisOri == "y") 
+     lowBound_position(2) = boundEdit_top_y;
+     upBound_position(2) = boundEdit_top_y;
+     inverseLow_position(2) = inverseChar_bottom_y;
+     inverseUp_position(2) = inverseChar_bottom_y;
+     
+  else % Switch the bound editboxes to be with the y-axis.
+     lowBound_position(2) = boundEdit_bottom_y;
+     upBound_position(2) = boundEdit_bottom_y;
+     inverseLow_position(2) = inverseChar_top_y;
+     inverseUp_position(2) = inverseChar_top_y;
+  end
 end
+% Sets the new positions of the inverse bound strings and the bound edit
+% boxes.
+set(handles.lowerBoundEdit, 'Position', lowBound_position);
+set(handles.upperBoundEdit, 'Position', upBound_position);
+set(handles.inverseLowBoundChar, 'Position', inverseLow_position);
+set(handles.inverseUpBoundChar, 'Position', inverseUp_position);
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -933,6 +975,10 @@ global axisValue;
 global inverseLowerBound;
 global inverseUpperBound;
 global originallyNegativeArea;
+global boundEdit_top_y;
+global boundEdit_bottom_y;
+global inverseChar_top_y;
+global inverseChar_bottom_y;
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
