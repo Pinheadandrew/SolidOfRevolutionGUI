@@ -144,9 +144,7 @@ if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound
 else
     functionChoice = functionContents;
     
-    
     % Reset parameters of volume once function changed.
-    
     if (functionChoice(6:end) == "2^x" && axisOri == "x")
         lowerBound = 1;
         upperBound = 2;
@@ -212,7 +210,6 @@ global originallyNegativeArea;
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
 if (strcmp(functionChoice, "Select a function"))
-    % plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
@@ -451,8 +448,12 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     
     lower_input = str2double(get(hObject,'String'));
     funcString = functionChoice(6:end);
-   
-    if(isnan(lower_input))
+    
+    if (strcmp(functionChoice, "Select a function"))
+        f = errordlg('No Function Selected.', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    elseif(isnan(lower_input))
         d = errordlg('The bound must be a real number.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -601,7 +602,11 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     upper_input = str2double(get(hObject,'String'));
     funcString = functionChoice(6:end);
     
-    if(isnan(upper_input))
+    if (strcmp(functionChoice, "Select a function"))
+        f = errordlg('No Function Selected.', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    elseif(isnan(upper_input))
         d = errordlg('The bound must be a real number.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -754,7 +759,11 @@ methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 % If switching from disc to shell method and the resulting shell volume
 % cannot be generating due to the axis constraint between the inverted bounds among the new axis, 
 % revert back to the disk method. Else, assign the global variable methodChoice to whatever selected.
-if (methodChoice == "Disk" && methodContents == "Shell" && ...
+if (strcmp(functionChoice, "Select a function"))
+    f = errordlg('No Function Selected.', 'Function Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+elseif (methodChoice == "Disk" && methodContents == "Shell" && ...
          ~axisOutsideBounds(functionChoice(6:end), methodContents, inverseLowerBound, inverseUpperBound, axisOri, axisValue))
     opts.Interpreter = 'tex';
     opts.Default = 'Cancel';
@@ -856,6 +865,7 @@ lowBound_position = get(handles.lowerBoundEdit,'Position');
 upBound_position = get(handles.upperBoundEdit,'Position');
 inverseLow_position = get(handles.inverseLowBoundChar,'Position');
 inverseUp_position = get(handles.inverseUpBoundChar,'Position');
+
 % Based on method and the axis orientation picked, reset the bound 
 % and the inverse bound statements in the boundary section. Also swap the
 % y-positions between the bound edit boxes and the inverse bound strings.
@@ -928,7 +938,11 @@ function axisEditbox_Callback(hObject, eventdata, handles)
     global methodChoice;
     axis_input = str2double(get(hObject,'String'));
    
-    if(isnan(axis_input))
+    if (strcmp(functionChoice, "Select a function"))
+        f = errordlg('No Function Selected.', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    elseif(isnan(axis_input))
         d = errordlg('Axis Value must be a Real number', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -988,7 +1002,11 @@ axisPicked = get(get(handles.axisButtonGroup,'SelectedObject'),'string');
 % negative bounds constraint under some configurations, i.e. when y=2^x,
 % 0<y<infinity. If this occurs, make error message and switch back to
 % previous axis orientation.
-if (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisPicked))
+if (strcmp(functionChoice, "Select a function"))
+    f = errordlg('No Function Selected.', 'Function Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisPicked))
     f = errordlg(sprintf(...
         'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
@@ -1001,26 +1019,46 @@ else
     % based afterwards.
     if (axisPicked ~= axisOri)
         
-        % Change and paramters to assist user in determining new axis.
+        % Change the paramters to assist user in determining new axis.
+        % Swap the postions b/w bound editboxes and inverse bound chars based
+        % on the new configuration with axis orientation picked.
+        lowBound_position = get(handles.lowerBoundEdit,'Position');
+        upBound_position = get(handles.upperBoundEdit,'Position');
+        inverseLow_position = get(handles.inverseLowBoundChar,'Position');
+        inverseUp_position = get(handles.inverseUpBoundChar,'Position');
+        orig_bounds_yPosition = lowBound_position(2);
+        orig_inverse_yPosition = inverseUp_position(2);
+
         if (methodChoice == "Disk")
-            if (axisPicked == "x")
-                bound_statement = "< Y <";
-                inverse_bound_statement = "< X <";
-            else
-                bound_statement = "< X <";
-                inverse_bound_statement = "< Y <";
+            if (axisPicked == "x")% Switch the bound editboxes to be with the y-axis.
+                 lowBound_position(2) = boundEdit_bottom_y;
+                 upBound_position(2) = boundEdit_bottom_y;
+                 inverseLow_position(2) = inverseChar_top_y;
+                 inverseUp_position(2) = inverseChar_top_y;
+            elseif (axisPicked == "y")% Switch the bound editboxes to be with the x-axis.
+                 lowBound_position(2) = boundEdit_top_y;
+                 upBound_position(2) = boundEdit_top_y;
+                 inverseLow_position(2) = inverseChar_bottom_y;
+                 inverseUp_position(2) = inverseChar_bottom_y;
             end
-        else
-            bound_statement = "< " + upper(axisPicked(1)) + " <";
-            
-            if (axisPicked == "x")
-                inverse_bound_statement = "< Y <";
-            else
-                inverse_bound_statement = "< X <";
+        elseif (methodChoice == "Shell")
+            if (axisPicked == "x")% Switch the bound editboxes to be with the x-axis.
+                 lowBound_position(2) = boundEdit_top_y;
+                 upBound_position(2) = boundEdit_top_y;
+                 inverseLow_position(2) = inverseChar_bottom_y;
+                 inverseUp_position(2) = inverseChar_bottom_y;
+            elseif (axisPicked == "y")% Switch the bound editboxes to be with the y-axis.
+                 lowBound_position(2) = boundEdit_bottom_y;
+                 upBound_position(2) = boundEdit_bottom_y;
+                 inverseLow_position(2) = inverseChar_top_y;
+                 inverseUp_position(2) = inverseChar_top_y;
             end
         end
-        set(handles.boundStatement, 'string', bound_statement);
-        set(handles.inverseAxisBoundStatement, 'string', inverse_bound_statement);
+
+        set(handles.lowerBoundEdit, 'Position', lowBound_position);
+        set(handles.upperBoundEdit, 'Position', upBound_position);
+        set(handles.inverseLowBoundChar, 'Position', inverseLow_position);
+        set(handles.inverseUpBoundChar, 'Position', inverseUp_position);
          
         % Inverts the bounds, while the user is prompted for a new axis to
         % show the forbidden space for the new axis.
@@ -1038,6 +1076,7 @@ else
         set(handles.upperBoundEdit, 'string', upperBound);
         % END SWITCHING PARAMETER ZONE
         
+        % Prompts user to enter a new axis value.
         prompt = {'Enter a new number for the axis value to rotate the area about, or enter 0 to rotate about the x/y-axis).'};
         title = 'Axis Change';
         definput = {'0'};
@@ -1048,7 +1087,7 @@ else
             disp("Not a number!")
             % CHANGE TO ERROR MESSAGE AND REVERT TO PREVIOUS
         
-        % Change paramters back to what it was before (down to line 718).
+        % Change parameters and positions of bound edits back to what it was before.
         % If 'cancel' selected, revert to previous axis orientation.
         elseif (isempty(newAxisValue)) 
             if ((methodChoice == "Shell" && axisOri == "y") || (methodChoice == "Disk" && axisOri == "x"))
@@ -1059,7 +1098,6 @@ else
             % selected to reset the bounds.
                 [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-                
             end
             
             set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
@@ -1076,31 +1114,23 @@ else
             end
             
             set(handles.axisEditbox, 'string', axisValue);
+            
+            % Set bound and inverse bound positions to the axis domains
+            % they were assigned to before the cancellation.
+            lowBound_position(2) = orig_bounds_yPosition;
+            upBound_position(2) = orig_bounds_yPosition;
+            inverseLow_position(2) = orig_inverse_yPosition;
+            inverseUp_position(2) = orig_inverse_yPosition;
+            
+            set(handles.lowerBoundEdit, 'Position', lowBound_position);
+            set(handles.upperBoundEdit, 'Position', upBound_position);
+            set(handles.inverseLowBoundChar, 'Position', inverseLow_position);
+            set(handles.inverseUpBoundChar, 'Position', inverseUp_position);
         else
             axisValue = str2double(newAxisValue);
             set(handles.axisEditbox, 'string', axisValue);
         end
-end
-    if (methodChoice == "Disk")
-        if (axisPicked == "x")
-            bound_statement = "< Y <";
-            inverse_bound_statement = "< X <";
-        else
-            bound_statement = "< X <";
-            inverse_bound_statement = "< Y <";
-        end
-    else
-        bound_statement = "< " + upper(axisPicked(1)) + " <";
-            
-        if (axisPicked == "x")
-            inverse_bound_statement = "< Y <";
-        else
-            inverse_bound_statement = "< X <";
-        end
     end
-    
-    set(handles.boundStatement, 'string', bound_statement);
-    set(handles.inverseAxisBoundStatement, 'string', inverse_bound_statement);
     
     position = get(handles.axisEditbox,'Position');
     
