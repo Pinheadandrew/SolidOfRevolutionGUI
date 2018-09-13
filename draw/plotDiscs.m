@@ -58,17 +58,15 @@ if (axisOri == "y")
                 if (axisVal <= 0)
                     disp("5")
                     innerRadius = zeros(1, length(xpoints));
-%                     innerRadius = axisVal*ones(1,length(xpoints));
                 else
                     disp("6")
-%                     innerRadius = zeros(1, length(xpoints)) - axisVal;
                     innerRadius = axisVal*ones(1,length(xpoints));
                 end
                 
                 outerRadius = abs(axisVal - f(xpoints));
             end
-            % Otherwise, if area under/above curve not f(x) bounded by negative
-            % numbers along x-axis.
+        % Otherwise, if area under/above curve not f(x)=x bounded by negative
+        % numbers along x-axis.
         else
             disp("7")
             % Axis of rotation BELOW area under curve, set outer radius to
@@ -78,7 +76,6 @@ if (axisOri == "y")
                 % Add difference b/w axis value and f(lowbound) to inner radius
                 if (axisVal >= 0)
                     disp("9")
-                    % innerArea = 0;
                     innerRadius = zeros(1,length(xpoints));
                 else
                     disp("10")
@@ -87,12 +84,13 @@ if (axisOri == "y")
                 end
                 outerRadius = abs(double(axisVal - f(xpoints)));
 
-                % Axis of rotation ABOVE area under curve, outer radius is axis
-                % value minus minima of function within bounds.
+            % Axis of rotation ABOVE area under curve, outer radius is axis
+            % value minus minima of function within bounds.
             elseif (double(f(upbound)) <= axisVal)
                 disp("11")
-                innerRadius = abs(double(axisVal - f(xpoints)));
-                outerRadius = abs(double(axisVal - f(lowbound)))*ones(1,length(xpoints));
+                innerRadius = abs(axisVal - f(xpoints));
+                outerRadius = abs(axisVal - f(lowbound))*ones(1,length(xpoints));
+                outerRadius = outerRadius + f(lowbound); % <- Includes area "under" f(lowerbound) in discs' radii.
             end
         end
         % Turns radius values into numbers of double precision.
