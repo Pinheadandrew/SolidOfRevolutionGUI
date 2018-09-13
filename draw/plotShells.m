@@ -87,10 +87,8 @@ if(lower(axisOri) == "x")
         [outer_y,inner_y], cylHeight*ones(1, 2*length(theta)),[0 0.902 0]);
         topRing.EdgeColor = 'none';
         
-%         plot3(inner_x, inner_y, volumeBaseLine*ones(1, length(theta)), "black"), hold on
         plot3(inner_x, inner_y, cylHeight*ones(1, length(theta)), "black"), hold on
         plot3(outer_x, outer_y, cylHeight*ones(1, length(theta)), "black"), hold on
-%         plot3(outer_x, outer_y, verticalCylEnd*ones(1, length(theta)), "black"), hold on
       end
     
     %Drawing rectangles to fill faces of shells' as they're cut on
@@ -108,20 +106,43 @@ if(lower(axisOri) == "x")
         patch(orig_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
         patch(mirror_xverts, zeros(size(orig_xverts)), yverts, [0 0.902 0]);
       end
-else
-    % When axis is horizontal line, draw shells parallel to this line, bounds along y-axis.
+% When axis is horizontal line, draw shells parallel to this line, bounds along y-axis.
+elseif (lower(axisOri) == "y")
     g(x) = finverse(f);
     
-    % If lower bound's value of f(x) higher than axis value, make solid's
-    % "base" at upper bound. Else, make "base" at lower bound.
-    if (double(g(lowbound)) >= axisVal)
-        volumeBaseLine = double(g(lowbound));
-        shellLengths = volumeBaseLine - double(g(xpoints));
-        shellEndpoints = volumeBaseLine - shellLengths;
-    elseif (double(g(upbound)) <= axisVal)
-        volumeBaseLine = double(g(upbound));
-        shellLengths = volumeBaseLine - double(g(xpoints));
-        shellEndpoints = volumeBaseLine - shellLengths;
+    % The bounds produce an output through the inverse function that are
+    % negative.
+    if (g(lowbound) <= 0 && g(upbound) <= 0)
+        % Function is "x", special case for area to be rotated.
+        if (funcString == "x")
+            volumeBaseLine = double(g(lowbound));
+            shellLengths = volumeBaseLine - double(g(xpoints));
+            shellEndpoints = volumeBaseLine - shellLengths;
+        else
+            volumeBaseLine = double(g(upbound));
+            shellLengths = double(volumeBaseLine - g(xpoints));
+            shellEndpoints = volumeBaseLine - shellLengths;
+        end
+    % Otherwise, bound one end of each shell's length by constant,
+    % g(upbound)
+    else
+        % If lower bound's value of f(y) higher than axis value, make solid's
+        % "base" at g(upper bound), which is higher bound along x-axis.
+
+%         belowCurve = double(lowbound) >= axisVal
+%         aboveCurve = double(upbound) <= axisVal
+
+        if (double(lowbound) >= axisVal)
+            volumeBaseLine = double(g(upbound));
+            shellLengths = volumeBaseLine - double(g(xpoints));
+            shellEndpoints = volumeBaseLine - shellLengths;
+        % Else, make "base" at at g(upper bound), which is upper bound along x-axis.
+%         elseif (double(g(upbound)) <= axisVal)
+        elseif (double(upbound) <= axisVal)
+            volumeBaseLine = double(g(upbound));
+            shellLengths = volumeBaseLine - double(g(xpoints));
+            shellEndpoints = volumeBaseLine - shellLengths;
+        end
     end
     
     for i=1:length(shellLengths)
@@ -148,6 +169,11 @@ else
         inner_z = axisVal + shellInnerRadius*sin(theta);
         outer_z = axisVal + shellOuterRadius*sin(theta);
         
+        inner_y = double(inner_y);
+        outer_y = double(outer_y);
+        inner_z = double(inner_z);
+        outer_z = double(outer_z);
+        
         innerFace.YData(1, :)= inner_y;
         innerFace.YData(2, :)= inner_y;
         innerFace.ZData(1, :)= inner_z;
@@ -164,7 +190,7 @@ else
             (volumeBaseLine-cylLength)*ones(1, length(outerFace.ZData(2, :)))];
         
         % Patching rings on the left and the right faces of the shells.
-        leftRing = patch((volumeBaseLine-cylLength)*ones(1, 2*length(theta)), ...
+        leftRing = patch(double(volumeBaseLine-cylLength)*ones(1, 2*length(theta)), ...
             [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
         leftRing.EdgeColor = 'none';
         rightRing = patch(volumeBaseLine*ones(1, 2*length(theta)), ...
