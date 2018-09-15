@@ -73,23 +73,23 @@ if (lower(axisOri) == 'y')
     end
     volume = double(int(A(x), lowerBound, upperBound));
     
-%     if (functionNotOnZero == 1)
-%         if (f(lowerBound) > 0)
-%             cylInnerRadius = g(lowerBound) - axisValue;
-%             cylOuterRadius = g(upperBound) - axisValue;
-%             cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
-%             cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
-%             
-%             volume = volume + cylVolumeWithBaseZero;
-%         elseif (f(upperBound) < 0)
-%             cylInnerRadius = g(upperBound) - axisValue;
-%             cylOuterRadius = g(lowerBound) - axisValue;
-%             cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
-%             cylVolumeWithBaseZero = double(int(cylIntegrant, upperBound, 0));
-%             
-%             volume = volume + cylVolumeWithBaseZero;
-%         end
-%     end
+    if (functionNotOnZero == 1)
+        if (f(lowerBound) > 0)
+            cylInnerRadius = g(lowerBound) - axisValue;
+            cylOuterRadius = g(upperBound) - axisValue;
+            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+            cylVolumeWithBaseZero = double(int(cylIntegrant, 0, lowerBound));
+            
+            volume = volume + cylVolumeWithBaseZero;
+        elseif (f(upperBound) < 0)
+            cylInnerRadius = g(upperBound) - axisValue;
+            cylOuterRadius = g(lowerBound) - axisValue;
+            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
+            cylVolumeWithBaseZero = double(int(cylIntegrant, upperBound, 0));
+            
+            volume = volume + cylVolumeWithBaseZero;
+        end
+    end
     % Area under curve rotated around vertical line.
 elseif (lower(axisOri) == 'x')
     g(x) = finverse(f);

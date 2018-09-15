@@ -29,11 +29,6 @@ elseif  (lower(axisOri) == 'y')
     
     % Area is bounded in area which is in negative-negative quadrant.
     if (g(lowerBound) <= 0 && g(upperBound) <= 0)
-        if (funcString == "x")
-            integrant = abs(radius*(g(lowerBound) - g(x)));
-        else
-            integrant = abs(radius*(g(upperBound) - g(x)));
-        end
     % Otherwise, bound one end of each shell's length by constant,
     % g(upperBound)
     else
@@ -43,16 +38,16 @@ end
 
 volume = 2*pi*double(int(integrant, lowerBound, upperBound));
 
-% If there is gap b/w inverse lower boudn and axis, add that inner
-% volume to the total volume.
-if (lower(axisOri) == 'y') 
+if (lower(axisOri) == 'y')
+    % If there is gap b/w inverse lower boudn and axis, add that inner
+    % volume to the total volume. 
     innerShellLength = g(lowerBound) - g(upperBound);
+%     innerShellRadius = (x-axisValue);
     
-    % Horizontal axis lower than lowerbound on y-axis, but greater than
-    % y=0, rotate area b/w lowerbound and axis value, in which diff b/w
-    % both is width and diff b/w counterparts of lower and upper bounds
-    % along x-axis is the length (shell height) of the shell.
+  % The lower bound along y-axis is greater than the horizontal a
   if (lowerBound >= axisValue)
+  if (lowerBound >= axisValue)
+
     if (lowerBound >= 0 && upperBound >= 0)
       if (axisValue >= 0)
         fillerShellVolume = double(int(abs(radius*innerShellLength), axisValue, lowerBound));
@@ -65,6 +60,11 @@ if (lower(axisOri) == 'y')
     end
   elseif (upperBound <= axisValue)
     % Area rotated is within negative space
+        disp("BOUNDS NEGATIVE")
+        fillerShellVolume = double(int(abs(radius*innerShellLength), upperBound, 0));
+    end
+  elseif (upperBound <= axisValue)
+    % Volume is negative
     if (upperBound <= 0)
       if (axisValue <= 0)
         fillerShellVolume = double(int(abs(radius*innerShellLength), upperBound, axisValue));

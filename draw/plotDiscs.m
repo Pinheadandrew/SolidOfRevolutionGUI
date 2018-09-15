@@ -37,15 +37,12 @@ if (axisOri == "y")
     % upperbound, use the washer method to rotate area under curve
     % around axis.
     if (axisVal >= f(lowbound) || axisVal <= f(upbound))
-        disp("1")
         % Area is within negative bounds of x-axis, and is function f(x) =
         % x
         if (lowbound <= 0 && upbound <= 0 && funcString == "x")
-            disp("2")
             % Axis of rotation BELOW area above curve in negative space, set outer radius to
             % aV and inner to |f(x) - aV|
             if(double(f(lowbound)) >= axisVal)
-                disp("3")
                 innerRadius = abs(f(xpoints) - axisVal);
                 outerRadius = abs(axisVal*ones(1,length(xpoints)));
                 
@@ -53,13 +50,10 @@ if (axisOri == "y")
                 % |aV - f(x)| within bounds and inner radius is
                 % (function maxima within bounds) - aV.
             elseif (f(upbound) <= axisVal)
-                disp("4")
                 % Add difference b/w axis value and f(lowbound) to inner radius
                 if (axisVal <= 0)
-                    disp("5")
                     innerRadius = zeros(1, length(xpoints));
                 else
-                    disp("6")
                     innerRadius = axisVal*ones(1,length(xpoints));
                 end
                 
@@ -68,17 +62,13 @@ if (axisOri == "y")
         % Otherwise, if area under/above curve not f(x)=x bounded by negative
         % numbers along x-axis.
         else
-            disp("7")
             % Axis of rotation BELOW area under curve, set outer radius to
             % function line.
             if(double(f(lowbound)) >= axisVal)
-                disp("8")
                 % Add difference b/w axis value and f(lowbound) to inner radius
                 if (axisVal >= 0)
-                    disp("9")
                     innerRadius = zeros(1,length(xpoints));
                 else
-                    disp("10")
                     innerRadius = zeros(1,length(xpoints)) - axisVal;
                     % innerArea = 0 - axisValue;
                 end
@@ -87,7 +77,6 @@ if (axisOri == "y")
             % Axis of rotation ABOVE area under curve, outer radius is axis
             % value minus minima of function within bounds.
             elseif (double(f(upbound)) <= axisVal)
-                disp("11")
                 innerRadius = abs(axisVal - f(xpoints));
                 outerRadius = abs(axisVal - f(lowbound))*ones(1,length(xpoints));
                 outerRadius = outerRadius + f(lowbound); % <- Includes area "under" f(lowerbound) in discs' radii.
