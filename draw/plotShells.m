@@ -89,6 +89,8 @@ if(lower(axisOri) == "x")
         
         plot3(inner_x, inner_y, cylHeight*ones(1, length(theta)), "black"), hold on
         plot3(outer_x, outer_y, cylHeight*ones(1, length(theta)), "black"), hold on
+        plot3(inner_x, inner_y, zeros(1, length(theta)), "black"), hold on
+        plot3(outer_x, outer_y, zeros(1, length(theta)), "black"), hold on
       end
     
     %Drawing rectangles to fill faces of shells' as they're cut on

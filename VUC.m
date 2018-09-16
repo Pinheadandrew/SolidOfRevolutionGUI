@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 13-Sep-2018 22:26:25
+% Last Modified by GUIDE v2.5 15-Sep-2018 22:02:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -145,14 +145,9 @@ else
     functionChoice = functionContents;
     
     % Reset parameters of volume once function changed.
-    if (functionChoice(6:end) == "2^x" && axisOri == "x")
-        lowerBound = 1;
-        upperBound = 2;
-    else
-        lowerBound = 0;
-        upperBound = 1;
+    lowerBound = 0;
+    upperBound = 1;
 %         axisOri = "y";
-    end
 %     axisValue = 0;
     
 %     set(handles.axisEditbox, 'string', axisValue);
@@ -441,6 +436,9 @@ end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Enter a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
 end
 
 % Setting the lower bound of the volume.
@@ -475,14 +473,14 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
         viewModeChanged = 1;
-    % Lower bound must be within range of -50 and 50.
-    elseif(lower_input < -50 || lower_input > 50)
-        plot(0,0);
-        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
-        set(handles.lowerBoundEdit, 'string', lowerBound);
-        viewModeChanged = 1;
+%     % Lower bound must be within range of -50 and 50.
+%     elseif(lower_input < -50 || lower_input > 50)
+%         plot(0,0);
+%         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+%         set(d, 'WindowStyle', 'modal');
+%         uiwait(d);
+%         set(handles.lowerBoundEdit, 'string', lowerBound);
+%         viewModeChanged = 1;
     % If entering lower bound to create invalid instance, produce error
     % message and reset bound to what it was previously.
     elseif (~isValidVolume(funcString, methodChoice, lower_input, upperBound, axisOri))
@@ -633,13 +631,13 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
         viewModeChanged = 1;
-    elseif(upper_input < -50 || upper_input > 50)
-        plot(0,0);
-        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
-        set(handles.upperBoundEdit, 'string', upperBound);
-        viewModeChanged = 1;
+%     elseif(upper_input < -50 || upper_input > 50)
+%         plot(0,0);
+%         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+%         set(d, 'WindowStyle', 'modal');
+%         uiwait(d);
+%         set(handles.upperBoundEdit, 'string', upperBound);
+%         viewModeChanged = 1;
     elseif (~isValidVolume(funcString, methodChoice, lowerBound, upper_input, axisOri))
         plot(0,0);
         f = errordlg(sprintf(...
@@ -963,7 +961,7 @@ function axisEditbox_Callback(hObject, eventdata, handles)
         set(f, 'WindowStyle', 'modal');
         uiwait(f);
     elseif(isnan(axis_input))
-        d = errordlg('Axis Value must be a Real number', 'Domain Error');
+        d = errordlg('Axis Value must be a Real number.', 'Axis Value Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
@@ -1017,11 +1015,6 @@ global axisValue;
 global inverseLowerBound;
 global inverseUpperBound;
 global viewMode;
-% global originallyNegativeArea;
-% global boundEdit_top_y;
-% global boundEdit_bottom_y;
-% global inverseChar_top_y;
-% global inverseChar_bottom_y;
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
@@ -1065,12 +1058,14 @@ else
             set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
             set(handles.yAxisRadio,'string',"y")
             set(handles.methodText, 'string', "Shell");
+            set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         else
             position(2) = 0.76923;
             set(handles.axisEditbox, 'Position', position)
             set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
             set(handles.xAxisRadio,'string',"x")
             set(handles.methodText, 'string', "Disk");
+            set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
         end
         
         % Prompts user to enter a new axis value.
@@ -1078,29 +1073,40 @@ else
         title = 'Axis Change';
         definput = {'0'};
         opts.Interpreter = 'tex';
-        newAxisValue = inputdlg(prompt,title,[1 40],definput,opts);
-        newAxisValue = str2double((cell2mat(newAxisValue)));
-        if(isnan(newAxisValue))
-            disp("Not a number!")
-            % CHANGE TO ERROR MESSAGE AND REVERT TO PREVIOUS
+        enteredAxis = inputdlg(prompt,title,[1 40],definput,opts);
+        enteredAxisString = cell2mat(enteredAxis);
+        newAxisValue = str2double((enteredAxisString));
         
-        % Change parameters and positions of bound edits back to what it was before.
-        % If 'cancel' selected, revert to previous axis orientation.
-        elseif (isempty(newAxisValue)) 
-            
-            % Revert GUI components to what they were before badly entered
-            % axis value.
-            if (axisOri == "x")
-                set(handles.xAxisRadio, 'value', 1.0)
-                set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-                axisPicked = "x";
-            else
-                set(handles.yAxisRadio, 'value', 1.0)
-                axisPicked = "y";
+        % New axis value entered not a number, error message and revert
+        % GUI.
+        if(isnan(newAxisValue))
+            %Error message if user entered non-numeric value, instead of hitting
+            %'Cancel'.
+            if(~isempty(enteredAxisString))
+                d = errordlg('Axis Value must be a Real number', 'Axis Value Error');
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
             end
             
-            set(handles.axisEditbox, 'string', axisValue);
-            
+            % Reset axis box and selected axis string to what it
+            % was before error
+            if (axisPicked == "y")
+                position(2) = 2.9;
+                set(handles.axisEditbox, 'Position', position)
+                set(handles.xAxisRadio, 'value', 1.0)
+                set(handles.xAxisRadio,'string',"x     =")
+                set(handles.yAxisRadio,'string',"y")
+                set(handles.methodText, 'string', "Shell");
+                set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+            elseif (axisPicked == "x")
+                position(2) = 0.76923;
+                set(handles.axisEditbox, 'Position', position)
+                set(handles.yAxisRadio, 'value', 1.0)
+                set(handles.yAxisRadio,'string',"y     =")
+                set(handles.xAxisRadio,'string',"x")
+                set(handles.methodText, 'string', "Disk");
+                set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+            end
         else % New axis value is valid number, but must be checked so that it's not violating
              % constraint between axis value, bounds and volume method.
              
@@ -1135,6 +1141,7 @@ else
                      set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
                      set(handles.yAxisRadio,'string',"y")
                      set(handles.methodText, 'string', "Shell");
+                     set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
                      
                  % Constraint violated trying to make shell volume.
                  elseif (axisPicked == "x")
@@ -1154,33 +1161,16 @@ else
                      set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
                      set(handles.xAxisRadio,'string',"x")
                      set(handles.methodText, 'string', "Disk");
+                     set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
                  end
                  set(handles.axisEditbox, 'string', axisValue);
+                 
              % Axis meets constraint, generate new volume and set new
              % volume method.
              else
+                 axisOri = axisPicked;
                  axisValue = newAxisValue;
                  methodChoice = methodFor_AoB_Check;
-                 
-                 
-                 position = get(handles.axisEditbox,'Position');
-    
-                 % Positions the axis value box adjacent to the axis orientation selected.
-                 % Also sets the axis orientation parameter in the volume function.
-                 if (axisPicked == "x")
-                     position(2) = 2.9;
-                     set(handles.axisEditbox, 'Position', position)
-                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
-                     set(handles.yAxisRadio,'string',"y")
-                     set(handles.methodText, 'string', "Shell");
-                 else
-                     position(2) = 0.76923;
-                     set(handles.axisEditbox, 'Position', position)
-                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
-                     set(handles.xAxisRadio,'string',"x")
-                     set(handles.methodText, 'string', "Disk");
-                 end
-                 axisOri = axisPicked;
              end
         end
     end
@@ -1194,26 +1184,6 @@ else
         set(handles.xBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) % 
         set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
     end
- 
-    
-%     position = get(handles.axisEditbox,'Position');
-    
-%     % Positions the axis value box adjacent to the axis orientation selected.
-%     % Also sets the axis orientation parameter in the volume function.
-%     if (axisPicked == "x")
-%         position(2) = 2.9;
-%         set(handles.axisEditbox, 'Position', position)
-%         set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
-%         set(handles.yAxisRadio,'string',"y")
-%         set(handles.methodText, 'string', "Shell");
-%     else
-%         position(2) = 0.76923;
-%         set(handles.axisEditbox, 'Position', position)
-%         set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
-%         set(handles.xAxisRadio,'string',"x")
-%         set(handles.methodText, 'string', "Disk");
-%     end
-%     axisOri = axisPicked;
     
     % Upon selection of the rotation method used, make changes to UI, changing
     % some titles.
@@ -1270,7 +1240,17 @@ viewModeChanged = 1;
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
+% --- Executes during object creation, after setting all properties.
+function threeDButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to threeDButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
 % --- Executes when selected object is changed in solidViewRadiogroup.
+set(hObject, 'TooltipString', ...
+    sprintf("Press to view the current volume as either a 3D representation,\nor a 2D representation as a cross-section of the solid cut along\nthe X-Y plane."));
+end
+
 function solidViewRadiogroup_SelectionChangedFcn(hObject, eventdata, handles)
 global fullSolid;
 
@@ -1318,7 +1298,7 @@ function resetButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to resetButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to reset GUI to default.');
+toolTipString = sprintf('Click to reset GUI to default values.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
