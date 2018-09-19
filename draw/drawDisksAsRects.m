@@ -18,6 +18,12 @@ elseif (radiusMethod == "r")
 end
 
 if(axisOri =="y")
+    specialCaseFor_quad = 0;
+    
+    %Special case when x^2 is function and bounds are non-positive.
+    if (lowbound <= 0 && upbound <= 0 && funcString == "x^2")
+        specialCaseFor_quad = 1;
+    end
     % Area is within negative bounds of x-axis, and is function f(x) =
     % x
     if (lowbound <= 0 && upbound <= 0 && funcString == "x")
@@ -43,24 +49,45 @@ if(axisOri =="y")
         % Otherwise, if area under/above curve not f(x)=x bounded by negative
         % numbers along x-axis.
     else
-        % Axis of rotation BELOW area under curve, set outer radius to
-        % function line.
-        if(double(f(lowbound)) >= axisVal)
-            % Add difference b/w axis value and f(lowbound) to inner radius
-            if (axisVal >= 0)
-                innerRadius = zeros(1,length(xpoints));
-            else
-                innerRadius = zeros(1,length(xpoints)) - axisVal;
-                % innerArea = 0 - axisValue;
+        %Special case when x^2 is function and bounds are
+        %non-positive.
+        if (specialCaseFor_quad == 1)
+            % Axis "above" the area of x^2 bound by negative x-bounds.
+            if(double(f(lowbound)) <= axisVal)
+                outerRadius = abs(axisVal*ones(1,length(xpoints)));
+                innerRadius = abs(double(axisVal - f(xpoints)));
+                
+            % Axis "under" the area of x^2 bound by negative x-bounds.
+            elseif(double(f(upbound)) >= axisVal)
+                % Axis "between" f(lowbound) and y=0.
+                if (axisVal >= 0)
+                    innerRadius = zeros(1,length(xpoints));
+                    % Axis "under" f(lowbound) and y=0.
+                elseif (axisVal < 0)
+                    innerRadius = zeros(1,length(xpoints)) - axisVal;
+                end
+                outerRadius = abs(double(axisVal - f(xpoints)));
             end
-            outerRadius = abs(double(axisVal - f(xpoints)));
-            
-            % Axis of rotation ABOVE area under curve, outer radius is axis
-            % value minus minima of function within bounds.
-        elseif (double(f(upbound)) <= axisVal)
-            innerRadius = abs(axisVal - f(xpoints));
-            outerRadius = abs(axisVal - f(lowbound))*ones(1,length(xpoints));
-            outerRadius = outerRadius + f(lowbound); % <- Includes area "above" f(upperbound) in discs' radii.
+        else
+            % Axis of rotation BELOW area under curve, set outer radius to
+            % function line.
+            if(double(f(lowbound)) >= axisVal)
+                % Add difference b/w axis value and f(lowbound) to inner radius
+                if (axisVal >= 0)
+                    innerRadius = zeros(1,length(xpoints));
+                else
+                    innerRadius = zeros(1,length(xpoints)) - axisVal;
+                    % innerArea = 0 - axisValue;
+                end
+                outerRadius = abs(double(axisVal - f(xpoints)));
+                
+                % Axis of rotation ABOVE area under curve, outer radius is axis
+                % value minus minima of function within bounds.
+            elseif (double(f(upbound)) <= axisVal)
+                innerRadius = abs(axisVal - f(xpoints));
+                outerRadius = abs(axisVal - f(lowbound))*ones(1,length(xpoints));
+                outerRadius = outerRadius + f(lowbound); % <- Includes area "above" f(upperbound) in discs' radii.
+            end
         end
     end
     % Turns radius values into numbers of double precision.

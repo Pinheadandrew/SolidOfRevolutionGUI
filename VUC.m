@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 15-Sep-2018 22:02:10
+% Last Modified by GUIDE v2.5 17-Sep-2018 10:19:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -32,7 +32,7 @@ startup
 handles.output = hObject;
 VUCimage = imread('img/homebutton.jpg');
 set(handles.homeButton, 'CData', VUCimage);
-resetImage = imread('img/reset.jpg');
+resetImage = imread('img/reset1.jpg');
 set(handles.resetButton, 'CData', resetImage);
 % Update handles structure2
 guidata(hObject, handles);
@@ -81,13 +81,8 @@ set(handles.stepSlider, 'Max', maxNumberOfRect);
 set(handles.stepSlider, 'Value', 5);
 set(handles.stepSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
 
-% Setting some multi-line tooltips, wherever necessary.
-set(handles.stepSlider, 'TooltipString', ...
-    sprintf("Drag for a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
-set(handles.upperBoundEdit, 'TooltipString', ...
-    sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
-set(handles.lowerBoundEdit, 'TooltipString', ...
-    sprintf("Enter the lower bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
+% ax=axes;
+% text('Hello World!', 'Parent', ax);
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -147,10 +142,6 @@ else
     % Reset parameters of volume once function changed.
     lowerBound = 0;
     upperBound = 1;
-%         axisOri = "y";
-%     axisValue = 0;
-    
-%     set(handles.axisEditbox, 'string', axisValue);
     set(handles.lowerBoundEdit, 'string', lowerBound);
     set(handles.upperBoundEdit, 'string', upperBound);
     
@@ -203,8 +194,6 @@ global radiusMethod;
 global az;
 global el;
 global viewModeChanged;
-global inverseLowerBound;
-global inverseUpperBound;
 global originallyNegativeArea;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
@@ -345,7 +334,7 @@ else
       else
           % Original negative area, so flip the axis of rotation across
           % y-axis.
-              plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+          plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
         
       end
       xlim(shape_plot_xlim);
@@ -496,93 +485,58 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     % which is invalid for creating volumes in that axis of rotation is
     % between bounds. If this occurs, error message and revert the lower
     % bound.
-    elseif (~axisOutsideBounds(funcString, methodChoice, lower_input, upperBound, axisOri, axisValue))
-        if (methodChoice == "Shell")
-            d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
-            set(d, 'WindowStyle', 'modal');
-            uiwait(d);
-        elseif (methodChoice == "Disk")
-             d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Disk Volume Error');
-            set(d, 'WindowStyle', 'modal');
-            uiwait(d);
-        end
-        set(handles.lowerBoundEdit, 'string', lowerBound);
-        
     else
-        useInverseFunction = 0;
-        % The state of the program is that the bound changed while the
-        % volume originated from negative x-bounds for shell object. In
-        % the case of changing a, change program's state so that the
-        % inverses of the disc volume's bounds are positive integers, so
-        % plot different volume.
-        if (originallyNegativeArea == 1)
-            originallyNegativeArea = 0;
-            
-            if (upperBound <= 0)
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-              upperBound, lower_input, 1);
-            else
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-              lower_input, upperBound, 1);
+        if (~axisOutsideBounds(funcString, methodChoice, lower_input, upperBound, axisOri, axisValue))
+            if (methodChoice == "Shell")
+                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
+            elseif (methodChoice == "Disk")
+                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Disk Volume Error');
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
             end
+            set(handles.lowerBoundEdit, 'string', lowerBound);
+            
         else
-            % Determine to use either current function or its inverse based
-            % on current volume configuration.
-            swapInverseBounds = 0;
+            % Changed the upper bound and the bounds are not the same sign
+            % (lower bound negative whie upper bound positive), change the
+            % lower bound to 0 and alert the user this happened and
             
-            if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
-                useInverseFunction = 0;
-                
-                % Using shell method with x^2 and the bounds <= 0, swap the
-                % lower and upper inverse bounds in the statement.
-                if (upperBound <= 0 && funcString == "x^2")
-                  swapInverseBounds = 1;
+            % Different signs between upper bound and new lower bound. Change
+            % upper bound to 0.
+            if (sameSigns(upperBound, lower_input) == 0 && funcString ~= "2^x")
+                if (upperBound > 0)
+                    upperBound = 0;
+                    
+                    set(handles.upperBoundEdit, 'string', upperBound);
+                    plot(0,0);
+                    f = errordlg(sprintf(...
+                        'Changed the upper bound to 0 for you so that they are the same signs, because simplicity.')...
+                        , 'Bounds Update');
+                    set(f, 'WindowStyle', 'modal');
+                    uiwait(f);
+                    viewModeChanged = 1;
                 end
-            else
-                useInverseFunction = 1;
             end
             
-            % Flip the lower and upper inverse bounds, if 
-            % Flip the lower and upper inverse bounds.
-            if swapInverseBounds == 1
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                upperBound, lower_input, useInverseFunction);
-            else
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                  lower_input, upperBound, useInverseFunction);
+            % Set the inverse bounds based on new lower bound and upper bound.
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                lower_input, upperBound, 0);
+            
+            
+            % Inverse bound of lower bound turns out to be greater than that
+            % of upper bound, swap the inverse bounds in the statement on GUI.
+            if (inverseLowerBound > inverseUpperBound)
+                temp_upper = inverseUpperBound;
+                inverseUpperBound = inverseLowerBound;
+                inverseLowerBound = temp_upper;
             end
+            
+            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+            lowerBound = lower_input;
         end
-        
-        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
-        
-        % Changed the upper bound and the bounds are not the same sign
-        % (lower bound negative whie upper bound positive), change the
-        % lower bound to 0 and alert the user this happened and why.
-        if (sameSigns(upperBound, lower_input) == 0 && funcString ~= "2^x")
-            if (upperBound > 0)
-                upperBound = 0;
-                
-                % Reset inverse bounds according to the new upper bound
-                % at 0.
-                [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                  lower_input, upperBound, useInverseFunction);
-                set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-                set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
-                
-                set(handles.upperBoundEdit, 'string', upperBound);
-                plot(0,0);
-                f = errordlg(sprintf(...
-                    'Changed the upper bound to 0 for you so that they are the same signs, because simplicity.')...
-                , 'Bounds Update');
-                set(f, 'WindowStyle', 'modal');
-                uiwait(f);
-                viewModeChanged = 1;
-            end
-        end
-        
-        lowerBound = lower_input;
-        
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -597,6 +551,9 @@ end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Enter the lower bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
 end
 
 % Setting the upper bound of the volume.
@@ -665,56 +622,26 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         % negative in case of x^2, reset the thing and switch the inverted
         % bounds to be positive numbers that are the bounds through inverse
         % function.
-        if (originallyNegativeArea == 1)
-            originallyNegativeArea = 0;
-            
-            if (upper_input <= 0)
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-              upper_input, lowerBound, 1);
-            else
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-              lowerBound, upper_input, 1);
-            end
-        else
-            swapInverseBounds = 0;
-            
-            % Determines whether to use inverse of function or function
-            % depending on volume configurations 
-            if ((methodChoice == "Disk" && axisOri == "y") || (methodChoice == "Shell" && axisOri == "x"))
-                useInverseFunction = 0;
-                
-                % Using shell method with x^2 and the bounds <= 0, swap the
-                % lower and upper inverse bounds in the statement.
-                if (upper_input <= 0 && funcString == "x^2")
-                  swapInverseBounds = 1;
-                end
-            else
-                useInverseFunction = 1;
-            end
-            
-            % Flip the lower and upper inverse bounds if state of program
-            % wants to change the automatically to the stored inverse
-            % bounds.
-            if swapInverseBounds == 1
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                upper_input, lowerBound, useInverseFunction);
-            else
-              [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                  lowerBound, upper_input, useInverseFunction);
-            end
-        end
+         [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+            lowerBound, upper_input, 0);
         
-        
+         % Inverse bound of lower bound turns out to be greater than that
+         % of upper bound, swap the inverse bounds in the statement on GUI.
+         if (inverseLowerBound > inverseUpperBound)
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                upper_input, lowerBound, 0);
+         end
+         
         % Changed the upper bound and the bounds are not the same sign
         % (lower bound negative whie upper bound positive), change the
         % lower bound to 0 and alert the user this happened and why.
         if (sameSigns(upper_input, lowerBound) == 0 && funcString ~= "2^x")
             if (upper_input > 0)
                 lowerBound = 0;
-                set(handles.lowerBoundEdit, 'string', lowerBound);
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
-                  lowerBound, upper_input, useInverseFunction);
+                    lowerBound, upper_input, 0);
                 
+                set(handles.lowerBoundEdit, 'string', lowerBound);
                 plot(0,0);
                 f = errordlg(sprintf(...
                     'Changed the bound for you so that they are the same signs, because simplicity.')...
@@ -753,6 +680,9 @@ end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
 end
 
 % Selecting either the disc or the shell method.
@@ -1285,6 +1215,9 @@ end
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Slide for a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
 end
 
 % --- Executes on button press in resetButton.
@@ -1417,4 +1350,33 @@ function yBoundsBackground_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to yBoundsBackground (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function leftRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to leftRadiusRadioButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'TooltipString', ...
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the left-endpoint integration method."));
+
+end
+
+% --- Executes during object creation, after setting all properties.
+function midRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to midRadiusRadioButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'TooltipString', ...
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the midpoint integration method."));
+end
+
+% --- Executes during object creation, after setting all properties.
+function rightRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rightRadiusRadioButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'TooltipString', ...
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the right-point integration method."));
 end

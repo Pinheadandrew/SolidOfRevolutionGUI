@@ -32,6 +32,12 @@ end
 
 % Area under/above curve rotated aroudn horizontal axis.
 if (axisOri == "y")
+    specialCaseFor_quad = 0;
+    
+    %Special case when x^2 is function and bounds are non-positive.
+    if (lowbound <= 0 && upbound <= 0 && funcString == "x^2")
+        specialCaseFor_quad = 1;
+    end
     
     % If axis of rotation not equal to function's height at lower or
     % upperbound, use the washer method to rotate area under curve
@@ -46,7 +52,7 @@ if (axisOri == "y")
                 innerRadius = abs(f(xpoints) - axisVal);
                 outerRadius = abs(axisVal*ones(1,length(xpoints)));
                 
-                % Axis of rotation ABOVE area under curve in negative space, outer radius is 
+                % Axis of rotation ABOVE area under curve in negative space, outer radius is
                 % |aV - f(x)| within bounds and inner radius is
                 % (function maxima within bounds) - aV.
             elseif (f(upbound) <= axisVal)
@@ -59,27 +65,48 @@ if (axisOri == "y")
                 
                 outerRadius = abs(axisVal - f(xpoints));
             end
-        % Otherwise, if area under/above curve not f(x)=x bounded by negative
-        % numbers along x-axis.
+            % Otherwise, if area under/above curve not f(x)=x bounded by negative
+            % numbers along x-axis.
         else
-            % Axis of rotation BELOW area under curve, set outer radius to
-            % function line.
-            if(double(f(lowbound)) >= axisVal)
-                % Add difference b/w axis value and f(lowbound) to inner radius
-                if (axisVal >= 0)
-                    innerRadius = zeros(1,length(xpoints));
-                else
-                    innerRadius = zeros(1,length(xpoints)) - axisVal;
-                    % innerArea = 0 - axisValue;
+            %Special case when x^2 is function and bounds are
+            %non-positive.
+            if (specialCaseFor_quad == 1)
+                
+                % Axis "above" the area of x^2 bound by negative x-bounds.
+                if(double(f(lowbound)) <= axisVal)
+                    outerRadius = abs(axisVal*ones(1,length(xpoints)));
+                    innerRadius = abs(double(axisVal - f(xpoints)));
+                       
+                % Axis "under" the area of x^2 bound by negative x-bounds.
+                elseif(double(f(upbound)) >= axisVal)
+                    % Axis "between" f(lowbound) and y=0.
+                    if (axisVal >= 0)
+                        innerRadius = zeros(1,length(xpoints));
+                    % Axis "under" f(lowbound) and y=0.
+                    elseif (axisVal < 0)
+                        innerRadius = zeros(1,length(xpoints)) - axisVal;
+                    end
+                    outerRadius = abs(double(axisVal - f(xpoints)));
                 end
-                outerRadius = abs(double(axisVal - f(xpoints)));
-
-            % Axis of rotation ABOVE area under curve, outer radius is axis
-            % value minus minima of function within bounds.
-            elseif (double(f(upbound)) <= axisVal)
-                innerRadius = abs(axisVal - f(xpoints));
-                outerRadius = abs(axisVal - f(lowbound))*ones(1,length(xpoints));
-                outerRadius = outerRadius + f(lowbound); % <- Includes area "under" f(lowerbound) in discs' radii.
+            else
+                % Axis of rotation BELOW area under curve, set outer radius to
+                % function line.
+                if(double(f(lowbound)) >= axisVal)
+                    % Add difference b/w axis value and f(lowbound) to inner radius
+                    if (axisVal >= 0)
+                        innerRadius = zeros(1,length(xpoints));
+                    else
+                        innerRadius = zeros(1,length(xpoints)) - axisVal;
+                    end
+                    outerRadius = abs(double(axisVal - f(xpoints)));
+                    
+                    % Axis of rotation ABOVE area under curve, outer radius is axis
+                    % value minus minima of function within bounds.
+                elseif (double(f(upbound)) <= axisVal)
+                    innerRadius = abs(axisVal - f(xpoints));
+                    outerRadius = abs(axisVal - f(lowbound))*ones(1,length(xpoints));
+                    outerRadius = outerRadius + f(lowbound); % <- Includes area "under" f(lowerbound) in discs' radii.
+                end
             end
         end
         % Turns radius values into numbers of double precision.
@@ -92,7 +119,7 @@ if (axisOri == "y")
             
             [x1, y1, z1] = cylinder(double(innerRadius(i)), length(theta)-1);
             [x2, y2, z2] = cylinder(double(outerRadius(i)), length(theta)-1);
-           
+            
             innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
             outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
             
@@ -101,7 +128,7 @@ if (axisOri == "y")
             
             % Coordinate for axis-line. Used to determine radius and
             % displacement of cylinders in 3D coordinate system. Matrices
-            % of Y and Z points that encompass points 
+            % of Y and Z points that encompass points
             
             inner_y = innerRadius(i)*cos(theta);
             outer_y = outerRadius(i)*cos(theta);
@@ -138,7 +165,7 @@ if (axisOri == "y")
             
             % Drawing rectangles to fill inside of disks as they're cut on
             % xy-plane. If axis perpendicular to y-axis, get inner radius,
-            % rectangles which are equal to the diameters of the disks. 
+            % rectangles which are equal to the diameters of the disks.
             if (fullCircles == 0)
                 xverts = [cylMargins(i); cylMargins(i);...
                     cylMargins(i+1); cylMargins(i+1)];
@@ -148,7 +175,7 @@ if (axisOri == "y")
                     axisVal+outerRadius(i); axisVal+innerRadius(i)];
                 yverts_bottom = [axisVal - innerRadius(i); axisVal - outerRadius(i);...
                     axisVal - outerRadius(i); axisVal - innerRadius(i)];
-               
+                
                 % Draws the top and bottom faces of the horizontally-facing
                 % discs' cross sections along the xy-plane (or xz-plane in actual implementation).
                 patch(xverts, zeros(size(xverts)), yverts_top, [0 0.902 0]);
@@ -162,6 +189,7 @@ if (axisOri == "y")
             plot3(cylMargins(i+1)*ones(1, length(theta)), outer_y, outer_z, "black"), hold on
         end
     else % If no difference b/w a bound and axis of rotation, draw regular disks.
+        disp("9")
         diskRadii = abs(double(f(xpoints)-axisVal)); % Vector storing radius of each disc.
         
         % Draw disks w/o area subtracted from within.
@@ -197,22 +225,22 @@ if (axisOri == "y")
             set(cyl,'edgecolor','none')
         end
         % Drawing rectangles to fill faces of shells' as they're cut on
-        % xy-plane. If axis parallel to x-axis, get heights of 
+        % xy-plane. If axis parallel to x-axis, get heights of
         % rectangles which are equal to the diameters of the disks. Else,
         % get radius of disks which are "lengths" of rectangles.
         if (fullCircles == 0)
-          xverts = [cylMargins(1:end-1); cylMargins(1:end-1);...
-            cylMargins(2:end); cylMargins(2:end)];
-
-          yverts = [axisVal-diskRadii(1:end); axisVal+diskRadii(1:end);...
-            axisVal+diskRadii(1:end); axisVal-diskRadii(1:end)];
-
-          %Patching the rectangles to "fill" the inside of the discs.
+            xverts = [cylMargins(1:end-1); cylMargins(1:end-1);...
+                cylMargins(2:end); cylMargins(2:end)];
+            
+            yverts = [axisVal-diskRadii(1:end); axisVal+diskRadii(1:end);...
+                axisVal+diskRadii(1:end); axisVal-diskRadii(1:end)];
+            
+            %Patching the rectangles to "fill" the inside of the discs.
             patch(xverts, zeros(size(xverts)), yverts, "b");
         end
     end
     
-% Branch where the area is being rotated around a vertical axis.   
+    % Branch where the area is being rotated around a vertical axis.
 elseif (axisOri == "x")
     g(x) = finverse(f);
     
@@ -226,18 +254,18 @@ elseif (axisOri == "x")
             % Negative bounds, inner/outer radii evaluated differently
             if (g(lowbound) <= 0 && g(upbound) <= 0 )
                 innerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
-                outerRadius = abs(double(axisVal - g(xpoints))); 
+                outerRadius = abs(double(axisVal - g(xpoints)));
             else
                 innerRadius = abs(double(axisVal - g(xpoints)));
                 outerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
             end
             
-        % Axis of rotation to right of area under curve, outer radius is axis
-        % value minus minima of function within bounds.
+            % Axis of rotation to right of area under curve, outer radius is axis
+            % value minus minima of function within bounds.
         elseif (axisVal >= g(upbound))
             if (g(lowbound) <= 0 && g(upbound) <= 0 )
                 outerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
-                innerRadius = abs(double(axisVal - g(xpoints))); 
+                innerRadius = abs(double(axisVal - g(xpoints)));
             else
                 innerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
                 outerRadius = abs(double(axisVal - g(xpoints)));
@@ -248,7 +276,7 @@ elseif (axisOri == "x")
         % in difference b/w outer and inner radius.
         for i=1:length(xpoints)
             [x1, y1, z1] = cylinder(innerRadius(i), length(theta)-1);
-            [x2, y2, z2] = cylinder(outerRadius(i), length(theta)-1); 
+            [x2, y2, z2] = cylinder(outerRadius(i), length(theta)-1);
             
             innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
             outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
@@ -277,7 +305,7 @@ elseif (axisOri == "x")
             
             %Drawing faces to fill top and bottom of discs.
             bottomFace = patch([outer_x,inner_x], ...
-                [outer_y,inner_y], cylMargins(i)*ones(1, 2*length(theta)),[0 0.902 0]); 
+                [outer_y,inner_y], cylMargins(i)*ones(1, 2*length(theta)),[0 0.902 0]);
             bottomFace.EdgeColor = 'none';
             topFace = patch([outer_x,inner_x], ...
                 [outer_y,inner_y], cylMargins(i+1)*ones(1, 2*length(theta)),[0 0.902 0]);
@@ -295,7 +323,7 @@ elseif (axisOri == "x")
                 patch(xverts_left, zeros(size(xverts_left)), yverts, [0 0.902 0]);
                 patch(xverts_right, zeros(size(xverts_right)), yverts, [0 0.902 0]);
             end
-
+            
             %Drawing circles for edges of left and right sides of discs.
             plot3(inner_x, inner_y, cylMargins(i)*ones(1, length(theta)), "black"), hold on
             plot3(inner_x, inner_y, cylMargins(i+1)*ones(1, length(theta)), "black"), hold on
@@ -303,7 +331,7 @@ elseif (axisOri == "x")
             plot3(outer_x, outer_y, cylMargins(i+1)*ones(1, length(theta)), "black"), hold on
         end
     else % If no difference b/w axis of rotation and a bound, plot discs without
-         % inner radius to subtract from their areas.
+        % inner radius to subtract from their areas.
         diskRadii = abs(double(g(xpoints)-axisVal)); % Vector storing radius of each disc.
         
         % Draw disks w/o area subtracted from within.
@@ -338,18 +366,18 @@ elseif (axisOri == "x")
             set(cyl,'edgecolor','none')
         end
         
-    % Drawing rectangles to fill faces of discs as they're cut along
-    % xy-plane. If axis perpendicular to x-axis, get lengths of
-    % rectangle.
-    if (fullCircles == 0)
-        xverts = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
-            axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
-        
-        yverts = [cylMargins(1:end-1); cylMargins(2:end);...
-            cylMargins(2:end); cylMargins(1:end-1)];
-        patch(xverts, zeros(size(xverts)), yverts, [0 0.902 0]);
+        % Drawing rectangles to fill faces of discs as they're cut along
+        % xy-plane. If axis perpendicular to x-axis, get lengths of
+        % rectangle.
+        if (fullCircles == 0)
+            xverts = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
+                axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
+            
+            yverts = [cylMargins(1:end-1); cylMargins(2:end);...
+                cylMargins(2:end); cylMargins(1:end-1)];
+            patch(xverts, zeros(size(xverts)), yverts, [0 0.902 0]);
+        end
     end
-end
 end
 end
 
