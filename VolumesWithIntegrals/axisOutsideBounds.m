@@ -15,14 +15,9 @@ if (axisOrient == "y") % Constraints for a horizontal line
         if (axisVal < f(upBound) && axisVal > f(lowBound)) % Axis b/w function heights at the bounds, constraint violated
             valid = 0;
         end
-        disp("Yay")
-        lowBound
-        upBound
         % Special case where f(x)=x^2 and bounds are negative.
         if (funcChoice == "x^2" && lowBound<0 && upBound<=0)
-            disp("Day")
             if (axisVal < f(lowBound) && axisVal > f(upBound))
-                disp("Ray")
                 valid = 0;
             end
         end
