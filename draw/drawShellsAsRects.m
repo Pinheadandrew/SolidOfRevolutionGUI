@@ -64,4 +64,3 @@ else
     mirrorRectSet = patch(xverts, mirror_yverts, "b"); hold on
 end
 end
-

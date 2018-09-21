@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 06-Jun-2018 13:13:27
+% Last Modified by GUIDE v2.5 20-Sep-2018 15:49:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -32,14 +32,18 @@ startup
 handles.output = hObject;
 VUCimage = imread('img/homebutton.jpg');
 set(handles.homeButton, 'CData', VUCimage);
-resetImage = imread('img/reset.jpg');
+resetImage = imread('img/reset1.jpg');
 set(handles.resetButton, 'CData', resetImage);
 % Update handles structure2
 guidata(hObject, handles);
 global lowerBound;
 lowerBound = 0;
 global upperBound;
-upperBound = 5;
+upperBound = 1;
+global inverseLowerBound;
+inverseLowerBound = 0;
+global inverseUpperBound;
+inverseUpperBound = 1;
 global steps;
 steps = 5;
 global axisValue;
@@ -59,19 +63,26 @@ global functionChoice;
 functionChoice = "Select a function";
 global viewModeChanged;
 viewModeChanged = 0;
+global originallyNegativeArea;
+originallyNegativeArea = 0;
+
+global boundEdit_top_y;
+boundEdit_top_y = 2.8;
+global boundEdit_bottom_y;
+boundEdit_bottom_y = 0.6;
+global inverseChar_top_y;
+inverseChar_top_y = 2.65;
+global inverseChar_bottom_y;
+inverseChar_bottom_y = 0.43;
+
 maxNumberOfRect = 75;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
 set(handles.stepSlider, 'Value', 5);
 set(handles.stepSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
 
-% Setting some multi-line tooltips, wherever necessary.
-set(handles.stepSlider, 'TooltipString', ...
-    sprintf("Drag for a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
-set(handles.upperBoundEdit, 'TooltipString', ...
-    sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
-set(handles.lowerBoundEdit, 'TooltipString', ...
-    sprintf("Enter the lower bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
+% ax=axes;
+% text('Hello World!', 'Parent', ax);
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -93,6 +104,9 @@ global upperBound;
 global methodChoice;
 global axisOri;
 global viewModeChanged;
+global inverseUpperBound;
+global inverseLowerBound;
+global axisValue;
 
 functionContents = cellstr(get(handles.functionMenu, 'String'));
 functionContents = functionContents{get(hObject, 'Value')};
@@ -100,7 +114,6 @@ functionContents = functionContents{get(hObject, 'Value')};
 % Check for case where switching function and function not one-to-one given
 % axis and boundary configurations.
 if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound, axisOri))
-    plot(0,0);
     f = errordlg(sprintf(...
             'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
@@ -124,15 +137,28 @@ if (~isValidVolume(functionContents(6:end), methodChoice, lowerBound, upperBound
     set(handles.functionMenu, 'Value', functionIndex);
 else
     functionChoice = functionContents;
-end
-
-% Sets default bounds of revolution according to function picked. i.e when
-% x^2 selected, bounds change to 0<=x<=2.
-if (functionChoice == "f(x)=x^2")
+    
+    % Reset parameters of volume once function changed.
     lowerBound = 0;
     upperBound = 1;
-    set(handles.lowerBoundEdit, 'String', lowerBound);
-    set(handles.upperBoundEdit, 'String', upperBound);
+    axisValue = 0;
+    set(handles.lowerBoundEdit, 'string', lowerBound);
+    set(handles.upperBoundEdit, 'string', upperBound);
+    set(handles.axisEditbox, 'string', axisValue);
+    
+    % Reset axis edit to be aligned with the Y-radio button.
+    
+    
+    % Set the inverse bounds and its statement, according to the volume
+    % configuration and the newly selected
+    if ((methodChoice == "Shell" && axisOri == "y") || (methodChoice == "Disk" && axisOri == "x"))
+        [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+    else
+        [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+    end
+    
+    set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+    set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
 end
 
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -146,6 +172,11 @@ function functionMenu_CreateFcn(hObject, eventdata, handles)
 
 % Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -167,17 +198,18 @@ global radiusMethod;
 global az;
 global el;
 global viewModeChanged;
+global originallyNegativeArea;
 
  % If 3D selected, plot volume using 3D functions. Else, draw patches in
  % 2D. Nothing changes about calculations though, so nest it right.
 if (strcmp(functionChoice, "Select a function"))
-    % plot(0,0);
     f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else
     set(handles.figure1, 'pointer', 'watch')
     drawnow;
+    
     if (viewMode == "2D")
         set(handles.threeDButton, 'String', "View in 3D");
         set(handles.solidViewRadiogroup, 'Visible', "off");
@@ -216,8 +248,24 @@ else
         
     % Calls different volume calculation methods depending on method picked. 
     if(strcmp(methodChoice, "Disk"))
-        estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, axisValue, radiusMethod);
-        actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, axisValue);
+        
+        % Some test for flipping bounds and inverting them if the original
+        % area before a method/axis switch was negative area in reflective
+        % function of x^2.
+        if (simple_exp_string == "x^2" && originallyNegativeArea == 1 && axisOri == "x")
+            actual_volume = diskmethod1(simple_exp_string, lowerBound, upperBound, axisOri, -axisValue);
+            estimated_volume = diskmethod2(simple_exp_string, steps, lowerBound, upperBound, axisOri, -axisValue, radiusMethod);
+        else
+            temp_lowerBound = 0;
+            % Takes care of when f(x) = 2^x rotated around vertical axis.
+            if (lowerBound == 0 && simple_exp_string == "2^x" && axisOri == "x")
+                temp_lowerBound = .0001;
+            else
+                temp_lowerBound = lowerBound;
+            end
+            actual_volume = diskmethod1(simple_exp_string, temp_lowerBound, upperBound, axisOri, axisValue);
+            estimated_volume = diskmethod2(simple_exp_string, steps, temp_lowerBound, upperBound, axisOri, axisValue, radiusMethod);
+        end
         
         % If 3D selected, plot volume using 3D functions. Else, draw patches in
         % 2D. Nothing changes about calculations though, so nest it right.
@@ -279,7 +327,7 @@ else
     % Preserving axis limits when the method is the shell, due to unusual
     % plots w/o using the bounds made from plotting the volume (2D or 3D).
     % Draw the function line, it's mirror and the axis of rotation, then
-    % reuse the axis limits.
+    % reuse the axis limits.th
     if (methodChoice == "Shell" || (methodChoice == "Disk" && axisOri == "x"))
       shape_plot_xlim = xlim;
       shape_plot_ylim = ylim;
@@ -288,7 +336,10 @@ else
       if (methodChoice == "Shell" && axisOri == "x")
         plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x") 
       else
-        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+          % Original negative area, so flip the axis of rotation across
+          % y-axis.
+          plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+        
       end
       xlim(shape_plot_xlim);
       ylim(shape_plot_ylim);
@@ -370,9 +421,17 @@ function diskEdit_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Enter a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
 end
 
 % Setting the lower bound of the volume.
@@ -384,32 +443,39 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global functionChoice;
     global axisOri;
     global viewModeChanged;
+    global originallyNegativeArea;
+    global inverseLowerBound;
+    global inverseUpperBound;
+    
     lower_input = str2double(get(hObject,'String'));
-   
-    if(isnan(lower_input))
+    funcString = functionChoice(6:end);
+    
+    if (strcmp(functionChoice, "Select a function"))
+        f = errordlg('No Function Selected.', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    elseif(isnan(lower_input))
         d = errordlg('The bound must be a real number.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
     elseif(lower_input >= upperBound)
-        plot(0,0);
         d = errordlg('The upper bound must be greater than the lower bound.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
         viewModeChanged = 1;
-    % Lower bound must be within range of -50 and 50.
-    elseif(lower_input < -50 || lower_input > 50)
-        plot(0,0);
-        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
-        set(handles.lowerBoundEdit, 'string', lowerBound);
-        viewModeChanged = 1;
+%     % Lower bound must be within range of -50 and 50.
+%     elseif(lower_input < -50 || lower_input > 50)
+%         plot(0,0);
+%         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+%         set(d, 'WindowStyle', 'modal');
+%         uiwait(d);
+%         set(handles.lowerBoundEdit, 'string', lowerBound);
+%         viewModeChanged = 1;
     % If entering lower bound to create invalid instance, produce error
     % message and reset bound to what it was previously.
-    elseif (~isValidVolume(functionChoice(6:end), methodChoice, lower_input, upperBound, axisOri))
-        plot(0,0);
+    elseif (~isValidVolume(funcString, methodChoice, lower_input, upperBound, axisOri))
         f = errordlg(sprintf(...
             'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
@@ -418,29 +484,106 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         set(handles.lowerBoundEdit, 'string', lowerBound);
         viewModeChanged = 1;
     % Lower bound is such that: lower bound < axis value < upper bound,
-    % which is invalid for creating shell volumes.
-    elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lower_input, upperBound))
-        d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
-        set(handles.lowerBoundEdit, 'string', lowerBound);
+    % which is invalid for creating volumes in that axis of rotation is
+    % between bounds. If this occurs, error message and revert the lower
+    % bound.
     else
-        lowerBound = lower_input;
+        % Changed the upper bound and the bounds are not the same sign
+        % (lower bound negative whie upper bound positive), change the
+        % lower bound to 0 and alert the user this happened and
+        
+        % Different signs between upper bound and new lower bound. Change
+        % upper bound to 0.
+        if (sameSigns(upperBound, lower_input) == 0 && funcString ~= "2^x")
+            if (upperBound > 0)
+                upperBound = 0;
+                
+                set(handles.upperBoundEdit, 'string', upperBound);
+                f = errordlg(sprintf(...
+                    'Changed the upper bound to 0 for you so that they are the same signs, because simplicity.')...
+                    , 'Bounds Update');
+                set(f, 'WindowStyle', 'modal');
+                uiwait(f);
+                viewModeChanged = 1;
+            end
+        end
+        
+        % Set the inverse bounds based on new lower bound and upper bound.
+        [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+            lower_input, upperBound, 0);
+        
+        
+        % Inverse bound of lower bound turns out to be greater than that
+        % of upper bound, swap the inverse bounds in the statement on GUI.
+        if (inverseLowerBound > inverseUpperBound)
+            temp_upper = inverseUpperBound;
+            inverseUpperBound = inverseLowerBound;
+            inverseLowerBound = temp_upper;
+        end
+        
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        
+        
+        if (~axisOutsideBounds(funcString, methodChoice, lower_input, upperBound, axisOri, axisValue))
+            if (methodChoice == "Shell")
+                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+                set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
+                set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
+                set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
+                set(handles.xBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) %
+                set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+                set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+            elseif (methodChoice == "Disk")
+                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Disk Volume Error');
+                set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
+                set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
+                set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
+                set(handles.yBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) %
+                set(handles.yBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+                set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+            end
+            set(handles.lowerBoundEdit, 'string', lowerBound);
+            
+            % Reset the inverse bounds to what they were in the previous,
+            % vaid state of program.
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                lowerBound, upperBound, 0);
+
+
+            % Inverse bound of lower bound turns out to be greater than that
+            % of upper bound, swap the inverse bounds in the statement on GUI.
+            if (inverseLowerBound > inverseUpperBound)
+                temp_upper = inverseUpperBound;
+                inverseUpperBound = inverseLowerBound;
+                inverseLowerBound = temp_upper;
+            end
+            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        else
+            lowerBound = lower_input;
+        end
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
 % --- Executes during object creation, after setting all properties.
 function lowerBoundEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to lowerBoundEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Enter the lower bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
 end
 
 % Setting the upper bound of the volume.
@@ -452,29 +595,35 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     global functionChoice;
     global axisOri;
     global viewModeChanged;
-    upper_input = str2double(get(hObject,'String'));
+    global inverseLowerBound;
+    global inverseUpperBound;
     
-    if(isnan(upper_input))
+    upper_input = str2double(get(hObject,'String'));
+    funcString = functionChoice(6:end);
+    
+    if (strcmp(functionChoice, "Select a function"))
+        f = errordlg('No Function Selected.', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    elseif(isnan(upper_input))
         d = errordlg('The bound must be a real number.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
     elseif(upper_input <= lowerBound)
-        plot(0,0);
         d = errordlg('The upper bound must be greater than the lower bound.', 'Bound Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
         viewModeChanged = 1;
-    elseif(upper_input < -50 || upper_input > 50)
-        plot(0,0);
-        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
-        set(handles.upperBoundEdit, 'string', upperBound);
-        viewModeChanged = 1;
-    elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upper_input, axisOri))
-        plot(0,0);
+%     elseif(upper_input < -50 || upper_input > 50)
+%         plot(0,0);
+%         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+%         set(d, 'WindowStyle', 'modal');
+%         uiwait(d);
+%         set(handles.upperBoundEdit, 'string', upperBound);
+%         viewModeChanged = 1;
+    elseif (~isValidVolume(funcString, methodChoice, lowerBound, upper_input, axisOri))
         f = errordlg(sprintf(...
             'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
         , 'Invalid Volume Error');
@@ -482,13 +631,89 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(f);
         set(handles.upperBoundEdit, 'string', upperBound);
         viewModeChanged = 1;
-    elseif (methodChoice == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upper_input))
-        d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
-        set(handles.upperBoundEdit, 'string', upperBound);
     else
-        upperBound = upper_input;
+        % If switching upper bound while current or inverted bounds are
+        % negative in case of x^2, reset the thing and switch the inverted
+        % bounds to be positive numbers that are the bounds through inverse
+        % function.
+        
+        % Changed the upper bound and the bounds are not the same sign
+        % (lower bound negative whie upper bound positive), change the
+        % lower bound to 0 and alert the user this happened and why.
+        if (sameSigns(upper_input, lowerBound) == 0 && funcString ~= "2^x")
+            if (upper_input > 0)
+                lowerBound = 0;
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                    lowerBound, upper_input, 0);
+                
+                set(handles.lowerBoundEdit, 'string', lowerBound);
+                f = errordlg(sprintf(...
+                    'Changed the bound for you so that they are the same signs, because simplicity.')...
+                , 'Bounds Update');
+                set(f, 'WindowStyle', 'modal');
+                uiwait(f);
+                viewModeChanged = 1;
+            end
+        end
+        
+         [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+            lowerBound, upper_input, 0);
+        
+         % Inverse bound of lower bound turns out to be greater than that
+         % of upper bound, swap the inverse bounds in the statement on GUI.
+         if (inverseLowerBound > inverseUpperBound)
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                upper_input, lowerBound, 0);
+         end
+         
+        % Set the inverse upper bound according to the new upper bound, and display the new
+        % inverse range.
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        
+        % Lower bound is such that: lower bound < axis value < upper bound,
+    % which is invalid for creating volumes in that axis of rotation is between bounds.
+        if (~axisOutsideBounds(funcString, methodChoice, lowerBound, upper_input, axisOri, axisValue))
+            if (methodChoice == "Shell")
+                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+                set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
+                set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
+                set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
+                set(handles.xBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) %
+                set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+                set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+            elseif (methodChoice == "Disk")
+                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Disk Volume Error');
+                set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
+                set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
+                set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
+                set(handles.yBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) %
+                set(handles.yBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+                set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+            end
+            set(handles.upperBoundEdit, 'string', upperBound);
+            % Reset the inverse bounds to what they were in the previous,
+            % vaid state of program.
+            [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
+                lowerBound, upperBound, 0);
+
+            % Inverse bound of lower bound turns out to be greater than that
+            % of upper bound, swap the inverse bounds in the statement on GUI.
+            if (inverseLowerBound > inverseUpperBound)
+                temp_upper = inverseUpperBound;
+                inverseUpperBound = inverseLowerBound;
+                inverseLowerBound = temp_upper;
+            end
+            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+            set(handles.upperBoundEdit, 'string', upperBound);
+        else
+            upperBound = upper_input;
+        end
     end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
@@ -503,22 +728,35 @@ function upperBoundEdit_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-end
 
+set(hObject, 'TooltipString', ...
+    sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
+end
 
 % Selecting either the disc or the shell method.
 function methodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
 global methodChoice;
 global viewMode;
-global fullSolid;
 global axisOri;
 global axisValue;
 global lowerBound;
 global upperBound;
 global functionChoice;
+global inverseLowerBound;
+global inverseUpperBound;
+global originallyNegativeArea;
+global boundEdit_top_y;
+global boundEdit_bottom_y;
+global inverseChar_top_y;
+global inverseChar_bottom_y;
 
 methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
 
@@ -540,9 +778,14 @@ if (~isValidVolume(functionChoice(6:end), methodContents, lowerBound, upperBound
             set(handles.shellRadio, "value", 1.0)
         end
 % If switching from disc to shell method and the resulting shell volume
-% cannot be generating due to the axis constraint, revert back to the disk
-% method. Else, assign the global variable methodChoice to whatever selected.
-elseif (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolume(axisValue, lowerBound, upperBound))
+% cannot be generating due to the axis constraint between the inverted bounds among the new axis, 
+% revert back to the disk method. Else, assign the global variable methodChoice to whatever selected.
+if (strcmp(functionChoice, "Select a function"))
+    f = errordlg('No Function Selected.', 'Function Error');
+    set(f, 'WindowStyle', 'modal');
+    uiwait(f);
+elseif (methodChoice == "Disk" && methodContents == "Shell" && ...
+         ~axisOutsideBounds(functionChoice(6:end), methodContents, inverseLowerBound, inverseUpperBound, axisOri, axisValue))
     opts.Interpreter = 'tex';
     opts.Default = 'Cancel';
     fontSettings = '\fontsize{12}';
@@ -550,11 +793,13 @@ elseif (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolu
         {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
         {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
     
-    lowBoundAxis = axisOri + "=" + num2str(lowerBound);
-    upperBoundAxis = axisOri + "=" + num2str(upperBound);
+    lowBoundAxis = axisOri + "=" + num2str(inverseLowerBound);
+    upperBoundAxis = axisOri + "=" + num2str(inverseUpperBound);
     
     answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
         upperBoundAxis, 'Cancel', opts);
+    
+    % Pop up between selections of new values of axis of rotation.
     switch answer
         case lowBoundAxis
             methodChoice = "Shell";
@@ -568,42 +813,114 @@ elseif (methodChoice == "Disk" && methodContents == "Shell" && ~isValidShellVolu
             set(handles.discRadio, 'Value', 1.0);
     end
 else
+    % If the method changes, and the domain of the integration changes
+    % between the x and y-axis, change the bounds accordingly so same
+    % volume generated. Also display inverse of the new bounds.
+    if (~strcmp(methodChoice, methodContents))
+        syms x
+        f(x) = str2sym(functionChoice(6:end));
+        
+        % Configurations in which domain for integration is in respect to dY.
+        if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
+            
+            % Switching to disk dY from shell dXand the function is x^2, bounds are both
+            % negative. In this case, make inverse bounds the original
+            % negative bounds, flip them and change the actual bounds using
+            % the original function.
+            if (functionChoice(6:end) == "x^2" && lowerBound <= 0 && upperBound <= 0)
+                inverseLowerBound = lowerBound;
+                inverseUpperBound = upperBound;
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), -upperBound, -lowerBound, 0);
+                originallyNegativeArea = 1;
+            else
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+            end
+            
+            % If switching to domain in respect to dX, use regular function
+        % selected to reset the bounds.
+        elseif ((methodContents == "Shell" && axisOri == "x") || (methodContents == "Disk" && axisOri == "y"))
+            if (originallyNegativeArea == 1)
+                lowerBound = inverseLowerBound;
+                upperBound = inverseUpperBound;
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), inverseUpperBound, inverseLowerBound, 0);
+            else
+                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
+                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
+            end
+        end
+        
+        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
+        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+        set(handles.upperBoundEdit, 'string', upperBound);
+    end
     methodChoice = methodContents;
 end
 
 subIntsLabelString = "Number of " + methodChoice + "s";
 set(handles.subintervalGroup, 'title', subIntsLabelString);
 
-
 % Upon selection of the rotation method used, make changes to UI, changing
 % some titles.
 if(viewMode == "3D")
-  fullSolid = 1;
-  set(handles.fullSolidRadio, 'Value', 1.0);
   set(handles.solidViewRadiogroup, 'Visible', "on");
   set(handles.subintervalGroup, 'title', subIntsLabelString);
 else
   set(handles.solidViewRadiogroup, 'Visible', "off");
 end
 
+lowBound_position = get(handles.lowerBoundEdit,'Position');
+upBound_position = get(handles.upperBoundEdit,'Position');
+inverseLow_position = get(handles.inverseLowBoundChar,'Position');
+inverseUp_position = get(handles.inverseUpBoundChar,'Position');
+
 % Based on method and the axis orientation picked, reset the bound 
-% statement in the boundary section.
+% and the inverse bound statements in the boundary section. Also swap the
+% y-positions between the bound edit boxes and the inverse bound strings.
 if (methodChoice == "Shell")
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+ 
+  % Switch the bound editboxes to be with the y-axis boundaries, and the inverse chars
+  % with the x-axis boundaries
   if (axisOri == "y")
-    set(handles.boundStatement, 'string', "< y <");
+     lowBound_position(2) = boundEdit_bottom_y;
+     upBound_position(2) = boundEdit_bottom_y;
+     inverseLow_position(2) = inverseChar_top_y;
+     inverseUp_position(2) = inverseChar_top_y;
   else
-    set(handles.boundStatement, 'string', "< x <");
+  % Switch the bound editboxes to be with the x-axis boundaries, and the inverse chars
+  % with the y-axis boundaries
+     lowBound_position(2) = boundEdit_top_y;
+     upBound_position(2) = boundEdit_top_y;
+     inverseLow_position(2) = inverseChar_bottom_y;
+     inverseUp_position(2) = inverseChar_bottom_y;
   end
 else
   set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
-    if (axisOri == "y")
-      set(handles.boundStatement, 'string', "< x <");
-    else
-      set(handles.boundStatement, 'string', "< y <");
-    end
+  
+  % Switch the bound editboxes to be with the x-axis boundaries, and the inverse chars
+  % with the y-axis boundaries
+  if (axisOri == "y") 
+     lowBound_position(2) = boundEdit_top_y;
+     upBound_position(2) = boundEdit_top_y;
+     inverseLow_position(2) = inverseChar_bottom_y;
+     inverseUp_position(2) = inverseChar_bottom_y;
+     
+  else % Switch the bound editboxes to be with the y-axis.
+     lowBound_position(2) = boundEdit_bottom_y;
+     upBound_position(2) = boundEdit_bottom_y;
+     inverseLow_position(2) = inverseChar_top_y;
+     inverseUp_position(2) = inverseChar_top_y;
+  end
 end
-
+% Sets the new positions of the inverse bound strings and the bound edit
+% boxes.
+set(handles.lowerBoundEdit, 'Position', lowBound_position);
+set(handles.upperBoundEdit, 'Position', upBound_position);
+set(handles.inverseLowBoundChar, 'Position', inverseLow_position);
+set(handles.inverseUpBoundChar, 'Position', inverseUp_position);
+end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
@@ -622,21 +939,45 @@ end
 
 % Setting the axis line.
 function axisEditbox_Callback(hObject, eventdata, handles)
+    global functionChoice;
+    global axisOri;
     global axisValue;
     global lowerBound;
     global upperBound;
     global methodChoice;
     axis_input = str2double(get(hObject,'String'));
    
-    if(isnan(axis_input))
-        d = errordlg('Axis Value must be a Real number', 'Domain Error');
+    if (strcmp(functionChoice, "Select a function"))
+        f = errordlg('No Function Selected.', 'Function Error');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+    elseif(isnan(axis_input))
+        d = errordlg('Axis Value must be a Real number.', 'Axis Value Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.axisEditbox, 'string', axisValue);
-    elseif(methodChoice == "Shell" && ~isValidShellVolume(axis_input, lowerBound, upperBound))
-        d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
-        set(d, 'WindowStyle', 'modal');
-        uiwait(d);
+    elseif (~axisOutsideBounds(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisOri, axis_input))
+        if (methodChoice == "Shell")
+            d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+            set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statenebt to illustrate limits of vertical.
+            set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
+            set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+            set(d, 'WindowStyle', 'modal');
+            uiwait(d);
+            set(handles.xBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) % 
+            set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+            set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+        elseif (methodChoice == "Disk")
+            d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Disk Volume Error');
+            set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statenebt to illustrate limits of vertical.
+            set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
+            set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+            set(d, 'WindowStyle', 'modal');
+            uiwait(d);
+            set(handles.yBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) % 
+            set(handles.yBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+            set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+        end
         set(handles.axisEditbox, 'string', axisValue);
     else
         axisValue = axis_input;
@@ -657,7 +998,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 end
 
-% --- Executes when selected object is changed in axisButtonGroup.
+% --- Executes when axis orientation is selected in button group of axes
+% buttons.
 function axisButtonGroup_SelectionChangedFcn(hObject, eventdata, handles)
 global axisOri;
 global functionChoice;
@@ -665,92 +1007,216 @@ global lowerBound;
 global upperBound;
 global methodChoice;
 global axisValue;
+global inverseLowerBound;
+global inverseUpperBound;
+global viewMode;
 
 % Get selected axis from radio button. If Disk method selected, bound
 % statement in perspective of opposite axis
-axisPicked = get(get(handles.axisButtonGroup,'SelectedObject'),'string');
+axisPicked = lower(get(get(handles.axisButtonGroup,'SelectedObject'),'string'));
 
 % Switching axis orientation and the volume to be generated violates the
 % negative bounds constraint under some configurations, i.e. when y=2^x,
 % 0<y<infinity. If this occurs, make error message and switch back to
 % previous axis orientation.
-if (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisPicked))
-    f = errordlg(sprintf(...
-        'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
-        , 'Invalid Volume Error');
+if (strcmp(functionChoice, "Select a function"))
+    f = errordlg('No Function Selected.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
-    set(handles.yAxisRadio, 'Value', 1.0);
+% elseif (~isValidVolume(functionChoice(6:end), methodChoice, lowerBound, upperBound, axisPicked))
+%     f = errordlg(sprintf(...
+%         'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
+%         , 'Invalid Volume Error');
+%     set(f, 'WindowStyle', 'modal');
+%     uiwait(f);
+%     set(handles.yAxisRadio, 'Value', 1.0);
 else
     % If new orientation selected, prompt user to enter a new axis value,
     % or go back to previous configuration. Then, update the plot and GUI
     % based afterwards.
     if (axisPicked ~= axisOri)
+        if (axisPicked == "y")
+          set(handles.yBoundsBackground ,'HighlightColor', [0 .71 1]) % Highlight around x-boundary statenebt to illustrate limits of vertical.
+          set(handles.yBoundsBackground ,'ShadowColor', [0 1 1])
+        else
+          set(handles.xBoundsBackground ,'HighlightColor', [0 .71 1]) % Highlight around x-boundary statenebt to illustrate limits of vertical.
+          set(handles.xBoundsBackground ,'ShadowColor', [0 1 1])
+        end
+        
+        position = get(handles.axisEditbox,'Position');
+        
+        % Positions the axis value box adjacent to the axis orientation selected.
+        % Also sets the axis orientation parameter in the volume function.
+        if (axisPicked == "x")
+            position(2) = 2.9;
+            set(handles.axisEditbox, 'Position', position)
+            set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X     =")
+            set(handles.yAxisRadio,'string',"Y")
+            set(handles.methodText, 'string', "Shell");
+            set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+        else
+            position(2) = 0.76923;
+            set(handles.axisEditbox, 'Position', position)
+            set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y     =")
+            set(handles.xAxisRadio,'string',"X")
+            set(handles.methodText, 'string', "Disk");
+            set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+        end
+        
+        % Prompts user to enter a new axis value.
         prompt = {'Enter a new number for the axis value to rotate the area about, or enter 0 to rotate about the x/y-axis).'};
         title = 'Axis Change';
         definput = {'0'};
         opts.Interpreter = 'tex';
-        newAxisValue = inputdlg(prompt,title,[1 40],definput,opts);
-        % If value entered into new input field not a number.
-        if(isnan(str2double(newAxisValue)))
-            d = errordlg(sprintf("Not a real number!"),'Invalid Input');
-            set(d, 'WindowStyle', 'modal');
-            uiwait(d);
-            set(handles.axisEditbox, 'string', axisValue);
-            
-            % Reset axis to what it was before the invalid input.
-            if (axisValue == "x")
-                set(handles.xAxisRadio, 'Value', 1.0);
-            else
-                set(handles.yAxisRadio, 'Value', 1.0);
+        enteredAxis = inputdlg(prompt,title,[1 40],definput,opts);
+        enteredAxisString = cell2mat(enteredAxis);
+        newAxisValue = str2double((enteredAxisString));
+        
+        % New axis value entered not a number, error message and revert
+        % GUI.
+        if(isnan(newAxisValue))
+            %Error message if user entered non-numeric value, instead of hitting
+            %'Cancel'.
+            if(~isempty(enteredAxisString))
+                d = errordlg('Axis Value must be a Real number', 'Axis Value Error');
+                set(d, 'WindowStyle', 'modal');
+                uiwait(d);
             end
-        elseif (~isValidShellVolume(str2double(newAxisValue), lowerBound, upperBound))
-            d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
-            set(d, 'WindowStyle', 'modal');
-            uiwait(d);
-            set(handles.axisEditbox, 'string', axisValue);
-        else
-            disp(newAxisValue)
-            axisValue = str2double(newAxisValue);
-            set(handles.axisEditbox, 'string', axisValue);
+            
+            % Reset axis box and selected axis string to what it
+            % was before error
+            if (axisPicked == "y")
+                position(2) = 2.9;
+                set(handles.axisEditbox, 'Position', position)
+                set(handles.xAxisRadio, 'value', 1.0)
+                set(handles.xAxisRadio,'string',"X     =")
+                set(handles.yAxisRadio,'string',"Y")
+                set(handles.methodText, 'string', "Shell");
+                set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+            elseif (axisPicked == "x")
+                position(2) = 0.76923;
+                set(handles.axisEditbox, 'Position', position)
+                set(handles.yAxisRadio, 'value', 1.0)
+                set(handles.yAxisRadio,'string',"Y     =")
+                set(handles.xAxisRadio,'string',"X")
+                set(handles.methodText, 'string', "Disk");
+                set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+            end
+        else % New axis value is valid number, but must be checked so that it's not violating
+             % constraint between axis value, bounds and volume method.
+             
+             % Based on axis orientation selected, create local variable
+             % that is either the disc or shell method, in case the new
+             % axis value is not valid with the method that is
+             % attempted to be used, and switch back to what it was before.
+             if (axisPicked == "y")
+                 methodFor_AoB_Check = "Disk";
+             elseif (axisPicked == "x")
+                 methodFor_AoB_Check = "Shell";
+             end
+             
+             set(handles.axisEditbox, 'string', newAxisValue);
+             
+             if (~axisOutsideBounds(functionChoice(6:end), methodFor_AoB_Check, lowerBound, upperBound, axisPicked, newAxisValue))
+                 % Constraint violated trying to make disc volume.
+                 if (axisPicked == "y")
+                     d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Shell Volume Error');
+                     set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
+                     set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
+                     set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+                     set(d, 'WindowStyle', 'modal');
+                     uiwait(d);
+                     set(handles.yBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) %
+                     set(handles.yBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+                     set(handles.xAxisRadio,'value', 1)
+                     set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+                     
+                     % Reset axis box and selected axis string to what it
+                     % was before error, to be aligned with x-radio.
+                     position(2) = 2.9;
+                     set(handles.axisEditbox, 'Position', position)
+                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X     =")
+                     set(handles.yAxisRadio,'string',"Y")
+                     set(handles.methodText, 'string', "Shell");
+                     set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+                     
+                 % Constraint violated trying to make shell volume.
+                 elseif (axisPicked == "x")
+                     d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated.'),'Disk Volume Error');
+                     set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
+                     set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
+                     set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
+                     set(d, 'WindowStyle', 'modal');
+                     uiwait(d);
+                     set(handles.xBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) %
+                     set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
+                     set(handles.yAxisRadio,'value', 1)
+                     set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
+                     
+                     % Reset axis box and selected axis string to what it
+                     % was before error, to be aligned with y-radio.
+                     position(2) = 0.76923;
+                     set(handles.axisEditbox, 'Position', position)
+                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y     =")
+                     set(handles.xAxisRadio,'string',"X")
+                     set(handles.methodText, 'string', "Disk");
+                     set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+                 end
+                 set(handles.axisEditbox, 'string', axisValue);
+                 
+             % Axis meets constraint, generate new volume and set new
+             % volume method.
+             else
+                 axisOri = axisPicked;
+                 axisValue = newAxisValue;
+                 methodChoice = methodFor_AoB_Check;
+             end
         end
     end
-    if (methodChoice == "Disk")
-        if (axisPicked == "x")
-            bound_statement = "< Y <";
-        else
-            bound_statement = "< X <";
-        end
+    
+    % Reset that highlight around the bounds that are constrainted from the
+    % user's new axis value to enter,
+    if (axisPicked == "y")
+        set(handles.yBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) % 
+        set(handles.yBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
     else
-        bound_statement = "< " + upper(axisPicked(1)) + " <";
+        set(handles.xBoundsBackground ,'HighlightColor', [0.94 0.94 0.94]) % 
+        set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
     end
     
-    set(handles.boundStatement, 'string', bound_statement);
-    
-    position = get(handles.axisEditbox,'Position');
-    
-    % Positions the axis value box adjacent to the axis orientation selected.
-    % Also sets the axis orientation parameter in the volume function.
-    if (axisPicked == "x")
-        position(2) = 2.9;
-        set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"x     =")
-        set(handles.yAxisRadio,'string',"y")
+    % Upon selection of the rotation method used, make changes to UI, changing
+    % some titles.
+    subIntsLabelString = "Number of " + methodChoice + "s";
+    set(handles.subintervalGroup, 'title', subIntsLabelString);
+
+    if(viewMode == "3D")
+        set(handles.solidViewRadiogroup, 'Visible', "on");
+        set(handles.subintervalGroup, 'title', subIntsLabelString);
     else
-        position(2) = 0.76923;
-        set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"y     =")
-        set(handles.xAxisRadio,'string',"x")
+        set(handles.solidViewRadiogroup, 'Visible', "off");
     end
-    axisOri = axisPicked;
 end
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
 % --- Executes on button press in homeButton.
-function homeButton_Callback(hObject, eventdata, handles)
+function homeButton_Callback(hObject, ~, handles)
 close(VUC);
 run('homescreen');
+end
+
+% --- Executes during object creation, after setting all properties.
+function homeButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to homeButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+toolTipString = sprintf('Click to navigate back to Home Screen.');
+set(hObject, 'TooltipString', toolTipString);
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 end
 
 % --- Callback from button group that sets whether to view the solid of
@@ -773,7 +1239,17 @@ viewModeChanged = 1;
 volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
+% --- Executes during object creation, after setting all properties.
+function threeDButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to threeDButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
 % --- Executes when selected object is changed in solidViewRadiogroup.
+set(hObject, 'TooltipString', ...
+    sprintf("Press to view the current volume as either a 3D representation,\nor a 2D representation as a cross-section of the solid cut along\nthe X-Y plane."));
+end
+
 function solidViewRadiogroup_SelectionChangedFcn(hObject, eventdata, handles)
 global fullSolid;
 
@@ -797,33 +1273,40 @@ function stepSlider_Callback(hObject, eventdata, handles)
     volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
-% --- Executes during object creation, after setting all properties.
 function stepSlider_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to stepSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
 % Hint: slider controls usually have a light gray background.
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
-end
 
-% Method used within callbacks when the volume method is set to Shell. Addresses
-% the constraint of keeping axis of rotation outside of bounds of the solid of revolution. 
-% If violated (axis between bounds), this returns false.
-function valid = isValidShellVolume(axisVal, lowBound, upBound)
-    if ((axisVal > lowBound) && (axisVal < upBound))
-        valid = 0;
-    else
-        valid = 1;
-    end
+set(hObject, 'TooltipString', ...
+    sprintf("Slide for a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
 end
 
 % --- Executes on button press in resetButton.
 function resetButton_Callback(hObject, eventdata, handles)
 close(VUC);
 run('VUC');
+end
+
+% --- Executes during object creation, after setting all properties.
+function resetButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to resetButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+toolTipString = sprintf('Click to reset GUI to default values.');
+set(hObject, 'TooltipString', toolTipString);
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 11);
+end
 end
 
 % --- Executes when selected object is changed in radiusMethodRadioGroup.
@@ -861,7 +1344,7 @@ if (axisOrient == "y")
     % Cases where disk method rotating area perpendicular to axis parallel
     % to y-axis. Here, can't enter a negative bound when the function
     % selected is x^2 or 2^x.
-else
+elseif (axisOrient == "x")
     if (methChoice == "Disk")
        if (funcChoice == "x^2" || funcChoice == "2^x")
            if (lowBound < 0 || upBound < 0)
@@ -872,10 +1355,108 @@ else
 end
 end
 
-% Function that tries to reset viewing angle to what it was before some
-% error messages that, for example, views a 3D object from the top.
-function resetViewAngle
-    global az;
-    global el;
-    [az, el] = view;
+function [newLower, newUpper] = inverseBounds(functionString, lowerBound, upperBound, inverse)
+
+% If the method/axis switches to Disk/Y or Shell/X, generate bounds using
+% function's inverse for inverse bounds along x-axis
+% bounds.
+if (inverse == 1)
+    if (functionString == "x^2")
+        newLower = lowerBound^(1/2);
+        newUpper = upperBound^(1/2);
+    % Inversions b/w bounds of function 2^x
+    elseif (functionString == "2^x")
+        % Undefined case when evaluating log2(0), which is
+        % undefined/negative infinity.
+        if (lowerBound == 0)
+            lowerBound = .0001;
+        elseif (upperBound == 0)
+            upperBound = .0001;
+        end
+        
+        newLower = double(log2(lowerBound));
+        newUpper = double(log2(upperBound));
+    % Otherwise, with f(x) = x, bounds among dx and dy are the same.
+    else
+        newLower = lowerBound;
+        newUpper = upperBound;
+    end
+    
+% If the method/axis switches to Disk/X or Shell/Y, generate bounds using
+% function for inverse bounds along y-axis
+elseif (inverse == 0) 
+    if (functionString == "x^2")
+        newLower = lowerBound^2;
+        newUpper = upperBound^2;
+    elseif (functionString == "2^x")
+        newLower = 2^lowerBound;
+        newUpper = 2^upperBound;
+    else
+        newLower = lowerBound;
+        newUpper = upperBound;
+    end
+end
+end
+
+function sameSigns = sameSigns(bound1, bound2)
+    if bound1*bound2 < 0
+        sameSigns = 0;
+    else
+        sameSigns = 1;
+    end
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function xBoundsBackground_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to xBoundsBackground (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+end
+
+% --- Executes during object creation, after setting all properties.
+function yBoundsBackground_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to yBoundsBackground (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function leftRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to leftRadiusRadioButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'TooltipString', ...
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the left-endpoint integration method."));
+
+end
+
+% --- Executes during object creation, after setting all properties.
+function midRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to midRadiusRadioButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'TooltipString', ...
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the midpoint integration method."));
+end
+
+% --- Executes during object creation, after setting all properties.
+function rightRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rightRadiusRadioButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+set(hObject, 'TooltipString', ...
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the right-point integration method."));
+end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over axisEditbox.
+function axisEditbox_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to axisEditbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)\
+
+disp("Hi")
 end

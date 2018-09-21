@@ -56,8 +56,44 @@ function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, v
           axis.LineStyle = '-.';
         end
     end
+    
+     x_label = 'x';
+     y_label = 'y';
+     if (viewMode == "3D")
+         origXLims = xlim;
+         origYLims = zlim;
+         xAxis = plot3(origXLims, zeros(1, 2), zeros(1, 2), "LineWidth", 3, "color", [0 0 0]); hold on
+         yAxis = plot3(zeros(1, 2), zeros(1, 2), origYLims, "LineWidth", 3, "color", [0 0 0]); hold on
+         xlim(origXLims)
+         zlim(origYLims)
+         
+         % Labels x and y-axis on graph, IF plot is in 3D
+         % Determine based on axes limits if there should be label for
+         % x-axis.
+         if (~all(origYLims < 0) && ~all(origYLims > 0))
+            text((origXLims(2) - (origXLims(2) - origXLims(1))/10),0, 0, x_label,'FontSize',16,'VerticalAlignment','top')
+            disp("X-Axis Graphed")
+         end
+         
+         % Determine based on axes limits if there should be label for
+         % y-axis.
+         if (~all(origXLims < 0) && ~all(origXLims > 0))
+            text((origXLims(2) - origXLims(1))/50, 0, origYLims(2) - (origYLims(2) - origYLims(1))/10, ... 
+                y_label,'FontSize',16,'HorizontalAlignment','left')
+            disp("Y-Axis Graphed")
+         end
+     elseif (viewMode == "2D")
+         origXLims = xlim;
+         origYLims = ylim;
+         xAxis = plot(origXLims, zeros(1, 2), "LineWidth", 2, "color", [0 0 0]); hold on
+         yAxis = plot(zeros(1, 2), origYLims, "LineWidth", 2, "color", [0 0 0]); hold on
+         xlim(origXLims)
+         ylim(origYLims)
+     end
+     
      leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "f(x) mirrored", "Axis of rotation", 'location', 'northeast');
      leg.FontSize = 12;
-     uistack(leg,"top")
+     uistack(axis,"top") % Axis line
+     uistack(leg,"top") % 
 end
 
