@@ -57,8 +57,6 @@ function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, v
         end
     end
     
-     x_label = 'x';
-     y_label = 'y';
      if (viewMode == "3D")
          origXLims = xlim;
          origYLims = zlim;
@@ -71,16 +69,14 @@ function plotWithReflection(funcString, lowbound, upbound, axisOri, axisValue, v
          % Determine based on axes limits if there should be label for
          % x-axis.
          if (~all(origYLims < 0) && ~all(origYLims > 0))
-            text((origXLims(2) - (origXLims(2) - origXLims(1))/10),0, 0, x_label,'FontSize',16,'VerticalAlignment','top')
-            disp("X-Axis Graphed")
+            text((origXLims(2) - (origXLims(2) - origXLims(1))/10),0, 0, "X",'FontSize',16,'VerticalAlignment','top')
          end
          
          % Determine based on axes limits if there should be label for
          % y-axis.
          if (~all(origXLims < 0) && ~all(origXLims > 0))
             text((origXLims(2) - origXLims(1))/50, 0, origYLims(2) - (origYLims(2) - origYLims(1))/10, ... 
-                y_label,'FontSize',16,'HorizontalAlignment','left')
-            disp("Y-Axis Graphed")
+                "Y",'FontSize',16,'HorizontalAlignment','left')
          end
      elseif (viewMode == "2D")
          origXLims = xlim;

@@ -155,13 +155,15 @@ if (axisOri == "y")
             outerFace.XData(2, :) = cylMargins(i+1);
             
             % Patching faces on the left and the right faces of the
-            % horizontally-facing cylinders.
-            topFace = patch(cylMargins(i)*ones(1, 2*length(theta)), ...
-                [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
-            topFace.EdgeColor = 'none';
-            bottomFace = patch(cylMargins(i+1)*ones(1, 2*length(theta)), ...
-                [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
-            bottomFace.EdgeColor = 'none';
+            % horizontally-facing cylinders, for non-zero disc areas.
+            if (outerRadius(i) ~= innerRadius(i))
+                topFace = patch(cylMargins(i)*ones(1, 2*length(theta)), ...
+                    [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
+                topFace.EdgeColor = 'none';
+                bottomFace = patch(cylMargins(i+1)*ones(1, 2*length(theta)), ...
+                    [outer_y,inner_y], [outer_z,inner_z], [0 0.902 0]);
+                bottomFace.EdgeColor = 'none';
+            end
             
             % Drawing rectangles to fill inside of disks as they're cut on
             % xy-plane. If axis perpendicular to y-axis, get inner radius,

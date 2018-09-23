@@ -121,7 +121,7 @@ else
 end
 % rectSet = patch(xverts, yverts, "b");
 % hold on
-patch(xverts, yverts_top, "b"); hold on
+rectSet = patch(xverts, yverts_top, "b"); hold on
 patch(xverts, yverts_bottom, "b"); hold on
 end
 

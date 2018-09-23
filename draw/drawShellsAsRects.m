@@ -1,4 +1,4 @@
- function [origRectSet, mirrorRectSet] = drawShellsAsRects(funcString, lowbound, upbound, subdivs, axisOri, axisVal, radiusMethod)
+function rectSet = drawShellsAsRects(funcString, lowbound, upbound, subdivs, axisOri, axisVal, radiusMethod)
 % Test file that draws rectangles representing shells viewed from the side, 
 % their heights are evaluations at the point of the point's function. Flexible for any arbitrary 
 % value as x-axis to rotate area around.
@@ -43,8 +43,8 @@ if(axisOri =="x")
     mirror_xverts = [mirror_shellBasePoints(1:end-1); mirror_shellBasePoints(1:end-1);... 
         mirror_shellBasePoints(2:end); mirror_shellBasePoints(2:end)];
                 
-    origRectSet = patch(orig_xverts, yverts, "b"); hold on
-    mirrorRectSet = patch(mirror_xverts, yverts, "b"); hold on
+    rectSet = patch(orig_xverts, yverts, "b"); hold on
+    patch(mirror_xverts, yverts, "b"); hold on
 else
     g(x) = finverse(f(x));
     shellLengths = double(g(xpoints));
@@ -60,7 +60,7 @@ else
     mirror_yverts = [mirror_shellBasePoints(1:end-1); mirror_shellBasePoints(1:end-1);... 
         mirror_shellBasePoints(2:end); mirror_shellBasePoints(2:end)];
     
-    origRectSet = patch(xverts, yverts, "b"); hold on
-    mirrorRectSet = patch(xverts, mirror_yverts, "b"); hold on
+    rectSet = patch(xverts, yverts, "b"); hold on
+    patch(xverts, mirror_yverts, "b"); hold on
 end
 end
