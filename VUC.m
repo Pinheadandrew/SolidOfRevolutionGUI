@@ -315,6 +315,7 @@ else
             xlabel('X','FontWeight','bold')
             ylabel('Z','FontWeight','bold')
             zlabel('Y','FontWeight','bold')
+        % View mode is 2D
         else
             volumePatch = drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
             xlabel('X','FontWeight','bold')
@@ -340,6 +341,7 @@ else
             xlabel('X','FontWeight','bold')
             ylabel('Z','FontWeight','bold')
             zlabel('Y','FontWeight','bold')
+        % View mode is in 2D.
         else
             volumePatch = drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
             xlabel('X','FontWeight','bold')
@@ -357,24 +359,35 @@ else
       shape_plot_zlim = zlim;
 
       if (methodChoice == "Shell" && axisOri == "x")
-        plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x") 
+%           plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x");
+        [origPlot, mirrorPlot, axis] = plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x");
       else
           % Original negative area, so flip the axis of rotation across
           % y-axis.
-          plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y") 
+%           plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y");
+        [origPlot, mirrorPlot, axis] = plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y");
         
       end
       xlim(shape_plot_xlim);
       ylim(shape_plot_ylim);
       zlim(shape_plot_zlim);
     else
-      plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x")
+%       plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x");
+      [origPlot, mirrorPlot, axis] = plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x");
     end
     
     % If the viewmode is in 2D, add the volume's 2D patch to the legend.
     if(viewMode == "2D")
-            
+       leg = legend([origPlot, mirrorPlot, axis, volumePatch], "f(x) = " + simple_exp_string, ...
+           "f(x) mirrored", "Axis of rotation", "Rotated Area", 'location', 'northeast');
+    else
+       leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + simple_exp_string, ...
+           "f(x) mirrored", "Axis of rotation", 'location', 'northeast');
     end
+    
+    leg.FontSize = 12;
+    uistack(axis,"top") % Axis line
+    uistack(leg,"top")
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
     estVolumeString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
