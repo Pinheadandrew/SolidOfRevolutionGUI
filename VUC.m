@@ -485,6 +485,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global viewModeChanged;
     global inverseLowerBound;
     global inverseUpperBound;
+    global funcHandle;
     
     lower_input = str2double(get(hObject,'String'));
     funcString = functionChoice(6:end);
@@ -505,13 +506,13 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.lowerBoundEdit, 'string', lowerBound);
         viewModeChanged = 1;
-%     % Lower bound must be within range of -50 and 50.
-%     elseif(lower_input < -50 || lower_input > 50)
-%         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
-%         set(d, 'WindowStyle', 'modal');
-%         uiwait(d);
-%         set(handles.lowerBoundEdit, 'string', lowerBound);
-%         viewModeChanged = 1;
+    % Lower bound must be within range of -50 and 50.
+    elseif(lower_input < -50 || lower_input > 50)
+        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.lowerBoundEdit, 'string', lowerBound);
+        viewModeChanged = 1;
     % If entering lower bound to create invalid instance, produce error
     % message and reset bound to what it was previously.
     elseif (~isValidVolume(funcString, methodChoice, lower_input, upperBound, axisOri))
@@ -568,7 +569,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         
         if (~axisOutsideBounds(funcString, methodChoice, lower_input, tempUpper, axisOri, axisValue))
             if (methodChoice == "Shell")
-                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated, hightlighted to the left.'),'Shell Volume Error');
+                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the X-bounds of the area to be rotated, hightlighted to the left.'),'Shell Volume Error');
                 set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                 set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
                 set(handles.lowerBoundEdit ,'BackgroundColor', [.706 1 1])
@@ -580,7 +581,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
                 set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
                 set(handles.lowerBoundEdit ,'BackgroundColor', [1 1 1])
             elseif (methodChoice == "Disk")
-                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated, which are highlighted on the left.'),'Disk Volume Error');
+                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area, highlighted to the left.'),'Disk Volume Error');
                 set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                 set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
                 set(handles.lowerBoundEdit ,'BackgroundColor', [.706 1 1])
@@ -613,6 +614,9 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         else
             lowerBound = lower_input;
             upperBound = tempUpper;
+            
+            funcHandle = @(x) x.^2;
+            funcHandle(3)
         end
         volumeButton_Callback(handles.volumeButton, eventdata, handles);
     end
@@ -644,6 +648,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     global viewModeChanged;
     global inverseLowerBound;
     global inverseUpperBound;
+    global funcHandle;
     
     upper_input = str2double(get(hObject,'String'));
     funcString = functionChoice(6:end);
@@ -664,13 +669,12 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         uiwait(d);
         set(handles.upperBoundEdit, 'string', upperBound);
         viewModeChanged = 1;
-%     elseif(upper_input < -50 || upper_input > 50)
-%         plot(0,0);
-%         d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
-%         set(d, 'WindowStyle', 'modal');
-%         uiwait(d);
-%         set(handles.upperBoundEdit, 'string', upperBound);
-%         viewModeChanged = 1;
+    elseif(upper_input < -50 || upper_input > 50)
+        d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.upperBoundEdit, 'string', upperBound);
+        viewModeChanged = 1;
     elseif (~isValidVolume(funcString, methodChoice, lowerBound, upper_input, axisOri))
         f = errordlg(sprintf(...
             'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
@@ -718,7 +722,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     % which is invalid for creating volumes in that axis of rotation is between bounds.
         if (~axisOutsideBounds(funcString, methodChoice, tempLower, upper_input, axisOri, axisValue))
             if (methodChoice == "Shell")
-                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated, which are highlighted to the left.'),'Shell Volume Error');
+                d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the X-bounds of the area to be rotated,\nhighlighted on the left.'),'Shell Volume Error');
                 set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                 set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
                 set(handles.upperBoundEdit ,'BackgroundColor', [.706 1 1])
@@ -730,7 +734,7 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
                 set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
                 set(handles.upperBoundEdit ,'BackgroundColor', [1 1 1])
             elseif (methodChoice == "Disk")
-                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated, which are highlighted on the left.'),'Disk Volume Error');
+                d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area, highlighted to the left.'),'Disk Volume Error');
                 set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                 set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
                 set(handles.upperBoundEdit ,'BackgroundColor', [.706 1 1])
@@ -1018,7 +1022,7 @@ function axisEditbox_Callback(hObject, eventdata, handles)
             set(handles.xBoundsBackground ,'ShadowColor', [0.94 0.94 0.94])
             set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
         elseif (methodChoice == "Disk")
-            d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the bounds of the area to be rotated, which are highlighted on the left.'),'Disk Volume Error');
+            d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area, highlighted to the left.'),'Disk Volume Error');
             set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statenebt to illustrate limits of vertical.
             set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
             set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
@@ -1076,7 +1080,7 @@ if (strcmp(functionChoice, "Select a function"))
         position(2) = 2.9;
         set(handles.axisEditbox, 'Position', position)
         set(handles.xAxisRadio,'Value', 1)
-        set(handles.xAxisRadio,'string',"X     =")
+        set(handles.xAxisRadio,'string',"X    =")
         set(handles.yAxisRadio,'string',"Y")
         set(handles.methodText, 'string', "Shell");
         set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
@@ -1084,7 +1088,7 @@ if (strcmp(functionChoice, "Select a function"))
         position(2) = 0.76923;
         set(handles.axisEditbox, 'Position', position)
         set(handles.yAxisRadio,'Value', 1)
-        set(handles.yAxisRadio,'string',"Y     =")
+        set(handles.yAxisRadio,'string',"Y    =")
         set(handles.xAxisRadio,'string',"X")
         set(handles.methodText, 'string', "Disk");
         set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
@@ -1109,14 +1113,14 @@ else
         if (axisPicked == "x")
             position(2) = 2.9;
             set(handles.axisEditbox, 'Position', position)
-            set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X     =")
+            set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
             set(handles.yAxisRadio,'string',"Y")
             set(handles.methodText, 'string', "Shell");
             set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         else
             position(2) = 0.76923;
             set(handles.axisEditbox, 'Position', position)
-            set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y     =")
+            set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
             set(handles.xAxisRadio,'string',"X")
             set(handles.methodText, 'string', "Disk");
             set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
@@ -1148,7 +1152,7 @@ else
                 position(2) = 2.9;
                 set(handles.axisEditbox, 'Position', position)
                 set(handles.xAxisRadio, 'value', 1.0)
-                set(handles.xAxisRadio,'string',"X     =")
+                set(handles.xAxisRadio,'string',"X    =")
                 set(handles.yAxisRadio,'string',"Y")
                 set(handles.methodText, 'string', "Shell");
                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
@@ -1156,7 +1160,7 @@ else
                 position(2) = 0.76923;
                 set(handles.axisEditbox, 'Position', position)
                 set(handles.yAxisRadio, 'value', 1.0)
-                set(handles.yAxisRadio,'string',"Y     =")
+                set(handles.yAxisRadio,'string',"Y    =")
                 set(handles.xAxisRadio,'string',"X")
                 set(handles.methodText, 'string', "Disk");
                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
@@ -1179,7 +1183,7 @@ else
              if (~axisOutsideBounds(functionChoice(6:end), methodFor_AoB_Check, lowerBound, upperBound, axisPicked, newAxisValue))
                  % Constraint violated trying to make disc volume.
                  if (axisPicked == "y")
-                     d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated,\nhighlighted on the left.'),'Shell Volume Error');
+                     d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area to be rotated,\nhighlighted on the left.'),'Disk Volume Error');
                      set(handles.yBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                      set(handles.yBoundsBackground ,'ShadowColor', [1 .2 0])
                      set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
@@ -1194,15 +1198,16 @@ else
                      % was before error, to be aligned with x-radio.
                      position(2) = 2.9;
                      set(handles.axisEditbox, 'Position', position)
-                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X     =")
+                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
                      set(handles.yAxisRadio,'string',"Y")
                      set(handles.methodText, 'string', "Shell");
                      set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
                      
                  % Constraint violated trying to make shell volume.
                  elseif (axisPicked == "x")
-                     d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area to be rotated,\n' ...
-                        + 'highlighted on the left.'),'Disk Volume Error');
+                     d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the X-bounds of the area to be rotated,\nhighlighted on the left.'),'Shell Volume Error');
+%                      d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area to be rotated,\n' ...
+%                         + 'highlighted on the left.'),'Disk Volume Error');
                      set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                      set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
                      set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
@@ -1217,7 +1222,7 @@ else
                      % was before error, to be aligned with y-radio.
                      position(2) = 0.76923;
                      set(handles.axisEditbox, 'Position', position)
-                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y     =")
+                     set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
                      set(handles.xAxisRadio,'string',"X")
                      set(handles.methodText, 'string', "Disk");
                      set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
