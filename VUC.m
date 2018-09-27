@@ -254,9 +254,7 @@ else
     end
     viewModeChanged = 0;
     
-    syms x
     simple_exp_string = functionChoice(6:end); % String of function w/o "f(x)="
-    f(x) = str2sym(simple_exp_string);
     
     % If the view option upon redrawing the plot is still 3D, store the
     % viewpoint of the plot to be reused when 3D plot redrawn.
@@ -884,8 +882,6 @@ else
     % between the x and y-axis, change the bounds accordingly so same
     % volume generated. Also display inverse of the new bounds.
     if (~strcmp(methodChoice, methodContents))
-        syms x
-        f(x) = str2sym(functionChoice(6:end));
         
         % Configurations in which domain for integration is in respect to dY.
         if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))

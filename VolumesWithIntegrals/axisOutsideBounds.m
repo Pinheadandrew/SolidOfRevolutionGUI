@@ -2,9 +2,8 @@
 function valid = axisOutsideBounds(funcChoice, methChoice, lowBound, upBound, axisOrient, axisVal)
 valid = 1;
 
-syms x
-f(x) = str2sym(funcChoice);
-g(x) = finverse(f);
+f = string2func(funcChoice, 0);
+g = string2func(funcChoice, 1);
 
 if (axisOrient == "y") % Constraints for a horizontal line
     if (methChoice == "Shell")

@@ -26,10 +26,7 @@ elseif (radiusMethod == "r")
     xpoints = lowerBound+delta:delta:upperBound;
 end
 
-syms x
-f(x) = str2sym(funcString);
-functionNotOnZero = 0;
-fillerVolume = 0;
+f = string2func(funcString, 0);
 
 if (lower(axisOri) == 'y')
     if (axisValue <= f(lowerBound) || axisValue >= f(upperBound))
@@ -82,84 +79,16 @@ if (lower(axisOri) == 'y')
         end
     end
     diskAreas = pi*(outerDisks.^2 - innerDisks.^2);
-    
-    % If axis running through x-axis, flip the function determining disk radii
-    % to be the inverse function of passed expression.
-elseif (lower(axisOri) == 'x')
-    g(x) = finverse(f);
-    
-    %If axis value outside of bounds or on a bound, use washer
-    %method.
-    if (axisValue <= double(g(lowerBound)) || axisValue >= double(g(upperBound)))
-        
-        % Axis of rotation to the left of area under curve, set outer radius to
-        % function line, inner to the inverse function with lower bound.
-        if(axisValue <= double(g(lowerBound)))
-            if (lowerBound <= 0 && upperBound <= 0)
-                innerDisks = axisValue - g(lowerBound);
-                outerDisks = axisValue - g(xpoints);
-                functionNotOnZero = 1;
-            %  Bounds are actually homogenous signs, or both positive  
-            else
-                innerDisks = axisValue - g(xpoints);
-                outerDisks = axisValue - g(upperBound);
-                
-                if (f(lowerBound) > 0)
-                    functionNotOnZero = 1;
-                end
-            % Axis of rotation to the right area under curve, outer radius is axis
-            % value minus minima of function within bounds.
-            end
-            elseif (axisValue >= double(g(upperBound)))
-                if (lowerBound <= 0 && upperBound <= 0)
-                    innerDisks = axisValue - g(xpoints);
-                    outerDisks = axisValue - g(lowerBound);
-                    functionNotOnZero = 1;
-                else
-                    innerDisks = axisValue - g(upperBound);
-                    outerDisks = axisValue - g(xpoints);
-                    
-                    % Function at lower bound > 0, rotate area under it.
-                    if (f(lowerBound) > 0)
-                        functionNotOnZero = 1;
-                    end
-                end
-            end
-            diskAreas = pi*(outerDisks.^2 - innerDisks.^2);
-        
-            % If no gap b/w axis and bound, regular discs w/ no inner area to
-        % subtract.
-        else
-            diskAreas = pi * (g(xpoints) - axisValue).^2;
+end
+
+% Checks for any NaNs, as result of problems such as logarithm function of
+% negative number.
+for i = 1:length(diskAreas)
+    if (isnan(diskAreas(i)) || ~isreal(diskAreas(i)))
+        diskAreas(i) = 0;
     end
-        
-    % If rotating area, and part of area between function and axis cut out
-    % (i.e. area above area where f(x) = x and -3<y<-1), add it.
-    if (functionNotOnZero == 1)
-        if (f(lowerBound) > 0)
-            cylInnerRadius = g(lowerBound) - axisValue;
-            cylOuterRadius = g(upperBound) - axisValue;
-            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
-            fillerVolume = double(int(cylIntegrant, 0, lowerBound));
-%             volume = volume + cylVolumeWithBaseZero;
-        elseif (f(upperBound) < 0)
-            cylInnerRadius = g(upperBound) - axisValue;
-            cylOuterRadius = g(lowerBound) - axisValue;
-            cylIntegrant = abs(pi*(cylOuterRadius^2 - cylInnerRadius^2));
-            fillerVolume = double(int(cylIntegrant, upperBound, 0));
-%             volume = volume + cylVolumeWithBaseZero;
-        end
-    end
-    end
-    
-    % Checks for any NaNs, as result of problems such as logarithm function of
-    % negative number.
-    for i = 1:length(diskAreas)
-        if (isnan(diskAreas(i)) || ~isreal(diskAreas(i)))
-            diskAreas(i) = 0;
-        end
-    end
-    diskVolumes = diskAreas*delta;
-    approxVol = double(sum(diskVolumes)) + fillerVolume;
+end
+diskVolumes = diskAreas*delta;
+approxVol = double(sum(diskVolumes));
 end
 
