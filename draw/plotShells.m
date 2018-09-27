@@ -2,8 +2,7 @@ function plotShells(funcString, lowbound, upbound, subdivs, axisOri, axisVal, fu
 % Function that plots solid of revolution as hollow 3D cylinders rotated
 % parallel to the axis specified. Choice of whether to show the whole solid
 % or cut half of it across the x-z plane.
-syms x
-f(x) = str2sym(funcString);
+f = string2func(funcString, 0);
 
 delta= (upbound - lowbound)/subdivs;
 shellWidthMargins = (lowbound:delta:upbound);

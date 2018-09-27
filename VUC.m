@@ -66,15 +66,6 @@ viewModeChanged = 0;
 global originallyNegativeArea;
 originallyNegativeArea = 0;
 
-global boundEdit_top_y;
-boundEdit_top_y = 2.8;
-global boundEdit_bottom_y;
-boundEdit_bottom_y = 0.6;
-global inverseChar_top_y;
-inverseChar_top_y = 2.65;
-global inverseChar_bottom_y;
-inverseChar_bottom_y = 0.43;
-
 maxNumberOfRect = 75;
 set(handles.stepSlider, 'Min', 1);
 set(handles.stepSlider, 'Max', maxNumberOfRect);
@@ -180,8 +171,8 @@ else
         [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
     end
     
-    set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-    set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+    set(handles.inverseLowBoundChar, 'string', round(inverseLowerBound,3));
+    set(handles.inverseUpBoundChar, 'string', round(inverseUpperBound, 4));
     volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 % volumeButton_Callback(handles.volumeButton, eventdata, handles);
@@ -496,7 +487,6 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
     global viewModeChanged;
     global inverseLowerBound;
     global inverseUpperBound;
-    global funcHandle;
     
     lower_input = str2double(get(hObject,'String'));
     funcString = functionChoice(6:end);
@@ -550,9 +540,9 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
             if (upperBound > 0)
                 tempUpper = 0;
                 
-                set(handles.upperBoundEdit, 'string', upperBound);
-                f = errordlg(sprintf(...
-                    'In maintaining simplicity of generated volumes, the bounds should have the same signs,\nwith the exception of areas under the function, 2^x.\n\nThe upper bound has been changed to 0.')...
+%                 set(handles.upperBoundEdit, 'string', upperBound);
+                f = warndlg(sprintf(...
+                    'In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe upper bound will be changed to 0.')...
                     , 'Bounds Update');
                 set(f, 'WindowStyle', 'modal');
                 uiwait(f);
@@ -564,8 +554,7 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
         [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
             lower_input, tempUpper, 0);
         
-          
-                set(handles.upperBoundEdit, 'string', tempUpper);
+%         set(handles.upperBoundEdit, 'string', tempUpper);
         
         % Inverse bound of lower bound turns out to be greater than that
         % of upper bound, swap the inverse bounds in the statement on GUI.
@@ -575,8 +564,9 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
             inverseLowerBound = temp_upper;
         end
         
-        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        set(handles.upperBoundEdit, 'string', tempUpper);
+        set(handles.inverseLowBoundChar, 'string', round(inverseLowerBound, 4));
+        set(handles.inverseUpBoundChar, 'string', round(inverseUpperBound, 4));
         
         if (~axisOutsideBounds(funcString, methodChoice, lower_input, tempUpper, axisOri, axisValue))
             if (methodChoice == "Shell")
@@ -620,14 +610,11 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
                 inverseUpperBound = inverseLowerBound;
                 inverseLowerBound = temp_upper;
             end
-            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+            set(handles.inverseLowBoundChar, 'string', round(inverseLowerBound, 4));
+            set(handles.inverseUpBoundChar, 'string', round(inverseUpperBound, 4));
         else
             lowerBound = lower_input;
             upperBound = tempUpper;
-            
-            funcHandle = @(x) x.^2;
-            funcHandle(3)
         end
         volumeButton_Callback(handles.volumeButton, eventdata, handles);
     end
@@ -659,7 +646,6 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
     global viewModeChanged;
     global inverseLowerBound;
     global inverseUpperBound;
-    global funcHandle;
     
     upper_input = str2double(get(hObject,'String'));
     funcString = functionChoice(6:end);
@@ -705,9 +691,9 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
                     tempLower, upper_input, 0);
                 
-                set(handles.lowerBoundEdit, 'string', tempLower);
-                f = errordlg(sprintf(...
-                    'In maintaining simplicity of generated volumes, the bounds should have the same signs,\nwith the exception of areas under the function, 2^x.\n\nThe lower bound has been changed to 0.'), 'Bounds Update');
+%                 opts = struct('WindowStyle','modal', 'Interpreter','tex');
+%                 f = warndlg('\fontsize{15} In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.', 'Bounds Update', opts);
+                f = warndlg(sprintf('In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.'), 'Bounds Update');
                 set(f, 'WindowStyle', 'modal');
                 uiwait(f);
                 viewModeChanged = 1;
@@ -726,8 +712,9 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
          
         % Set the inverse upper bound according to the new upper bound, and display the new
         % inverse range.
-        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+        set(handles.lowerBoundEdit, 'string', tempLower);
+        set(handles.inverseLowBoundChar, 'string', round(inverseLowerBound, 4));
+        set(handles.inverseUpBoundChar, 'string', round(inverseUpperBound, 4));
         
         % Lower bound is such that: lower bound < axis value < upper bound,
     % which is invalid for creating volumes in that axis of rotation is between bounds.
@@ -771,8 +758,8 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
                 inverseUpperBound = inverseLowerBound;
                 inverseLowerBound = temp_upper;
             end
-            set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-            set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
+            set(handles.inverseLowBoundChar, 'string', round(inverseLowerBound, 4));
+            set(handles.inverseUpBoundChar, 'string', round(inverseUpperBound, 4));
 %             set(handles.upperBoundEdit, 'string', upperBound);
         else
             lowerBound = tempLower;
@@ -804,199 +791,6 @@ end
 
 set(hObject, 'TooltipString', ...
     sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
-end
-
-% Selecting either the disc or the shell method.
-function methodRadioGroup_SelectionChangedFcn(hObject, eventdata, handles)
-global methodChoice;
-global viewMode;
-global axisOri;
-global axisValue;
-global lowerBound;
-global upperBound;
-global functionChoice;
-global inverseLowerBound;
-global inverseUpperBound;
-global originallyNegativeArea;
-global boundEdit_top_y;
-global boundEdit_bottom_y;
-global inverseChar_top_y;
-global inverseChar_bottom_y;
-
-methodContents = get(get(handles.methodRadioGroup,'SelectedObject'),'string');
-
-% Switching between methods and the new volume uses a function that is not
-% one-to-one given the domain specified by the defined lower and upper
-% bound, so produce an error message. After message cleared, return
-% selected method to what it was previously that was working.
-if (strcmp(functionChoice, "Select a function"))
-    f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
-    set(f, 'WindowStyle', 'modal');
-    uiwait(f);
-elseif (~isValidVolume(functionChoice(6:end), methodContents, lowerBound, upperBound, axisOri))
-    f = errordlg(sprintf(...
-            'Cannot enter negative bounds, as the function\nis not one-to-one within the domain entered.\n              e.g y=2^x, 0<y<infinity')...
-        , 'Invalid Volume Error');
-        set(f, 'WindowStyle', 'modal');
-        uiwait(f);
-        set(handles.discRadio, 'Value', 1.0);
-        
-        if (methodChoice == "Disk")
-            set(handles.discRadio, "value", 1.0)
-        else
-            set(handles.shellRadio, "value", 1.0)
-        end
-% If switching from disc to shell method and the resulting shell volume
-% cannot be generating due to the axis constraint between the inverted bounds among the new axis, 
-% revert back to the disk method. Else, assign the global variable methodChoice to whatever selected.
-elseif (methodChoice == "Disk" && methodContents == "Shell" && ...
-         ~axisOutsideBounds(functionChoice(6:end), methodContents, inverseLowerBound, inverseUpperBound, axisOri, axisValue))
-    opts.Interpreter = 'tex';
-    opts.Default = 'Cancel';
-    fontSettings = '\fontsize{12}';
-    warningMessage = strcat(fontSettings, {'Warning: by switching to the Shell method, a volume '}, ...
-        {'would fail to generate, given the current axis of rotation is between the bounds of the area. '}, ...
-        {'You can set a new axis below, or hit "Cancel" to revert back to the previous parameters.'});
-    
-    lowBoundAxis = axisOri + "=" + num2str(inverseLowerBound);
-    upperBoundAxis = axisOri + "=" + num2str(inverseUpperBound);
-    
-    answer = questdlg(warningMessage, 'Warning', lowBoundAxis,...
-        upperBoundAxis, 'Cancel', opts);
-    
-    % Pop up between selections of new values of axis of rotation.
-    switch answer
-        case lowBoundAxis
-            methodChoice = "Shell";
-            axisValue = lowerBound;
-            set(handles.axisEditbox, 'string', axisValue);
-        case upperBoundAxis
-            methodChoice = "Shell";
-            axisValue = upperBound;
-            set(handles.axisEditbox, 'string', axisValue);
-        case 'Cancel'
-            set(handles.discRadio, 'Value', 1.0);
-    end
-else
-    % If the method changes, and the domain of the integration changes
-    % between the x and y-axis, change the bounds accordingly so same
-    % volume generated. Also display inverse of the new bounds.
-    if (~strcmp(methodChoice, methodContents))
-        
-        % Configurations in which domain for integration is in respect to dY.
-        if ((methodContents == "Shell" && axisOri == "y") || (methodContents == "Disk" && axisOri == "x"))
-            
-            % Switching to disk dY from shell dXand the function is x^2, bounds are both
-            % negative. In this case, make inverse bounds the original
-            % negative bounds, flip them and change the actual bounds using
-            % the original function.
-            if (functionChoice(6:end) == "x^2" && lowerBound <= 0 && upperBound <= 0)
-                inverseLowerBound = lowerBound;
-                inverseUpperBound = upperBound;
-                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), -upperBound, -lowerBound, 0);
-                originallyNegativeArea = 1;
-            else
-                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-            end
-            
-            % If switching to domain in respect to dX, use regular function
-        % selected to reset the bounds.
-        elseif ((methodContents == "Shell" && axisOri == "x") || (methodContents == "Disk" && axisOri == "y"))
-            if (originallyNegativeArea == 1)
-                lowerBound = inverseLowerBound;
-                upperBound = inverseUpperBound;
-                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), inverseUpperBound, inverseLowerBound, 0);
-            else
-                [lowerBound, upperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 1);
-                [inverseLowerBound, inverseUpperBound] = inverseBounds(functionChoice(6:end), lowerBound, upperBound, 0);
-            end
-        end
-        
-        set(handles.inverseLowBoundChar, 'string', inverseLowerBound);
-        set(handles.inverseUpBoundChar, 'string', inverseUpperBound);
-        set(handles.lowerBoundEdit, 'string', lowerBound);
-        set(handles.upperBoundEdit, 'string', upperBound);
-    end
-    methodChoice = methodContents;
-end
-
-subIntsLabelString = "Number of " + methodChoice + "s";
-set(handles.subintervalGroup, 'title', subIntsLabelString);
-
-% Upon selection of the rotation method used, make changes to UI, changing
-% some titles.
-if(viewMode == "3D")
-  set(handles.solidViewRadiogroup, 'Visible', "on");
-  set(handles.subintervalGroup, 'title', subIntsLabelString);
-else
-  set(handles.solidViewRadiogroup, 'Visible', "off");
-end
-
-lowBound_position = get(handles.lowerBoundEdit,'Position');
-upBound_position = get(handles.upperBoundEdit,'Position');
-inverseLow_position = get(handles.inverseLowBoundChar,'Position');
-inverseUp_position = get(handles.inverseUpBoundChar,'Position');
-
-% Based on method and the axis orientation picked, reset the bound 
-% and the inverse bound statements in the boundary section. Also swap the
-% y-positions between the bound edit boxes and the inverse bound strings.
-if (methodChoice == "Shell")
-  set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
- 
-  % Switch the bound editboxes to be with the y-axis boundaries, and the inverse chars
-  % with the x-axis boundaries
-  if (axisOri == "y")
-     lowBound_position(2) = boundEdit_bottom_y;
-     upBound_position(2) = boundEdit_bottom_y;
-     inverseLow_position(2) = inverseChar_top_y;
-     inverseUp_position(2) = inverseChar_top_y;
-  else
-  % Switch the bound editboxes to be with the x-axis boundaries, and the inverse chars
-  % with the y-axis boundaries
-     lowBound_position(2) = boundEdit_top_y;
-     upBound_position(2) = boundEdit_top_y;
-     inverseLow_position(2) = inverseChar_bottom_y;
-     inverseUp_position(2) = inverseChar_bottom_y;
-  end
-else
-  set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
-  
-  % Switch the bound editboxes to be with the x-axis boundaries, and the inverse chars
-  % with the y-axis boundaries
-  if (axisOri == "y") 
-     lowBound_position(2) = boundEdit_top_y;
-     upBound_position(2) = boundEdit_top_y;
-     inverseLow_position(2) = inverseChar_bottom_y;
-     inverseUp_position(2) = inverseChar_bottom_y;
-     
-  else % Switch the bound editboxes to be with the y-axis.
-     lowBound_position(2) = boundEdit_bottom_y;
-     upBound_position(2) = boundEdit_bottom_y;
-     inverseLow_position(2) = inverseChar_top_y;
-     inverseUp_position(2) = inverseChar_top_y;
-  end
-end
-% Sets the new positions of the inverse bound strings and the bound edit
-% boxes.
-set(handles.lowerBoundEdit, 'Position', lowBound_position);
-set(handles.upperBoundEdit, 'Position', upBound_position);
-set(handles.inverseLowBoundChar, 'Position', inverseLow_position);
-set(handles.inverseUpBoundChar, 'Position', inverseUp_position);
-volumeButton_Callback(handles.volumeButton, eventdata, handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function methodMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to methodMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 end
 
 % Setting the axis line.
@@ -1548,6 +1342,4 @@ function axisEditbox_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axisEditbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)\
-
-disp("Hi")
 end

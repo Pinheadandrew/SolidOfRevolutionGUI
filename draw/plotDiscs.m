@@ -3,8 +3,7 @@ function plotDiscs(funcString, lowbound, upbound, cylsCount, axisOri, axisVal, f
 % argument funcString rotated perpendicularly around axis. Input are bounds of solid,
 % number of discs to approximate the volume, axis orientation and axis value.
 
-syms x
-f(x) = str2sym(funcString);
+f = string2func(funcString, 0);
 
 diskWidth = (upbound-lowbound)/cylsCount; %<- Thickness of each disk
 cylMargins = lowbound:diskWidth:upbound; %<- Difference between disks within bounds
@@ -120,11 +119,11 @@ if (axisOri == "y")
             [x1, y1, z1] = cylinder(double(innerRadius(i)), length(theta)-1);
             [x2, y2, z2] = cylinder(double(outerRadius(i)), length(theta)-1);
             
-            innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
-            outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
+            innerCyl = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
+            outerCy = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
             
-            rotate(innerFace, [0 1 0], 90);
-            rotate(outerFace, [0 1 0], 90);
+            rotate(innerCyl, [0 1 0], 90);
+            rotate(outerCy, [0 1 0], 90);
             
             % Coordinate for axis-line. Used to determine radius and
             % displacement of cylinders in 3D coordinate system. Matrices
@@ -140,19 +139,19 @@ if (axisOri == "y")
             inner_z = double(inner_z);
             outer_z = double(outer_z);
             
-            innerFace.YData(1, :)= inner_y;
-            innerFace.YData(2, :)= inner_y;
-            innerFace.ZData(1, :)= inner_z;
-            innerFace.ZData(2, :)= inner_z;
-            innerFace.XData(1, :) = cylMargins(i);
-            innerFace.XData(2, :) = cylMargins(i+1);
+            innerCyl.YData(1, :)= inner_y;
+            innerCyl.YData(2, :)= inner_y;
+            innerCyl.ZData(1, :)= inner_z;
+            innerCyl.ZData(2, :)= inner_z;
+            innerCyl.XData(1, :) = cylMargins(i);
+            innerCyl.XData(2, :) = cylMargins(i+1);
             
-            outerFace.YData(1, :)= outer_y;
-            outerFace.YData(2, :)= outer_y;
-            outerFace.ZData(1, :)= outer_z;
-            outerFace.ZData(2, :)= outer_z;
-            outerFace.XData(1, :) = cylMargins(i);
-            outerFace.XData(2, :) = cylMargins(i+1);
+            outerCy.YData(1, :)= outer_y;
+            outerCy.YData(2, :)= outer_y;
+            outerCy.ZData(1, :)= outer_z;
+            outerCy.ZData(2, :)= outer_z;
+            outerCy.XData(1, :) = cylMargins(i);
+            outerCy.XData(2, :) = cylMargins(i+1);
             
             % Patching faces on the left and the right faces of the
             % horizontally-facing cylinders, for non-zero disc areas.
@@ -191,7 +190,6 @@ if (axisOri == "y")
             plot3(cylMargins(i+1)*ones(1, length(theta)), outer_y, outer_z, "black"), hold on
         end
     else % If no difference b/w a bound and axis of rotation, draw regular disks.
-        disp("9")
         diskRadii = abs(double(f(xpoints)-axisVal)); % Vector storing radius of each disc.
         
         % Draw disks w/o area subtracted from within.
@@ -239,145 +237,6 @@ if (axisOri == "y")
             
             %Patching the rectangles to "fill" the inside of the discs.
             patch(xverts, zeros(size(xverts)), yverts, "b");
-        end
-    end
-    
-    % Branch where the area is being rotated around a vertical axis.
-elseif (axisOri == "x")
-    g(x) = finverse(f);
-    
-    % Axis of rotation must be outside bounds or at a bound point.
-    if (axisVal <= g(lowbound) || axisVal >= g(upbound))
-        
-        % Axis of rotation to the left of area under curve, inner radius is
-        % function line.
-        if(axisVal <= g(lowbound))
-            
-            % Negative bounds, inner/outer radii evaluated differently
-            if (g(lowbound) <= 0 && g(upbound) <= 0 )
-                innerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
-                outerRadius = abs(double(axisVal - g(xpoints)));
-            else
-                innerRadius = abs(double(axisVal - g(xpoints)));
-                outerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
-            end
-            
-            % Axis of rotation to right of area under curve, outer radius is axis
-            % value minus minima of function within bounds.
-        elseif (axisVal >= g(upbound))
-            if (g(lowbound) <= 0 && g(upbound) <= 0 )
-                outerRadius = abs(double(axisVal - g(lowbound)))*ones(1,length(xpoints));
-                innerRadius = abs(double(axisVal - g(xpoints)));
-            else
-                innerRadius = abs(double(axisVal - g(upbound)))*ones(1,length(xpoints));
-                outerRadius = abs(double(axisVal - g(xpoints)));
-            end
-        end
-        
-        % Loop that draws the discs that look like shells. They change
-        % in difference b/w outer and inner radius.
-        for i=1:length(xpoints)
-            [x1, y1, z1] = cylinder(innerRadius(i), length(theta)-1);
-            [x2, y2, z2] = cylinder(outerRadius(i), length(theta)-1);
-            
-            innerFace = surf(x1, y1, z1, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
-            outerFace = surf(x2, y2, z2, "FaceColor", [0 0.902 0], "EdgeColor", "none"); hold on
-            
-            % Coordinate for axis-line. Used to determine radius and
-            % displacement of cylinders in 3D coordinate system.=
-            
-            inner_x = axisVal + innerRadius(i)*cos(theta);
-            outer_x = axisVal + outerRadius(i)*cos(theta);
-            inner_y = innerRadius(i)*sin(theta);
-            outer_y = outerRadius(i)*sin(theta);
-            
-            innerFace.XData(1, :)= inner_x;
-            innerFace.XData(2, :)= inner_x;
-            innerFace.YData(1, :)= inner_y;
-            innerFace.YData(2, :)= inner_y;
-            innerFace.ZData(1, :) = double(f(lowbound));
-            innerFace.ZData(2, :) = cylMargins(i+1);
-            
-            outerFace.XData(1, :)= outer_x;
-            outerFace.XData(2, :)= outer_x;
-            outerFace.YData(1, :)= outer_y;
-            outerFace.YData(2, :)= outer_y;
-            outerFace.ZData(1, :) = cylMargins(i);
-            outerFace.ZData(2, :) = cylMargins(i+1);
-            
-            %Drawing faces to fill top and bottom of discs.
-            bottomFace = patch([outer_x,inner_x], ...
-                [outer_y,inner_y], cylMargins(i)*ones(1, 2*length(theta)),[0 0.902 0]);
-            bottomFace.EdgeColor = 'none';
-            topFace = patch([outer_x,inner_x], ...
-                [outer_y,inner_y], cylMargins(i+1)*ones(1, 2*length(theta)),[0 0.902 0]);
-            topFace.EdgeColor = 'none';
-            
-            if (fullCircles == 0)
-                % Rectangle for faces under and above the horizontal line.
-                xverts_left = [axisVal-outerRadius(i); axisVal-outerRadius(i);...
-                    axisVal-innerRadius(i); axisVal-innerRadius(i)];
-                xverts_right= [axisVal + innerRadius(i); axisVal + innerRadius(i);...
-                    axisVal + outerRadius(i); axisVal + outerRadius(i)];
-                
-                yverts = [cylMargins(i); cylMargins(i+1);...
-                    cylMargins(i+1); cylMargins(i)];
-                patch(xverts_left, zeros(size(xverts_left)), yverts, [0 0.902 0]);
-                patch(xverts_right, zeros(size(xverts_right)), yverts, [0 0.902 0]);
-            end
-            
-            %Drawing circles for edges of left and right sides of discs.
-            plot3(inner_x, inner_y, cylMargins(i)*ones(1, length(theta)), "black"), hold on
-            plot3(inner_x, inner_y, cylMargins(i+1)*ones(1, length(theta)), "black"), hold on
-            plot3(outer_x, outer_y, cylMargins(i)*ones(1, length(theta)), "black"), hold on
-            plot3(outer_x, outer_y, cylMargins(i+1)*ones(1, length(theta)), "black"), hold on
-        end
-    else % If no difference b/w axis of rotation and a bound, plot discs without
-        % inner radius to subtract from their areas.
-        diskRadii = abs(double(g(xpoints)-axisVal)); % Vector storing radius of each disc.
-        
-        % Draw disks w/o area subtracted from within.
-        for i = 1:length(diskRadii)
-            [x, y, z] = cylinder(diskRadii(i), length(theta)-1); %The function at x (in this loop, i) is the radius of a cylinder
-            cyl = surf(x, y, z);
-            cyl.FaceColor = [0 0.902 0];
-            hold on
-            
-            cyl.ZData(1, :) = cylMargins(i);
-            cyl.ZData(2, :) = cylMargins(i+1);
-            
-            x_distance = diskRadii(i)*cos(theta);
-            y_distance = axisVal + diskRadii(i)*sin(theta);
-            
-            % Setting Z and Y coords so the points of cylinder's edge are equal
-            % distance from the axis of rotation.
-            
-            cyl.XData(1, :) = x_distance;
-            cyl.XData(2, :) = x_distance;
-            cyl.YData(1, :) = y_distance;
-            cyl.YData(2, :) = y_distance;
-            
-            cir_z_1 = cylMargins(i)+zeros(size(theta));
-            cir_z_2 = cylMargins(i+1)+zeros(size(theta));
-            cir_x = x_distance;
-            cir_y = y_distance;
-            
-            %Draws both front and back faces of each disc.
-            patch(cir_x,cir_y,cir_z_1, [0 0.902 0]);
-            patch(cir_x,cir_y,cir_z_2, [0 0.902 0]);
-            set(cyl,'edgecolor','none')
-        end
-        
-        % Drawing rectangles to fill faces of discs as they're cut along
-        % xy-plane. If axis perpendicular to x-axis, get lengths of
-        % rectangle.
-        if (fullCircles == 0)
-            xverts = [axisVal-diskRadii(1:end); axisVal-diskRadii(1:end);...
-                axisVal + diskRadii(1:end); axisVal + diskRadii(1:end)];
-            
-            yverts = [cylMargins(1:end-1); cylMargins(2:end);...
-                cylMargins(2:end); cylMargins(1:end-1)];
-            patch(xverts, zeros(size(xverts)), yverts, [0 0.902 0]);
         end
     end
 end

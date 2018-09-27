@@ -3,8 +3,7 @@ function rectSet = drawShellsAsRects(funcString, lowbound, upbound, subdivs, axi
 % their heights are evaluations at the point of the point's function. Flexible for any arbitrary 
 % value as x-axis to rotate area around.
 
-syms x
-f(x) = str2sym(funcString);
+f = string2func(funcString, 0);
 
 delta= (upbound - lowbound)/subdivs;
 orig_shellBasePoints = (lowbound:delta:upbound);            %<- Base points for rectangles along static-changing axis.

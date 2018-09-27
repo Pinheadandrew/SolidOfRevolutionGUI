@@ -2,8 +2,7 @@ function rectSet = drawDisksAsRects(funcString, lowbound, upbound, subdivs, axis
 % Function to draw rectangles representing 2D perspective of disks
 % comprising an approximate volume of a solid generated using integration,
 % used by the disk method.
-syms x
-f(x) = str2sym(funcString);
+f = string2func(funcString, 0);
 
 steps = (upbound - lowbound)/subdivs;
 rectBasePoints = lowbound:steps:upbound;

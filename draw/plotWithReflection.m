@@ -1,9 +1,7 @@
-% function plotWithReflection(funcString, lowbound, ...
-%     upbound, axisOri, axisValue, viewMode, domain)
 function [origPlot, mirrorPlot, axis] = plotWithReflection(funcString, lowbound, ...
     upbound, axisOri, axisValue, viewMode, domain)
-    syms x
-    f(x) = str2sym(funcString);
+    
+    f = string2func(funcString, 0);
     
     %Points along domain that plot is result of.  If domain is y, use
     %inverse function of f(x) to determine new bounds of the plot, along
@@ -12,7 +10,7 @@ function [origPlot, mirrorPlot, axis] = plotWithReflection(funcString, lowbound,
         step = (upbound-lowbound)/100;
         xpoints = lowbound:step:upbound;
     else
-        g(x) = finverse(f);
+        g(x) = string2func(funcString, 1);
         
         if(isnan(double(g(lowbound))))
             lowbound = .0000001;
@@ -25,18 +23,15 @@ function [origPlot, mirrorPlot, axis] = plotWithReflection(funcString, lowbound,
     end
     
     if (axisOri == "x") %% Reflect function plot across an axis parallel to y-axis.
-       disp("1")
         mirror_xpoints = axisValue - (xpoints - axisValue);
         
         if (viewMode == "3D")
-            disp("2")
           origPlot = plot3(xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "r"); hold on
           mirrorPlot = plot3(mirror_xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "m"); hold on
           vertAxisBounds = zlim;
           axis = plot3(axisValue*ones(1,2), zeros(1, 2), [vertAxisBounds(1) vertAxisBounds(2)], "LineWidth", 5,...
               "color", "b", "LineStyle", "--"); hold on
         else
-            disp("3")
           origPlot = plot(xpoints, double(f(xpoints)), "LineWidth", 2, "color", "r"); hold on
           mirrorPlot = plot(mirror_xpoints, double(f(xpoints)), "LineWidth", 2, "color", "m"); hold on
           vertAxisBounds = ylim;
@@ -46,18 +41,15 @@ function [origPlot, mirrorPlot, axis] = plotWithReflection(funcString, lowbound,
         end
     
     else %% Reflect across an axis parallel to x-axis.
-        disp("4")
         mirror_ypoints = axisValue - (double(f(xpoints)) - axisValue);
         
         if (viewMode == "3D")
-            disp("5")
           origPlot = plot3(xpoints, zeros(1, length(xpoints)), double(f(xpoints)), "LineWidth", 5, "color", "r"); hold on
           mirrorPlot = plot3(xpoints, zeros(1, length(xpoints)),mirror_ypoints, "LineWidth", 5, "color", "m"); hold on
           horizAxisBounds = xlim;
           axis = plot3([horizAxisBounds(1) horizAxisBounds(2)], zeros(1, 2), axisValue*ones(1,2), "LineWidth", 5,...
               "color", "b", "LineStyle", "--"); hold on
         else
-            disp("6")
           origPlot = plot(xpoints, double(f(xpoints)), "LineWidth", 2, "color", "r"); hold on
           mirrorPlot = plot(xpoints, mirror_ypoints, "LineWidth", 2, "color", "m"); hold on
           horizAxisBounds = xlim;
@@ -96,9 +88,5 @@ function [origPlot, mirrorPlot, axis] = plotWithReflection(funcString, lowbound,
          xlim(origXLims)
          ylim(origYLims)
      end
-%      leg = legend([origPlot, mirrorPlot, axis], "f(x) = " + funcString, "f(x) mirrored", "Axis of rotation", 'location', 'northeast');
-%      leg.FontSize = 12;
-%      uistack(axis,"top") % Axis line
-%      uistack(leg,"top") % 
 end
 
