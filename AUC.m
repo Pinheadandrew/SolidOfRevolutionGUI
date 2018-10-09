@@ -112,7 +112,7 @@ else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(lowerBound < -100)
-        plot(0,0);
+%         plot(0,0);
         d = errordlg('Lower Domain must be LARGER than -101 and SMALLER than 99.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -120,7 +120,7 @@ else
         set(handles.lowerBoundEditBox, 'string', lowerBound);
     end
     if(lowerBound >= upperBound)
-        plot(0,0);
+%         plot(0,0);
         d = errordlg('Lower Domain must be SMALLER than Upper Domain.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -172,7 +172,7 @@ else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(upperBound > 100)
-        plot(0,0);
+%         plot(0,0);
         d = errordlg('Upper Domain must be LARGER than -100 and SMALLER than 101.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -180,7 +180,7 @@ else
         set(handles.upperBoundEditBox, 'string', upperBound);
     end
     if(lowerBound >= upperBound)
-        plot(0,0);
+%         plot(0,0);
         d = errordlg('Upper Bound must be LARGER than Lower Bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -317,7 +317,7 @@ else
     if(lowerBound > upperBound)
         newString = 'Fix domain';
         set(handles.text4, 'string', newString);
-        plot(0,0);
+%         plot(0,0);
         d = errordlg('LOWER bound is larger than UPPER bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -528,7 +528,7 @@ if(isnan(str2double(get(handles.fifthCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.fifthCoefficientEditBox, 'string', tempValue);
-        plot(0,0);
+%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -571,7 +571,7 @@ if(isnan(str2double(get(handles.fourthCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.fourthCoefficientEditBox, 'string', tempValue);
-        plot(0,0);
+%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -615,7 +615,7 @@ if(isnan(str2double(get(handles.thirdCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.thirdCoefficientEditBox, 'string', tempValue);
-        plot(0,0);
+%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -658,7 +658,7 @@ if(isnan(str2double(get(handles.secondCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.secondCoefficientEditBox, 'string', tempValue);
-        plot(0,0);
+%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -701,7 +701,7 @@ if(isnan(str2double(get(handles.firstCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.firstCoefficientEditBox, 'string', tempValue);
-        plot(0,0);
+%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -768,7 +768,7 @@ global rectCount;
 tempRectCount = str2double(get(hObject,'String'));
 if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 101)
     % set(handles.text4, 'string', newString);
-    plot(0,0);
+%     plot(0,0);
     d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);

@@ -18,6 +18,7 @@ function sumShellVols = shellmethod2(funcString, shellcount, lowerBound, upperBo
 %       radii and delta.
 %       3. Add them together, multiply their sum by 2*pi.
 
+f = string2func(funcString, 0);
 delta = (upperBound-lowerBound)/shellcount;
 
 %X-points separated by disk width, which determine radii of shells.
@@ -28,9 +29,6 @@ elseif (radiusMethod == "l")
 elseif (radiusMethod == "r")
     xpoints = lowerBound+delta:delta:upperBound;
 end
-
-syms x
-f = string2func(funcString, 0);
 
 % Bounds along x-axis, use inverse with upperbound as "limit" of volume
 % minus the function along to collect the shell's lengths (shells are

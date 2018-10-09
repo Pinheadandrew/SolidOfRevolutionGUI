@@ -221,8 +221,10 @@ if (strcmp(functionChoice, "Select a function"))
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else
-    set(handles.figure1, 'pointer', 'watch')
-    drawnow;
+    if (viewMode == "3D")
+        set(handles.figure1, 'pointer', 'watch')
+        drawnow;
+    end
     
     if (viewMode == "2D")
         set(handles.threeDButton, 'String', "View in 3D");
@@ -348,12 +350,10 @@ else
       shape_plot_zlim = zlim;
 
       if (methodChoice == "Shell" && axisOri == "x")
-%           plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x");
         [origPlot, mirrorPlot, axis] = plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "x");
       else
           % Original negative area, so flip the axis of rotation across
           % y-axis.
-%           plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y");
         [origPlot, mirrorPlot, axis] = plotWithReflection(simple_exp_string, lowerBound, upperBound,  axisOri, axisValue, viewMode, "y");
         
       end
@@ -416,7 +416,10 @@ else
     end
     
     hold off
-    set(handles.figure1, 'pointer', 'arrow')
+    
+    if (viewMode == "3D")
+        set(handles.figure1, 'pointer', 'arrow')
+    end
     
 %     legend = findobj('type', 'legend')
 %     A = legend.String;
@@ -852,6 +855,9 @@ function axisEditbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+set(hObject, 'TooltipString', ...
+    sprintf("Enter a real number to set the axis of rotation, perpendicular to the axis orientation selected.\nIf 'X' selected, the new axis value must be outside of the X-boundaries, set within the 'Bounds of Area' box above.\n Otherwise, if 'Y' selected, the new axis value must be outside of the Y-boundaries."));
 end
 
 % --- Executes when axis orientation is selected in button group of axes
