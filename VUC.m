@@ -884,11 +884,14 @@ if (strcmp(functionChoice, "Select a function"))
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
     position = get(handles.axisEditbox,'Position');
-    
+%     equals_position = get(handles.equalsText,'Position');
+ 
     if (axisOri == "x")
         position(2) = 0.4484536082474227;
         set(handles.axisEditbox, 'Position', position)
         set(handles.xAxisRadio,'Value', 1)
+%         equals_position(2) =  0.585;
+%         set(handles.equalsText, 'Position', equals_position)
         set(handles.xAxisRadio,'string',"X    =")
         set(handles.yAxisRadio,'string',"Y")
         set(handles.methodText, 'string', "Shell");
@@ -897,6 +900,8 @@ if (strcmp(functionChoice, "Select a function"))
         position(2) = 0.1436372269705601;
         set(handles.axisEditbox, 'Position', position)
         set(handles.yAxisRadio,'Value', 1)
+%         equals_position(2) =  0.2535211267605634;
+%         set(handles.equalsText, 'Position', equals_position)
         set(handles.yAxisRadio,'string',"Y    =")
         set(handles.xAxisRadio,'string',"X")
         set(handles.methodText, 'string', "Disk");
@@ -916,14 +921,15 @@ else
         end
         
         position = get(handles.axisEditbox,'Position');
+%         equals_position = get(handles.equalsText,'Position');
         
         % Positions the axis value box adjacent to the axis orientation selected.
         % Also sets the axis orientation parameter in the volume function.
         if (axisPicked == "x")
-            
-            
             position(2) = 0.4484536082474227;
             set(handles.axisEditbox, 'Position', position)
+%             equals_position(2) =  0.585;
+%             set(handles.equalsText, 'Position', equals_position)
             set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
             set(handles.yAxisRadio,'string',"Y")
             set(handles.methodText, 'string', "Shell");
@@ -931,6 +937,8 @@ else
         else
             position(2) = 0.1436372269705601;
             set(handles.axisEditbox, 'Position', position)
+%             equals_position(2) =  0.2535211267605634;
+%             set(handles.equalsText, 'Position', equals_position)
             set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
             set(handles.xAxisRadio,'string',"X")
             set(handles.methodText, 'string', "Disk");
@@ -963,6 +971,8 @@ else
                 position(2) = 0.4484536082474227;
                 set(handles.axisEditbox, 'Position', position)
                 set(handles.xAxisRadio, 'value', 1.0)
+%                 equals_position(2) =  0.585;
+%                 set(handles.equalsText, 'Position', equals_position)
                 set(handles.xAxisRadio,'string',"X    =")
                 set(handles.yAxisRadio,'string',"Y")
                 set(handles.methodText, 'string', "Shell");
@@ -971,6 +981,8 @@ else
                 position(2) = 0.1436372269705601;
                 set(handles.axisEditbox, 'Position', position)
                 set(handles.yAxisRadio, 'value', 1.0)
+%                 equals_position(2) =  0.2535211267605634;
+%                 set(handles.equalsText, 'Position', equals_position)
                 set(handles.yAxisRadio,'string',"Y    =")
                 set(handles.xAxisRadio,'string',"X")
                 set(handles.methodText, 'string', "Disk");
@@ -1009,6 +1021,8 @@ else
                      % was before error, to be aligned with x-radio.
                      position(2) = 0.4484536082474227;
                      set(handles.axisEditbox, 'Position', position)
+%                      equals_position(2) =  0.585;
+%                      set(handles.equalsText, 'Position', equals_position)
                      set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
                      set(handles.yAxisRadio,'string',"Y")
                      set(handles.methodText, 'string', "Shell");
@@ -1033,6 +1047,8 @@ else
                      % was before error, to be aligned with y-radio.
                      position(2) = 0.1436372269705601;
                      set(handles.axisEditbox, 'Position', position)
+%                      equals_position(2) =  0.2535211267605634;
+%                      set(handles.equalsText, 'Position', equals_position)
                      set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
                      set(handles.xAxisRadio,'string',"X")
                      set(handles.methodText, 'string', "Disk");

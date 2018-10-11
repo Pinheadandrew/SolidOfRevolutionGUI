@@ -22,7 +22,7 @@ function varargout = AUC(varargin)
 
 % Edit the above text to modify the response to help AreaUnderCurve
 
-% Last Modified by GUIDE v2.5 10-Jul-2018 12:18:47
+% Last Modified by GUIDE v2.5 10-Oct-2018 22:01:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,7 +112,6 @@ else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(lowerBound < -100)
-%         plot(0,0);
         d = errordlg('Lower Domain must be LARGER than -101 and SMALLER than 99.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -120,7 +119,6 @@ else
         set(handles.lowerBoundEditBox, 'string', lowerBound);
     end
     if(lowerBound >= upperBound)
-%         plot(0,0);
         d = errordlg('Lower Domain must be SMALLER than Upper Domain.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -172,7 +170,6 @@ else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(upperBound > 100)
-%         plot(0,0);
         d = errordlg('Upper Domain must be LARGER than -100 and SMALLER than 101.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -180,7 +177,6 @@ else
         set(handles.upperBoundEditBox, 'string', upperBound);
     end
     if(lowerBound >= upperBound)
-%         plot(0,0);
         d = errordlg('Upper Bound must be LARGER than Lower Bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -317,7 +313,6 @@ else
     if(lowerBound > upperBound)
         newString = 'Fix domain';
         set(handles.text4, 'string', newString);
-%         plot(0,0);
         d = errordlg('LOWER bound is larger than UPPER bound', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -470,7 +465,7 @@ else
         set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f', AUC)));
         set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f', actualArea)));
         if(isnan(errorPerc) || round(AUC,4) == round(actualArea,4))
-            set(handles.errorText, 'string', strcat({'  Relative Error: '}, {'0%'}));
+            set(handles.errorText, 'ForegroundColor', 'black','string', strcat({'  Relative Error: '}, {'0%'}));
         else
             if(errorPerc > 0)
                 set(handles.errorText, 'ForegroundColor', 'red', 'string', strcat({'  Relative Error: '}, sprintf('%.4f', errorPerc), {'% (overestimate)'}));
@@ -528,7 +523,6 @@ if(isnan(str2double(get(handles.fifthCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.fifthCoefficientEditBox, 'string', tempValue);
-%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -571,7 +565,6 @@ if(isnan(str2double(get(handles.fourthCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.fourthCoefficientEditBox, 'string', tempValue);
-%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -615,7 +608,6 @@ if(isnan(str2double(get(handles.thirdCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.thirdCoefficientEditBox, 'string', tempValue);
-%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -658,7 +650,6 @@ if(isnan(str2double(get(handles.secondCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.secondCoefficientEditBox, 'string', tempValue);
-%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -701,7 +692,6 @@ if(isnan(str2double(get(handles.firstCoefficientEditBox, 'string'))))
     else
         newString = 'Must be a REAL NUMBER';
         set(handles.firstCoefficientEditBox, 'string', tempValue);
-%         plot(0,0);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
@@ -768,7 +758,6 @@ global rectCount;
 tempRectCount = str2double(get(hObject,'String'));
 if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 101)
     % set(handles.text4, 'string', newString);
-%     plot(0,0);
     d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
@@ -1079,3 +1068,10 @@ if ismac
 elseif ispc
     set(hObject, 'fontSize', 10);
 end
+
+
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
