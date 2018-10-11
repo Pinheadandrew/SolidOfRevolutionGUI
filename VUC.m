@@ -886,7 +886,7 @@ if (strcmp(functionChoice, "Select a function"))
     position = get(handles.axisEditbox,'Position');
     
     if (axisOri == "x")
-        position(2) = 2.9;
+        position(2) = 0.4484536082474227;
         set(handles.axisEditbox, 'Position', position)
         set(handles.xAxisRadio,'Value', 1)
         set(handles.xAxisRadio,'string',"X    =")
@@ -894,7 +894,7 @@ if (strcmp(functionChoice, "Select a function"))
         set(handles.methodText, 'string', "Shell");
         set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
     elseif (axisOri == "y")
-        position(2) = 0.76923;
+        position(2) = 0.1436372269705601;
         set(handles.axisEditbox, 'Position', position)
         set(handles.yAxisRadio,'Value', 1)
         set(handles.yAxisRadio,'string',"Y    =")
@@ -920,14 +920,16 @@ else
         % Positions the axis value box adjacent to the axis orientation selected.
         % Also sets the axis orientation parameter in the volume function.
         if (axisPicked == "x")
-            position(2) = 2.9;
+            
+            
+            position(2) = 0.4484536082474227;
             set(handles.axisEditbox, 'Position', position)
             set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
             set(handles.yAxisRadio,'string',"Y")
             set(handles.methodText, 'string', "Shell");
             set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         else
-            position(2) = 0.76923;
+            position(2) = 0.1436372269705601;
             set(handles.axisEditbox, 'Position', position)
             set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
             set(handles.xAxisRadio,'string',"X")
@@ -958,7 +960,7 @@ else
             % Reset axis box and selected axis string to what it
             % was before error
             if (axisPicked == "y")
-                position(2) = 2.9;
+                position(2) = 0.4484536082474227;
                 set(handles.axisEditbox, 'Position', position)
                 set(handles.xAxisRadio, 'value', 1.0)
                 set(handles.xAxisRadio,'string',"X    =")
@@ -966,7 +968,7 @@ else
                 set(handles.methodText, 'string', "Shell");
                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
             elseif (axisPicked == "x")
-                position(2) = 0.76923;
+                position(2) = 0.1436372269705601;
                 set(handles.axisEditbox, 'Position', position)
                 set(handles.yAxisRadio, 'value', 1.0)
                 set(handles.yAxisRadio,'string',"Y    =")
@@ -1005,7 +1007,7 @@ else
                      
                      % Reset axis box and selected axis string to what it
                      % was before error, to be aligned with x-radio.
-                     position(2) = 2.9;
+                     position(2) = 0.4484536082474227;
                      set(handles.axisEditbox, 'Position', position)
                      set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
                      set(handles.yAxisRadio,'string',"Y")
@@ -1029,7 +1031,7 @@ else
                      
                      % Reset axis box and selected axis string to what it
                      % was before error, to be aligned with y-radio.
-                     position(2) = 0.76923;
+                     position(2) = 0.1436372269705601;
                      set(handles.axisEditbox, 'Position', position)
                      set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
                      set(handles.xAxisRadio,'string',"X")
