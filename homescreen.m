@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 07-Feb-2018 08:20:21
+% Last Modified by GUIDE v2.5 28-Oct-2018 19:23:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,17 +77,25 @@ varargout{1} = handles.output;
 
 
 % --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
+function AUCbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
-run('AUC');
+run('AUC');x
 
 % --- Executes on button press in pushbutton2.
-function pushbutton2_Callback(hObject, eventdata, handles)
+function VUCbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
 run('VUC');
+
+% --- Executes during object creation, after setting all properties.
+function msu_logo_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to msu_logo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+msulogo = imread('img/MSU-Logo.png');
+set(hObject, 'CData', msulogo);

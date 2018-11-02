@@ -443,7 +443,7 @@ function diskEdit_Callback(hObject, eventdata, handles)
     
     % Step input not an integer, or out of range of 0<x<101, throw error.
     if(isnan(stepInput) || stepInput <= 0 || stepInput > 75 || (floor(stepInput) ~= stepInput))
-      d = errordlg('Number of subintervals must be positive integer less than or equal to 75', 'Subinterval Count Error');
+      d = errordlg('The number of subintervals must be an integer between 0 and 76.', 'Subinterval Count Error');
       set(d, 'WindowStyle', 'modal');
       set(handles.diskEdit, 'string', steps);
       uiwait(d);
@@ -476,7 +476,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Enter a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
+    sprintf("Enter a positive integer less than or equal to 75 for the\nnumber of subintervals to determine the estimated volume."));
 end
 
 % Setting the lower bound of the volume.
@@ -635,7 +635,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Enter the lower bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
+    sprintf("Enter the lower bound for the area to be rotated.\n-Min.: -50\n-Max.: 50\n-Lower bound must be less than the upper bound."));
 end
 
 % Setting the upper bound of the volume.
@@ -793,7 +793,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Enter the upper bound for the area to be rotated.\nMin.: -50\nMax.: 50"));
+    sprintf("Enter the upper bound for the area to be rotated.\n-Min.: -50\n-Max.: 50\n-Lower bound must be less than the upper bound."));
 end
 
 % Setting the axis line.
@@ -1190,7 +1190,7 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Slide for a number between 0 and 75 to set the number \n of subintervals in determining the estimated volume."));
+    sprintf("Slide for an integer between 0 and 76 to set the number \n of subintervals in determining the estimated volume."));
 end
 
 % --- Executes on button press in resetButton.
@@ -1204,7 +1204,7 @@ function resetButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to resetButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to reset GUI to default values.');
+toolTipString = sprintf('Click to reset back to default parameters.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -1337,7 +1337,7 @@ function leftRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject, 'TooltipString', ...
-    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the left-endpoint integration method."));
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the left-integration method."));
 
 end
 
@@ -1347,7 +1347,7 @@ function midRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject, 'TooltipString', ...
-    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the midpoint integration method."));
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the midpoint-integration method."));
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1356,7 +1356,7 @@ function rightRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject, 'TooltipString', ...
-    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the right-point integration method."));
+    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the right-integration method."));
 end
 
 

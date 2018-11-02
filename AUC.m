@@ -65,6 +65,10 @@ global lowerBound;
 global upperBound;
 global rectCount;
 global methodPicked;
+global definedFunction;
+global functionChoice;
+functionChoice = "Select a function";
+definedFunction = 0;
 lowerBound = 0;
 upperBound = 20;
 rectCount = 5;
@@ -78,6 +82,11 @@ set(handles.intervalSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRec
 % initializes integration method to trapz method.
 set(handles.integratioMethodButtonGroup, 'SelectedObject', handles.trapzIntegrationRadioButton);
 methodPicked = 'trapz';
+plot(0,0);
+xAxis = xlabel('x');
+yAxis = ylabel('f(x)');
+set(xAxis, 'fontSize', 16);
+set(yAxis, 'fontSize', 16);
 % UIWAIT makes AreaUnderCurve wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -103,7 +112,7 @@ lowerBound = str2double(get(hObject,'String'));
 % checks to make sure value entered as the lower bound is an integer.
 % Throws an error if that is not the case.
 if(isnan(lowerBound))
-    d = errordlg('Domain must be an real number', 'Domain Error');
+    d = errordlg('The bound must be a real number.', 'Domain Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     lowerBound = tempLowerBound;
@@ -112,14 +121,16 @@ else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(lowerBound < -100)
-        d = errordlg('Lower Domain must be LARGER than -101 and SMALLER than 99.', 'Domain Error');
+%         d = errordlg('Lower Domain must be LARGER than -101 and SMALLER than 99.', 'Domain Error');
+        d = errordlg('The new bound must be greater than -101 and smaller than 100', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
         set(handles.lowerBoundEditBox, 'string', lowerBound);
     end
     if(lowerBound >= upperBound)
-        d = errordlg('Lower Domain must be SMALLER than Upper Domain.', 'Domain Error');
+%         d = errordlg('Lower Domain must be SMALLER than Upper Domain.', 'Domain Error');
+        d = errordlg('The lower bound must be less than the upper bound.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
@@ -138,7 +149,8 @@ function lowerBoundEditBox_CreateFcn(hObject, ~, ~)
 %       See ISPC and COMPUTER.
 
 % sets tooltip for lower bound edit text box
-toolTipString = sprintf('Enter a real number for lower bound. \nMust be SMALLER THAN 100 \nMust be LARGER THAN -101');
+% toolTipString = sprintf('Enter a real number for lower bound. \nMust be SMALLER THAN 100 \nMust be LARGER THAN -101');
+toolTipString = sprintf('Enter a real number for the lower bound.\n-Max: 100\n-Min: -100\n-Lower bound must be less than the upper bound.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -161,7 +173,7 @@ upperBound = str2double(get(hObject,'String'));
 % checks to make sure value entered as the lower bound is an real number.
 % Throws an error if that is not the case.
 if(isnan(upperBound))
-    d = errordlg('Domain must be real number', 'Domain Error');
+    d = errordlg('The bound must be a real number.', 'Domain Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     upperBound = tempUpperBound;
@@ -170,14 +182,14 @@ else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(upperBound > 100)
-        d = errordlg('Upper Domain must be LARGER than -100 and SMALLER than 101.', 'Domain Error');
+        d = errordlg('The new bound must be greater than -101 and smaller than 100', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
         set(handles.upperBoundEditBox, 'string', upperBound);
     end
     if(lowerBound >= upperBound)
-        d = errordlg('Upper Bound must be LARGER than Lower Bound', 'Domain Error');
+        d = errordlg('The upper bound must be greater than the lower bound.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
@@ -197,7 +209,8 @@ function upperBoundEditBox_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 
 % Sets tooltip for upper bound text box
-toolTipString = sprintf('Enter a real number for upper bound. \nMust be SMALLER THAN 101 \nMust be LARGER THAN -100');
+% toolTipString = sprintf('Enter a real number for upper bound. \nMust be SMALLER THAN 101 \nMust be LARGER THAN -100');
+toolTipString = sprintf('Enter a real number for the upper bound.\n-Max: 100\n-Min: -100\n-Lower bound must be less than the upper bound.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -216,8 +229,16 @@ function functionSelectionDropdownMenu_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 global functionChoice;
+global definedFunction;
 global lowerBound;
 global upperBound;
+global fifthCoefficientValue;
+global forthCoefficientValue;
+global thirdCoefficientValue;
+global secondCoefficientValue;
+global firstCoefficientValue;
+global constantValue;
+
 % When a function is selected, first all the fields for the exponential and
 % polynomial coefficients are hidden.
 
@@ -236,41 +257,75 @@ set(handles.secondDegreeTextBox,'Visible','off');
 set(handles.firstDegreeTextBox,'Visible','off');
 functionContents = cellstr(get(handles.functionSelectionDropdownMenu, 'String'));
 functionChoice = functionContents{get(hObject, 'Value')};
+
 if(strcmp(functionChoice,'Exponential'))
-    % set default parameters when creating a exponential function is
-    % selected.
-    upperBound = 1;
-    lowerBound = 0;
-    set(handles.lowerBoundEditBox, 'string', lowerBound);
-    set(handles.upperBoundEditBox, 'string', upperBound);
-    set(handles.fifthCoefficientEditBox, 'string', '1');
-    set(handles.fourthCoefficientEditBox, 'string', '1');
-    set(handles.thirdCoefficientEditBox, 'string', '0');
+        % set default parameters when creating a exponential function is
+        % selected.
+        % Previous selected function was not 'Select a function')
+        if (definedFunction == 1)
+            upperBound = 1;
+            lowerBound = 0;
+        end
+        fifthCoefficientValue = 1;
+        forthCoefficientValue = 1;
+        thirdCoefficientValue = 0;
+        set(handles.lowerBoundEditBox, 'string', lowerBound);
+        set(handles.upperBoundEditBox, 'string', upperBound);
+        set(handles.fifthCoefficientEditBox, 'string', '1');
+        set(handles.fourthCoefficientEditBox, 'string', '1');
+        set(handles.thirdCoefficientEditBox, 'string', '0');
 elseif(strcmp(functionChoice,'Polynomial'))
-    % set default parameters when creating a polynomial function is
-    % selected.
-    upperBound = 1;
-    lowerBound = 0;
-    set(handles.lowerBoundEditBox, 'string', lowerBound);
-    set(handles.upperBoundEditBox, 'string', upperBound);
-    set(handles.fifthCoefficientEditBox, 'string', '0');
-    set(handles.fourthCoefficientEditBox, 'string', '0');
-    set(handles.thirdCoefficientEditBox, 'string', '0');
-    set(handles.secondCoefficientEditBox, 'string', '1');
-    set(handles.firstCoefficientEditBox, 'string', '0');
-    set(handles.constantEditBox, 'string', '0');
+        % set default parameters when creating a polynomial function is
+        % selected.
+        
+        % Previous selected function was not 'Select a function')
+        if (definedFunction == 1)
+            upperBound = 1;
+            lowerBound = 0;
+        end
+        fifthCoefficientValue = 0;
+        forthCoefficientValue = 0;
+        thirdCoefficientValue = 0;
+        secondCoefficientValue = 1;
+        firstCoefficientValue = 0;
+        constantValue = 0;
+        set(handles.lowerBoundEditBox, 'string', lowerBound);
+        set(handles.upperBoundEditBox, 'string', upperBound);
+        set(handles.fifthCoefficientEditBox, 'string', '0');
+        set(handles.fourthCoefficientEditBox, 'string', '0');
+        set(handles.thirdCoefficientEditBox, 'string', '0');
+        set(handles.secondCoefficientEditBox, 'string', '1');
+        set(handles.firstCoefficientEditBox, 'string', '0');
+        set(handles.constantEditBox, 'string', '0');
 elseif(strcmp(functionChoice,'f(x)=x^3+5*x^2'))
-    upperBound = 20;
-    lowerBound = 0;
-    set(handles.lowerBoundEditBox, 'string', lowerBound);
-    set(handles.upperBoundEditBox, 'string', upperBound);
+    % Previous selected function was not 'Select a function')
+        if (definedFunction == 1)
+            upperBound = 20;
+            lowerBound = 0;
+        end
+        set(handles.lowerBoundEditBox, 'string', lowerBound);
+        set(handles.upperBoundEditBox, 'string', upperBound);
 elseif(strcmp(functionChoice,'f(x)=x^2+1'))
-    upperBound = 20;
-    lowerBound = 0;
-    set(handles.lowerBoundEditBox, 'string', lowerBound);
-    set(handles.upperBoundEditBox, 'string', upperBound);
+    % Previous selected function was not 'Select a function')
+        if (definedFunction == 1)
+            upperBound = 20;
+            lowerBound = 0;
+        end
+        
+        set(handles.lowerBoundEditBox, 'string', lowerBound);
+        set(handles.upperBoundEditBox, 'string', upperBound);
 end
-calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+
+% User switched from 'Select a function' to an actual function, change
+% state so that when a function selected again, default parameters are
+% assigned.
+if definedFunction == 0
+    definedFunction = 1;
+end
+% calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+if (~strcmp(functionChoice, 'Select a function'))
+    calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+end
 
 % --- Executes during object creation, after setting all properties.
 function functionSelectionDropdownMenu_CreateFcn(hObject, eventdata, handles)
@@ -282,7 +337,7 @@ function functionSelectionDropdownMenu_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 
 % Sets tooltip for functionSelectionDropdownMenu 
-toolTipString = sprintf('Select a preset function or\ncreate an exponential or polynomial function.');
+toolTipString = sprintf('Select a preset function or create an\nexponential or polynomial function.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -506,30 +561,35 @@ function integratioMethodButtonGroup_SelectionChangedFcn(hObject, eventdata, han
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global methodPicked;
+global functionChoice;
 hh = get(get(handles.integratioMethodButtonGroup,'SelectedObject'),'string');
 methodPicked = string(hh);
-calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+% calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+if (~strcmp(functionChoice, 'Select a function'))
+    calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+end
 
 function fifthCoefficientEditBox_Callback(hObject, eventdata, handles)
 % hObject    handle to edit9 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global fifthCoefficientValue;
-tempValue = fifthCoefficientValue;
-if(isnan(str2double(get(handles.fifthCoefficientEditBox, 'string'))))
-    if(isempty(get(handles.fifthCoefficientEditBox, 'string')))
+tempValue = get(handles.fifthCoefficientEditBox, 'string');
+if(isnan(str2double(tempValue)))
+    if(isempty(tempValue))
         fifthCoefficientValue = 0;
         set(handles.fifthCoefficientEditBox, 'string', 0);
     else
-        newString = 'Must be a REAL NUMBER';
-        set(handles.fifthCoefficientEditBox, 'string', tempValue);
+        newString = 'The new coefficient must be a real number.';
+%         set(handles.constantEditBox, 'string', constantValue);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.fifthCoefficientEditBox, 'string', fifthCoefficientValue);
     end
 else
-    fifthCoefficientValue = get(handles.fifthCoefficientEditBox, 'string');
-end 
+    fifthCoefficientValue = tempValue;
+end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
 function fifthCoefficientEditBox_CreateFcn(hObject, eventdata, handles)
@@ -541,7 +601,7 @@ function fifthCoefficientEditBox_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 global fifthCoefficientValue;
 fifthCoefficientValue = 0;
-toolTipString = sprintf('Enter a real number');
+toolTipString = sprintf('Enter a real number (or\nenter as blank to set to 0).');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -557,22 +617,22 @@ function fourthCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global forthCoefficientValue;
-tempValue = forthCoefficientValue;
-if(isnan(str2double(get(handles.fourthCoefficientEditBox, 'string'))))
-    if(isempty(get(handles.fourthCoefficientEditBox, 'string')))
+tempValue = get(handles.fourthCoefficientEditBox, 'string');
+if(isnan(str2double(tempValue)))
+    if(isempty(tempValue))
         forthCoefficientValue = 0;
         set(handles.fourthCoefficientEditBox, 'string', 0);
     else
-        newString = 'Must be a REAL NUMBER';
-        set(handles.fourthCoefficientEditBox, 'string', tempValue);
+        newString = 'The new coefficient must be a real number.';
+%         set(handles.constantEditBox, 'string', constantValue);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.fourthCoefficientEditBox, 'string', forthCoefficientValue);
     end
 else
-    forthCoefficientValue = get(handles.fourthCoefficientEditBox, 'string');
+    forthCoefficientValue = tempValue;
 end
-
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
 function fourthCoefficientEditBox_CreateFcn(hObject, eventdata, handles)
@@ -584,7 +644,7 @@ function fourthCoefficientEditBox_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 global forthCoefficientValue;
 forthCoefficientValue = 0;
-toolTipString = sprintf('Enter a real number');
+toolTipString = sprintf('Enter a real number (or\nenter as blank to set to 0).');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -600,20 +660,21 @@ function thirdCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global thirdCoefficientValue;
-tempValue = thirdCoefficientValue;
-if(isnan(str2double(get(handles.thirdCoefficientEditBox, 'string'))))
-    if(isempty(get(handles.thirdCoefficientEditBox, 'string')))
+tempValue = get(handles.thirdCoefficientEditBox, 'string');
+if(isnan(str2double(tempValue)))
+    if(isempty(tempValue))
         thirdCoefficientValue = 0;
         set(handles.thirdCoefficientEditBox, 'string', 0);
     else
-        newString = 'Must be a REAL NUMBER';
-        set(handles.thirdCoefficientEditBox, 'string', tempValue);
+        newString = 'The new coefficient must be a real number.';
+%         set(handles.constantEditBox, 'string', constantValue);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.thirdCoefficientEditBox, 'string', thirdCoefficientValue);
     end
 else
-    thirdCoefficientValue = get(handles.thirdCoefficientEditBox, 'string');
+    thirdCoefficientValue = tempValue;
 end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
@@ -626,7 +687,7 @@ global thirdCoefficientValue;
 thirdCoefficientValue = 0;
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
-toolTipString = sprintf('Enter a real number');
+toolTipString = sprintf('Enter a real number (or\nenter as blank to set to 0).');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -642,20 +703,21 @@ function secondCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global secondCoefficientValue;
-tempValue = secondCoefficientValue;
-if(isnan(str2double(get(handles.secondCoefficientEditBox, 'string'))))
-    if(isempty(get(handles.secondCoefficientEditBox, 'string')))
+tempValue = get(handles.secondCoefficientEditBox, 'string');
+if(isnan(str2double(tempValue)))
+    if(isempty(tempValue))
         secondCoefficientValue = 0;
         set(handles.secondCoefficientEditBox, 'string', 0);
     else
-        newString = 'Must be a REAL NUMBER';
-        set(handles.secondCoefficientEditBox, 'string', tempValue);
+        newString = 'The new coefficient must be a real number.';
+%         set(handles.constantEditBox, 'string', constantValue);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.secondCoefficientEditBox, 'string', secondCoefficientValue);
     end
 else
-    secondCoefficientValue = get(handles.secondCoefficientEditBox, 'string');
+    secondCoefficientValue = tempValue;
 end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
@@ -666,7 +728,7 @@ function secondCoefficientEditBox_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 global secondCoefficientValue;
 secondCoefficientValue = 0;
-toolTipString = sprintf('Enter a real number');
+toolTipString = sprintf('Enter a real number (or\nenter as blank to set to 0).');
 set(hObject, 'TooltipString', toolTipString);
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
@@ -683,21 +745,23 @@ function firstCoefficientEditBox_Callback(hObject, eventdata, handles)
 % hObject    handle to edit9 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 global firstCoefficientValue;
-tempValue = firstCoefficientValue;
-if(isnan(str2double(get(handles.firstCoefficientEditBox, 'string'))))
-    if(isempty(get(handles.firstCoefficientEditBox, 'string')))
+tempValue = get(handles.firstCoefficientEditBox, 'string');
+if(isnan(str2double(tempValue)))
+    if(isempty(tempValue))
         firstCoefficientValue = 0;
         set(handles.firstCoefficientEditBox, 'string', 0);
     else
-        newString = 'Must be a REAL NUMBER';
-        set(handles.firstCoefficientEditBox, 'string', tempValue);
+        newString = 'The new coefficient must be a real number.';
+%         set(handles.constantEditBox, 'string', constantValue);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
+        set(handles.firstCoefficientEditBox, 'string', firstCoefficientValue);
     end
 else
-    firstCoefficientValue = get(handles.firstCoefficientEditBox, 'string');
+    firstCoefficientValue = tempValue;
 end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
@@ -708,7 +772,7 @@ function firstCoefficientEditBox_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 global firstCoefficientValue;
 firstCoefficientValue = 0;
-toolTipString = sprintf('Enter a real number');
+toolTipString = sprintf('Enter a real number (or\nenter as blank to set to 0).');
 set(hObject, 'TooltipString', toolTipString);
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
@@ -727,9 +791,13 @@ function intervalSlider_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global rectCount;
+global functionChoice;
 rectCount = ceil(get(handles.intervalSlider, 'Value'));
 set(handles.stepEdit, 'string', rectCount);
-calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+% calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+if (~strcmp(functionChoice, 'Select a function'))
+    calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+end
 
 % --- Executes during object creation, after setting all properties.
 function intervalSlider_CreateFcn(hObject, ~, handles)
@@ -755,10 +823,12 @@ function stepEdit_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global rectCount;
+global functionChoice;
 tempRectCount = str2double(get(hObject,'String'));
 if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 101)
     % set(handles.text4, 'string', newString);
-    d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
+%     d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
+    d = errordlg('The number of subintervals must be an integer between 0 and 102.', 'Rectangle Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.stepEdit, 'string', rectCount);
@@ -766,7 +836,11 @@ else
     rectCount = tempRectCount;
     set(handles.intervalSlider, 'value', rectCount);
 end
-calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+% calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+
+if (~strcmp(functionChoice, 'Select a function'))
+    calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
+end
 
 % --- Executes during object creation, after setting all properties.
 function stepEdit_CreateFcn(hObject, eventdata, handles)
@@ -776,7 +850,8 @@ function stepEdit_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
-toolTipString = sprintf('Enter a positive integer less than or equal to 100');
+% toolTipString = sprintf('Enter a positive integer less than or equal to 100');
+toolTipString = sprintf("Enter a positive integer less than or equal to 101 for the\nnumber of subintervals to determine the estimated area.");
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -788,11 +863,26 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
+% Callback for constant editbox when "polynomial" function selected.
 function constantEditBox_Callback(hObject, eventdata, handles)
-% hObject    handle to constantEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+
+global constantValue;
+tempValue = get(handles.constantEditBox, 'string');
+if(isnan(str2double(tempValue)))
+    if(isempty(tempValue))
+        constantValue = 0;
+        set(handles.constantEditBox, 'string', 0);
+    else
+        newString = 'The new coefficient must be a real number.';
+%         set(handles.constantEditBox, 'string', constantValue);
+        d = errordlg(newString, 'Domain Error');
+        set(d, 'WindowStyle', 'modal');
+        uiwait(d);
+        set(handles.constantEditBox, 'string', constantValue);
+    end
+else
+    constantValue = tempValue;
+end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
 % Hints: get(hObject,'String') returns contents of constantEditBox as text
@@ -806,7 +896,9 @@ function constantEditBox_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
-toolTipString = sprintf('Enter a real number');
+global constantValue;
+toolTipString = sprintf('Enter a real number (or\nenter as blank to set to 0).');
+constantValue = 0;
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -846,7 +938,8 @@ function leftIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to leftIntegrationRadioButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to display left end point integration method.');
+% toolTipString = sprintf('Click to display left end point integration method.');
+toolTipString = sprintf('Click to calculate and display the area using the left-integration method.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 10);
@@ -859,7 +952,8 @@ function rightIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to rightIntegrationRadioButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to display right end point integration method.');
+% toolTipString = sprintf('Click to display right end point integration method.');
+toolTipString = sprintf('Click to calculate and display the area using the right-integration method.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 10);
@@ -873,7 +967,8 @@ function radiobutton3_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to radiobutton3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to display midpoint integration method.');
+% toolTipString = sprintf('Click to display midpoint integration method.');
+toolTipString = sprintf('Click to calculate and display the area using the midpoint-integration method.');
 set(hObject, 'TooltipString', toolTipString);
 
 
@@ -882,7 +977,8 @@ function trapzIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to trapzIntegrationRadioButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to display trapezoidal integration method.');
+% toolTipString = sprintf('Click to display trapezoidal integration method.');
+toolTipString = sprintf('Click to calculate and display the area using the trapezoidal-integration method.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 10);
@@ -905,7 +1001,7 @@ function resetButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to resetButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-toolTipString = sprintf('Click to reset GUI to default.');
+toolTipString = sprintf('Click to reset back to default parameters.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
