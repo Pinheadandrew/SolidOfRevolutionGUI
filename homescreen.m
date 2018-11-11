@@ -82,7 +82,7 @@ function AUCbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
-run('AUC');x
+run('AUC');
 
 % --- Executes on button press in pushbutton2.
 function VUCbutton_Callback(hObject, eventdata, handles)

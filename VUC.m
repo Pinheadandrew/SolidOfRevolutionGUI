@@ -72,6 +72,12 @@ set(handles.stepSlider, 'Max', maxNumberOfRect);
 set(handles.stepSlider, 'Value', 5);
 set(handles.stepSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
 
+
+plot(0,0);
+xAxis = xlabel('X','FontWeight','bold');
+yAxis = ylabel('Y','FontWeight','bold');
+set(xAxis, 'fontSize', 16);
+set(yAxis, 'fontSize', 16);
 % ax=axes;
 % text('Hello World!', 'Parent', ax);
 end
@@ -303,14 +309,10 @@ else
             end
             
             view([az el])
-            xlabel('X','FontWeight','bold')
             ylabel('Z','FontWeight','bold')
-            zlabel('Y','FontWeight','bold')
         % View mode is 2D
         else
             volumePatch = drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
-            xlabel('X','FontWeight','bold')
-            ylabel('Y','FontWeight','bold')
         end
         
     %Branch if volume generated via shell method.
@@ -329,14 +331,10 @@ else
             end
             
             view([az el])
-            xlabel('X','FontWeight','bold')
             ylabel('Z','FontWeight','bold')
-            zlabel('Y','FontWeight','bold')
         % View mode is in 2D.
         else
             volumePatch = drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
-            xlabel('X','FontWeight','bold')
-            ylabel('Y','FontWeight','bold')
         end
     end
     
@@ -420,14 +418,6 @@ else
     if (viewMode == "3D")
         set(handles.figure1, 'pointer', 'arrow')
     end
-    
-%     legend = findobj('type', 'legend')
-%     A = legend.String;
-%     a= A{1}
-%     b=A{2}
-%     c= A{3}
-%     A{4} = 'Rotated Area'
-%     legendI
 end
 end
 
@@ -453,6 +443,8 @@ function diskEdit_Callback(hObject, eventdata, handles)
       set(handles.stepSlider, 'value', stepInput);
     end
     
+    % If function has been selected since start of program, run calculation
+    % and plottings.
     if (~strcmp(functionChoice, "Select a function"))
         volumeButton_Callback(handles.volumeButton, eventdata, handles);
     end
@@ -1172,6 +1164,8 @@ function stepSlider_Callback(hObject, eventdata, handles)
     steps = ceil(get(handles.stepSlider, 'Value'));
     set(handles.diskEdit, 'string', steps);
     
+    % If function has been selected since start of program, run calculation
+    % and plottings.
     if (~strcmp(functionChoice, "Select a function"))
         volumeButton_Callback(handles.volumeButton, eventdata, handles);
     end
@@ -1228,6 +1222,8 @@ elseif (methodPicked == "Right")
     radiusMethod = "r";
 end
 
+% If function has been selected since start of program, run calculation
+    % and plottings.
 if (~strcmp(functionChoice, "Select a function"))
     volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
