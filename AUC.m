@@ -83,8 +83,8 @@ set(handles.intervalSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRec
 set(handles.integratioMethodButtonGroup, 'SelectedObject', handles.trapzIntegrationRadioButton);
 methodPicked = 'trapz';
 plot(0,0);
-xAxis = xlabel('x');
-yAxis = ylabel('f(x)');
+xAxis = xlabel('X','FontWeight','bold');
+yAxis = ylabel('Y','FontWeight','bold');
 set(xAxis, 'fontSize', 16);
 set(yAxis, 'fontSize', 16);
 % UIWAIT makes AreaUnderCurve wait for user response (see UIRESUME)
@@ -519,6 +519,14 @@ else
         errorPerc = ((AUC - actualArea)/actualArea)*100;
         set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f', AUC)));
         set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f', actualArea)));
+        
+        % Indents volume calculation strings if they're too long.
+        if (length(get(handles.estVolText, 'String')) > 40 ...
+            || length(get(handles.estVolText, 'String')) > 40)
+            set(handles.estVolText, 'string', strcat({'  Estimated Area:\n '}, sprintf('%.4f', AUC)));
+            set(handles.actVolText, 'string', strcat({'  Actual Area:\n '}, sprintf('%.4f', actualArea)));
+        end
+        
         if(isnan(errorPerc) || round(AUC,4) == round(actualArea,4))
             set(handles.errorText, 'ForegroundColor', 'black','string', strcat({'  Relative Error: '}, {'0%'}));
         else
