@@ -479,11 +479,13 @@ else
         functionPoints = t(x);
         actualPoints = t(x2);
         actualArea = trapz(x2, actualPoints);
+        
         xAxis = xlabel('X','FontWeight','bold');
         yAxis = ylabel('Y','FontWeight','bold');
         set(xAxis, 'fontSize', 16);
         set(yAxis, 'fontSize', 16);
         set(h, 'LineWidth', 2);
+        
         if(lower(methodPicked) == 'trapz')
             % builds out the patching that fills the rectangles to show the
             % area under the curve

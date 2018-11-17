@@ -314,8 +314,6 @@ else
         % View mode is 2D
         else
             volumePatch = drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
-            xlabel('X','FontWeight','bold')
-            ylabel('Y','FontWeight','bold')
         end
         
     %Branch if volume generated via shell method.
