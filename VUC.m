@@ -151,6 +151,12 @@ else
     % Previous selected function was 'Select a function', so set parameters
     % to what they were before selected.
     if (definedFunction == 0)
+      if (~strcmp(functionChoice, "f(x)=x"))
+        lowerBound = 0;
+        upperBound = 1;
+        axisValue = 0;
+      end
+      
       definedFunction = 1;
     else
     % Function already selected before new selection, so set bounds to 0
@@ -159,7 +165,6 @@ else
         upperBound = 1;
         axisValue = 0;
     end
-    disp(definedFunction)
     % Reset parameters of volume once function changed.
     set(handles.lowerBoundEdit, 'string', lowerBound);
     set(handles.upperBoundEdit, 'string', upperBound);
@@ -518,7 +523,18 @@ function lowerBoundEdit_Callback(hObject, eventdata, handles)
           end
           set(handles.lowerBoundEdit, 'string', lowerBound);
           set(handles.inverseLowBoundChar, 'string', lowerBound);
-          
+         
+        % New bound violates constraint that bounds must be same signs.
+        % Tell user and revert back to previous lower bound.
+        elseif (~sameSigns(lower_input, upperBound))
+            f = warndlg(sprintf(...
+                    'In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be reverted to the previous value.')...
+                    , 'Bounds Update');
+            set(f, 'WindowStyle', 'modal');
+            uiwait(f);
+            set(handles.lowerBoundEdit, 'string', lowerBound);
+            set(handles.inverseLowBoundChar, 'string', lowerBound);
+            
         % Otherwise, it's alright. Set new lower bound.
         else
           lowerBound = lower_input;
@@ -709,6 +725,17 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
         set(handles.upperBoundEdit, 'string', upperBound);
         set(handles.inverseUpBoundChar, 'string', upperBound);
         
+      % New bound violates constraint that bounds must be same signs.
+      % Tell user and revert back to previous lower bound.
+      elseif (~sameSigns(lowerBound, upper_input))
+        f = warndlg(sprintf(...
+          'In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe upper bound will be reverted to the previous value.')...
+          , 'Bounds Update');
+        set(f, 'WindowStyle', 'modal');
+        uiwait(f);
+        set(handles.upperBoundEdit, 'string', upperBound);
+        set(handles.inverseUpBoundChar, 'string', upperBound);
+        
         % Otherwise, it's alright. Set new lower bound.
       else
         upperBound = upper_input;
@@ -751,8 +778,6 @@ function upperBoundEdit_Callback(hObject, eventdata, handles)
                 [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
                     tempLower, upper_input, 0);
                 
-%                 opts = struct('WindowStyle','modal', 'Interpreter','tex');
-%                 f = warndlg('\fontsize{15} In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.', 'Bounds Update', opts);
                 f = warndlg(sprintf('In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.'), 'Bounds Update');
                 set(f, 'WindowStyle', 'modal');
                 uiwait(f);
@@ -968,30 +993,30 @@ axisPicked = lower(get(get(handles.axisButtonGroup,'SelectedObject'),'string'));
 % negative bounds constraint under some configurations, i.e. when y=2^x,
 % 0<y<infinity. If this occurs, make error message and switch back to
 % previous axis orientation.
-if (strcmp(functionChoice, "Select a function"))
-%     f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
-%     set(f, 'WindowStyle', 'modal');
-%     uiwait(f);
-    position = get(handles.axisEditbox,'Position');
-    
-    if (axisOri == "x")
-        position(2) = 0.4484536082474227;
-        set(handles.axisEditbox, 'Position', position)
-        set(handles.xAxisRadio,'Value', 1)
-        set(handles.xAxisRadio,'string',"X    =")
-        set(handles.yAxisRadio,'string',"Y")
-        set(handles.methodText, 'string', "Shell");
-        set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
-    elseif (axisOri == "y")
-        position(2) = 0.1436372269705601;
-        set(handles.axisEditbox, 'Position', position)
-        set(handles.yAxisRadio,'Value', 1)
-        set(handles.yAxisRadio,'string',"Y    =")
-        set(handles.xAxisRadio,'string',"X")
-        set(handles.methodText, 'string', "Disk");
-        set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
-    end
-else
+% if (strcmp(functionChoice, "Select a function"))
+% %     f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
+% %     set(f, 'WindowStyle', 'modal');
+% %     uiwait(f);
+%     position = get(handles.axisEditbox,'Position');
+%     
+%     if (axisOri == "x")
+%         position(2) = 0.4484536082474227;
+%         set(handles.axisEditbox, 'Position', position)
+%         set(handles.xAxisRadio,'Value', 1)
+%         set(handles.xAxisRadio,'string',"X    =")
+%         set(handles.yAxisRadio,'string',"Y")
+%         set(handles.methodText, 'string', "Shell");
+%         set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+%     elseif (axisOri == "y")
+%         position(2) = 0.1436372269705601;
+%         set(handles.axisEditbox, 'Position', position)
+%         set(handles.yAxisRadio,'Value', 1)
+%         set(handles.yAxisRadio,'string',"Y    =")
+%         set(handles.xAxisRadio,'string',"X")
+%         set(handles.methodText, 'string', "Disk");
+%         set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+%     end
+% else
     % If new orientation selected, prompt user to enter a new axis value,
     % or go back to previous configuration. Then, update the plot and GUI
     % based afterwards.
@@ -1008,6 +1033,7 @@ else
         
         % Positions the axis value box adjacent to the axis orientation selected.
         % Also sets the axis orientation parameter in the volume function.
+        % Also, user-prompt text different based on axis selected.
         if (axisPicked == "x")
             position(2) = 0.4484536082474227;
             set(handles.axisEditbox, 'Position', position)
@@ -1015,6 +1041,7 @@ else
             set(handles.yAxisRadio,'string',"Y")
             set(handles.methodText, 'string', "Shell");
             set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+            prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the Y-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
         else
             position(2) = 0.1436372269705601;
             set(handles.axisEditbox, 'Position', position)
@@ -1022,10 +1049,10 @@ else
             set(handles.xAxisRadio,'string',"X")
             set(handles.methodText, 'string', "Disk");
             set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+            prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the X-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
         end
         
-        % Prompts user to enter a new axis value.
-        prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the x/y-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
+        % Make prompt for user to enter new axis value.
         title = 'Axis Change';
         definput = {'0'};
         opts.Interpreter = 'tex';
@@ -1076,9 +1103,18 @@ else
                  methodFor_AoB_Check = "Shell";
              end
              
+             % If no function selected, set bound checks to be that as if
+             % function selected is f(x) = x.
+             
+             if (strcmp(functionChoice, "Select a function"))
+               functionToUse = "x";
+             else
+               functionToUse = functionChoice(6:end);
+             end
+               
              set(handles.axisEditbox, 'string', newAxisValue);
              
-             if (~axisOutsideBounds(functionChoice(6:end), methodFor_AoB_Check, lowerBound, upperBound, axisPicked, newAxisValue))
+             if (~axisOutsideBounds(functionToUse, methodFor_AoB_Check, lowerBound, upperBound, axisPicked, newAxisValue))
                  % Constraint violated trying to make disc volume.
                  if (axisPicked == "y")
                      d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area to be rotated,\nhighlighted on the left.'),'Disk Volume Error');
@@ -1104,8 +1140,6 @@ else
                  % Constraint violated trying to make shell volume.
                  elseif (axisPicked == "x")
                      d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the X-bounds of the area to be rotated,\nhighlighted on the left.'),'Shell Volume Error');
-%                      d = errordlg(sprintf('Cannot generate a disk volume, given the axis of rotation\nis set between the Y-bounds of the area to be rotated,\n' ...
-%                         + 'highlighted on the left.'),'Disk Volume Error');
                      set(handles.xBoundsBackground ,'HighlightColor', [1 .2 0]) % Highlight around x-boundary statement to show bound violated.
                      set(handles.xBoundsBackground ,'ShadowColor', [1 .2 0])
                      set(handles.axisEditbox ,'BackgroundColor', [0.969 0.816 0.816])
@@ -1158,8 +1192,12 @@ else
     else
         set(handles.solidViewRadiogroup, 'Visible', "off");
     end
-    volumeButton_Callback(handles.volumeButton, eventdata, handles);
-end
+    
+    % If a function has been selected from menu, you can run calculations
+    % and plots.
+    if (~strcmp(functionChoice, "Select a function"))
+        volumeButton_Callback(handles.volumeButton, eventdata, handles);
+    end
 % volumeButton_Callback(handles.volumeButton, eventdata, handles);
 end
 
