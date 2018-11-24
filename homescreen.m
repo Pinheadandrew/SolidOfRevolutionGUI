@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 28-Oct-2018 19:23:04
+% Last Modified by GUIDE v2.5 24-Nov-2018 11:51:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,6 +59,11 @@ set(handles.pushbutton1, 'CData', AUCimage);
 VUCimage = imread('img/VUC3.jpg');
 set(handles.pushbutton2, 'CData', VUCimage);
 % Update handles structure
+% 
+% MSUimage = imread('img/MSU-Logo.png');
+% axes(handles.someAxes);
+% imshow(MSUimage)
+% image(MSUimage)
 guidata(hObject, handles);
 
 % UIWAIT makes homescreen wait for user response (see UIRESUME)
@@ -99,3 +104,29 @@ function msu_logo_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 msulogo = imread('img/MSU-Logo.png');
 set(hObject, 'CData', msulogo);
+
+
+% --- Executes on button press in vsr_tutorial.
+function vsr_tutorial_Callback(hObject, eventdata, handles)
+% hObject    handle to vsr_tutorial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if ispc
+    winopen('MATLAB WORKBOOK1.pdf')
+else
+    open('MATLAB WORKBOOK1.pdf')
+end
+
+
+% --- Executes on button press in auc_tutorial.
+function auc_tutorial_Callback(hObject, eventdata, handles)
+% hObject    handle to auc_tutorial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if ispc
+    winopen('MATLAB WORKBOOK1.pdf')
+else
+    open('MATLAB WORKBOOK1.pdf')
+end
