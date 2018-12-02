@@ -87,8 +87,14 @@ xAxis = xlabel('X','FontWeight','bold');
 yAxis = ylabel('Y','FontWeight','bold');
 set(xAxis, 'fontSize', 16);
 set(yAxis, 'fontSize', 16);
-% UIWAIT makes AreaUnderCurve wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+
+% Calculation + Error Statement Tooltips
+set(handles.actVolText, 'TooltipString', ...
+    sprintf("The area under the curve calculated as a result of a definite integral(as the number of\nsubintervals approaches infinity)."));
+set(handles.estVolText, 'TooltipString', ...
+    sprintf("The area under the curve approximated by a summation of the set,\nfinite number of subintervals."));
+set(handles.errorText, 'TooltipString', ...
+    sprintf("The measure of accuracy of the estimated area in respect to the actual area, evaluated as:\n((Estimated Area - Actual Area) / Actual Area)*100."));
 
 % --- Outputs from this function are returned to the command line.
 function varargout = AreaUnderCurve_OutputFcn(~, ~, handles) 
@@ -519,8 +525,8 @@ else
         end
         format shortG
         errorPerc = ((AUC - actualArea)/actualArea)*100;
-        set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f', AUC)));
-        set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f', actualArea)));
+        set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f (un.^2)', AUC)));
+        set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f (un.^2)', actualArea)));
         
         % Indents volume calculation strings if they're too long.
         if (length(get(handles.estVolText, 'String')) > 40 ...

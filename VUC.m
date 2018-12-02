@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 20-Sep-2018 15:49:35
+% Last Modified by GUIDE v2.5 29-Nov-2018 22:07:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,8 +80,14 @@ xAxis = xlabel('X','FontWeight','bold');
 yAxis = ylabel('Y','FontWeight','bold');
 set(xAxis, 'fontSize', 16);
 set(yAxis, 'fontSize', 16);
-% ax=axes;
-% text('Hello World!', 'Parent', ax);
+
+% Set tool tips of calculation + error textboxes.
+set(handles.actualVolumeText, 'TooltipString', ...
+    sprintf("The volume of the solid calculated as a result of a definite integral(as the number of\nsubintervals approaches infinity)."));
+set(handles.estimatedVolumeText, 'TooltipString', ...
+    sprintf("The volume of the solid approximated with a summation of the set,\nfinite number of subintervals."));
+set(handles.errorText, 'TooltipString', ...
+    sprintf("The measure of accuracy of the estimated volume in respect to the actual, evaluated as:\n((Estimated Volume - Actual Volume) / Actual Volume)*100."));
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -151,9 +157,13 @@ else
     % Previous selected function was 'Select a function', so set parameters
     % to what they were before selected.
     if (definedFunction == 0)
+        % Function not x, 
         if (~strcmp(functionChoice, "f(x)=x"))
-            %         lowerBound = 0;
-            %         upperBound = 1;
+            set(handles.axisEditbox ,'BackgroundColor', [1 0.89 0.61])
+            f = warndlg(sprintf("Due to the function selected, the axis value(highlighted to the left in yellow) will be set to 0."), 'Axis Update');
+            set(f, 'WindowStyle', 'modal');
+            uiwait(f);
+            set(handles.axisEditbox ,'BackgroundColor', [1 1 1])
             axisValue = 0;
         end
         
@@ -383,8 +393,8 @@ else
     uistack(leg,"top")
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
-    estVolumeString = "Estimated Volume: " + sprintf('%0.4f', estimated_volume);
-    actVolumeString = "Actual Volume: " + sprintf('%0.4f', actual_volume);
+    estVolumeString = "Estimated Volume: " + sprintf('%0.4f (un.^3)', estimated_volume);
+    actVolumeString = "Actual Volume: " + sprintf('%0.4f (un.^3)', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
     errorPerc = round(errorPerc,4);
     
@@ -409,7 +419,7 @@ else
         set(handles.errorText, 'ForegroundColor', 'black');
     end
     
-    set(handles.statementText, 'string', estVolumeString);
+    set(handles.estimatedVolumeText, 'string', estVolumeString);
     set(handles.actualVolumeText, 'string', actVolumeString);
     
     % For undefined percentage, dispaly as 0%

@@ -56,13 +56,25 @@ function homescreen_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 AUCimage = imread('img/AUC.jpg');
 set(handles.pushbutton1, 'CData', AUCimage);
-VUCimage = imread('img/VUC3.jpg');
+VUCimage = imread('img/VSR.jpg');
 set(handles.pushbutton2, 'CData', VUCimage);
 % Update handles structure
 % 
-% MSUimage = imread('img/MSU-Logo.png');
 % axes(handles.someAxes);
+% MSUimage = imread('img/MSU-Logo.png');
+% set(handles.someAxes,'Units','pixels');
+% resizePos = get(handles.someAxes,'Position');
+% MSUimage= imresize(MSUimage, [resizePos(3) resizePos(3)]);
 % imshow(MSUimage)
+% set(handles.someAxes,'Units','normalized');
+% uistack(handles.msu_logo, 'top');
+% axes(handles.otherAxes);
+% MSUimage = imread('img/MSU-Logo.png');
+% imshow(MSUimage)
+
+% set(handles.someAxes,'Visible','On')
+% set(handles.otherAxes,'Visible','On')
+
 % image(MSUimage)
 guidata(hObject, handles);
 
