@@ -81,7 +81,7 @@ set(handles.intervalSlider, 'Value', 5);
 set(handles.intervalSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
 % initializes integration method to trapz method.
 set(handles.integratioMethodButtonGroup, 'SelectedObject', handles.trapzIntegrationRadioButton);
-methodPicked = 'trapz';
+methodPicked = 'trapezoidal';
 plot(0,0);
 xAxis = xlabel('X','FontWeight','bold');
 yAxis = ylabel('Y','FontWeight','bold');
@@ -492,7 +492,7 @@ else
         set(yAxis, 'fontSize', 16);
         set(h, 'LineWidth', 2);
         
-        if(lower(methodPicked) == 'trapz')
+        if(lower(methodPicked) == 'trapezoidal')
             % builds out the patching that fills the rectangles to show the
             % area under the curve
             xverts = [x(1:end-1); x(1:end-1); x(2:end); x(2:end)];
@@ -501,15 +501,15 @@ else
             uistack(h, 'top');
             AUC = trapz(x, functionPoints);
         else
-            if(lower(methodPicked) == 'left')
+            if(lower(methodPicked) == 'left endpoints')
                 riemannsPoints = lowerBound:step:upperBound-step;
                 functionPoints = t(riemannsPoints);
                 AUC = sum(functionPoints*step);
-            elseif(lower(methodPicked) == 'midpoint')
+            elseif(lower(methodPicked) == 'midpoints')
                 riemannsPoints = lowerBound+(step/2):step:upperBound-(step/2);
                 functionPoints = t(riemannsPoints);
                 AUC = sum(functionPoints*step);
-            elseif(lower(methodPicked) == 'right')
+            elseif(lower(methodPicked) == 'right endpoints')
                 riemannsPoints = lowerBound+step:step:upperBound;
                 functionPoints = t(riemannsPoints);
                 AUC = sum(functionPoints*step);
@@ -563,8 +563,11 @@ else
         funcText = strrep(funcText, "*", "");
         funcText = strrep(funcText, " ", "");
 %         funcText = strrep(funcText, "+   0.", "+ .");
-        lineLeg = strcat(funcString, char(3), funcText); 
-        patchLeg = strcat(areaString, char(3), funcText); 
+%         lineLeg = strcat(funcString, char(3), funcText); 
+%         patchLeg = strcat(areaString, char(3), funcText); 
+        
+        lineLeg = strcat(funcString, ' ' + funcText); 
+        patchLeg = strcat(areaString, ' ' + funcText); 
         leg = legend([h, p], lineLeg, patchLeg, 'location', 'northwest');
         leg.FontSize = 14;
     end

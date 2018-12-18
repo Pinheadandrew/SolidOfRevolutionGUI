@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 24-Nov-2018 11:51:08
+% Last Modified by GUIDE v2.5 15-Dec-2018 18:59:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,28 +54,64 @@ function homescreen_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for homescreen
 handles.output = hObject;
-AUCimage = imread('img/AUC.jpg');
-set(handles.pushbutton1, 'CData', AUCimage);
-VUCimage = imread('img/VSR.jpg');
-set(handles.pushbutton2, 'CData', VUCimage);
-% Update handles structure
-% 
-% axes(handles.someAxes);
-% MSUimage = imread('img/MSU-Logo.png');
-% set(handles.someAxes,'Units','pixels');
-% resizePos = get(handles.someAxes,'Position');
-% MSUimage= imresize(MSUimage, [resizePos(3) resizePos(3)]);
-% imshow(MSUimage)
-% set(handles.someAxes,'Units','normalized');
-% uistack(handles.msu_logo, 'top');
-% axes(handles.otherAxes);
-% MSUimage = imread('img/MSU-Logo.png');
-% imshow(MSUimage)
+% AUCimage = imread('img/AUC.jpg');
+% set(handles.AUCpicture, 'CData', AUCimage);
+% VUCimage = imread('img/VSR.jpg');
+% set(handles.VUCpicture, 'CData', VUCimage);
 
-% set(handles.someAxes,'Visible','On')
-% set(handles.otherAxes,'Visible','On')
+% Testing resizing images out
+VSRimage = imread('img/VSRBiggerTest.jpg');
+set(handles.VUCpicture,'Units','pixels');
+resizePos = get(handles.VUCpicture,'Position');
+VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
+set(handles.VUCpicture, 'CData', VSRimage);
 
-% image(MSUimage)
+AUCimage = imread('img/AUCBiggerTest.jpg');
+set(handles.AUCpicture,'Units','pixels');
+resizePos = get(handles.AUCpicture,'Position');
+AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);
+set(handles.AUCpicture, 'CData', AUCimage);
+
+msu = imread('img/MSU-Logo.png');
+set(handles.msuLogo,'Units','pixels');
+resizePos = get(handles.msuLogo,'Position');
+msu= imresize(msu, [resizePos(4), resizePos(3)]);
+set(handles.msuLogo, 'CData', msu);
+set(handles.msuLogo,'Units','normalize');
+% End test
+
+
+% Vertically centering the description for each GUI between the
+% buttons.
+set(handles.AUCbutton,'Units','pixels');
+set(handles.VUCbutton,'Units','pixels');
+set(handles.AUCdesc,'Units','pixels');
+set(handles.VUCdesc,'Units','pixels');
+
+buttonPosition = get(handles.AUCbutton, 'Position');
+imgPosition = get(handles.AUCpicture, 'Position');
+AUCdescPosition = get(handles.AUCdesc, 'Position');
+VUCdescPosition = get(handles.VUCdesc, 'Position');
+
+y_at_button_top = (buttonPosition(2) + buttonPosition(4));
+spaceBetween = imgPosition(2) - y_at_button_top;
+unusedHeight_AUC = spaceBetween - AUCdescPosition(4);
+unusedHeight_VUC = spaceBetween - VUCdescPosition(4);
+moveAUCDescUpBy = unusedHeight_AUC/2;
+moveVUCDescUpBy = unusedHeight_VUC/2;
+AUCdescPosition(2) = y_at_button_top + moveAUCDescUpBy;
+VUCdescPosition(2) = y_at_button_top + moveVUCDescUpBy;
+
+set(handles.AUCdesc, 'position', AUCdescPosition);
+set(handles.VUCdesc, 'position', VUCdescPosition);
+
+set(handles.VUCpicture,'Units','normalize');
+set(handles.AUCpicture,'Units','normalize');
+set(handles.AUCbutton,'Units','normalize');
+set(handles.VUCbutton,'Units','normalize');
+set(handles.AUCdesc,'Units','normalize');
+set(handles.VUCdesc,'Units','normalize');
+
 guidata(hObject, handles);
 
 % UIWAIT makes homescreen wait for user response (see UIRESUME)
@@ -83,7 +119,8 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = homescreen_OutputFcn(hObject, eventdata, handles) 
+% function varargout = homescreen_OutputFcn(hObject, eventdata, handles) 
+function varargout = homescreen_OutputFcn(~, ~, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -93,29 +130,33 @@ function varargout = homescreen_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in pushbutton1.
+% --- Executes on button press in AUCpicture.
 function AUCbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton1 (see GCBO)
+% hObject    handle to AUCpicture (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
 run('AUC');
 
-% --- Executes on button press in pushbutton2.
+% --- Executes on button press in VUCpicture.
 function VUCbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton2 (see GCBO)
+% hObject    handle to VUCpicture (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
 run('VUC');
 
-% --- Executes during object creation, after setting all properties.
-function msu_logo_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to msu_logo (see GCBO)
+%--- Executes during object creation, after setting all properties.
+function msuLogo_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to msuLogo (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-msulogo = imread('img/MSU-Logo.png');
-set(hObject, 'CData', msulogo);
+% msulogo = imread('img/MSU-Logo.png');
+% set(handles.msuLogo,'Units','pixels');
+% resizePos = get(handles.msuLogo,'Position');
+% MSU= imresize(msulogo, [resizePos(4), resizePos(3)]);
+% set(handles.msuLogo, 'CData', MSU);
+% set(handles.msuLogo,'Units','normalize');
 
 
 % --- Executes on button press in vsr_tutorial.
@@ -124,10 +165,33 @@ function vsr_tutorial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% edit(fullfile(matlabroot, 'toolbox\matlab\general\private\openpdf.m'))
+
+% filename = 'MATLAB WORKBOOK1.pdf';
+% % read data from file
+% [~, ~, xlsxdata] = xlsread(filename);
+% assignin('base','xlsxdata',xlsxdata);
+
 if ispc
-    winopen('MATLAB WORKBOOK1.pdf')
+  % Running code in deployed app
+  if isdeployed
+    ctfroot
+    folder = fileparts(mfilename('fullpath'));
+    winopen(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
+  % Running in MATLAB editor
+  else
+    winopen('MATLAB WORKBOOK1.pdf');
+  end
 else
+  % Running code in deployed app
+  if isdeployed
+    ctfroot
+    folder = fileparts(mfilename('fullpath'));
+    open(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
+  % Running in MATLAB editor
+  else
     open('MATLAB WORKBOOK1.pdf')
+  end
 end
 
 
@@ -137,8 +201,26 @@ function auc_tutorial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Running on Windows
 if ispc
-    winopen('MATLAB WORKBOOK1.pdf')
-else
-    open('MATLAB WORKBOOK1.pdf')
+    % Running on compiled app
+    if isdeployed
+        ctfroot
+        folder = fileparts(mfilename('fullpath'));
+        winopen(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
+      % Running in MATLAB editor
+    else
+        winopen('MATLAB WORKBOOK1.pdf')
+    end
+% Running on Mac
+else 
+    % Running on compiled app
+    if isdeployed
+        ctfroot
+        folder = fileparts(mfilename('fullpath'));
+        open(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
+      % Running in MATLAB editor
+    else
+        open('MATLAB WORKBOOK1.pdf')
+    end
 end

@@ -158,7 +158,7 @@ else
     % to what they were before selected.
     if (definedFunction == 0)
         % Function not x, 
-        if (~strcmp(functionChoice, "f(x)=x"))
+        if (~strcmp(functionChoice, "f(x)=x") && axisValue ~= 0)
             set(handles.axisEditbox ,'BackgroundColor', [1 0.89 0.61])
             f = warndlg(sprintf("Due to the function selected, the axis value(highlighted to the left in yellow) will be set to 0."), 'Axis Update');
             set(f, 'WindowStyle', 'modal');
@@ -1083,7 +1083,7 @@ if (axisPicked ~= axisOri)
         set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
         set(handles.yAxisRadio,'string',"Y")
         set(handles.methodText, 'string', "Shell");
-        set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+%         set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the Y-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
     else
         position(2) = 0.1436372269705601;
@@ -1091,7 +1091,7 @@ if (axisPicked ~= axisOri)
         set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
         set(handles.xAxisRadio,'string',"X")
         set(handles.methodText, 'string', "Disk");
-        set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+%         set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
         prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the X-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
     end
     
@@ -1123,7 +1123,7 @@ if (axisPicked ~= axisOri)
             set(handles.xAxisRadio,'string',"X    =")
             set(handles.yAxisRadio,'string',"Y")
             set(handles.methodText, 'string', "Shell");
-            set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+%             set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         elseif (axisPicked == "x")
             position(2) = 0.1436372269705601;
             set(handles.axisEditbox, 'Position', position)
@@ -1131,7 +1131,7 @@ if (axisPicked ~= axisOri)
             set(handles.yAxisRadio,'string',"Y    =")
             set(handles.xAxisRadio,'string',"X")
             set(handles.methodText, 'string', "Disk");
-            set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+%             set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
         end
     else % New axis value is valid number, but must be checked so that it's not violating
         % constraint between axis value, bounds and volume method.
@@ -1178,7 +1178,7 @@ if (axisPicked ~= axisOri)
                 set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
                 set(handles.yAxisRadio,'string',"Y")
                 set(handles.methodText, 'string', "Shell");
-                set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
+%                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
                 
                 % Constraint violated trying to make shell volume.
             elseif (axisPicked == "x")
@@ -1200,7 +1200,7 @@ if (axisPicked ~= axisOri)
                 set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
                 set(handles.xAxisRadio,'string',"X")
                 set(handles.methodText, 'string', "Disk");
-                set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
+%                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
             end
             set(handles.axisEditbox, 'string', axisValue);
             
@@ -1374,11 +1374,11 @@ global functionChoice;
 
 methodPicked = get(get(handles.radiusMethodRadioGroup,'SelectedObject'),'string');
 
-if(methodPicked == "Left")
+if(methodPicked == "Left Endpoints")
     radiusMethod = "l";
-elseif (methodPicked == "Midpoint")
+elseif (methodPicked == "Midpoints")
     radiusMethod = "m";
-elseif (methodPicked == "Right")
+elseif (methodPicked == "Right Endpoints")
     radiusMethod = "r";
 end
 
@@ -1493,7 +1493,7 @@ function leftRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject, 'TooltipString', ...
-    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the left-integration method."));
+    sprintf("Click to approximate and display the disks / shells\nbased on left-endpoints."));
 
 end
 
@@ -1503,7 +1503,7 @@ function midRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject, 'TooltipString', ...
-    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the midpoint-integration method."));
+    sprintf("Click to approximate and display the disks / shells\nbased on middle-endpoints."));
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1512,7 +1512,7 @@ function rightRadiusRadioButton_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 set(hObject, 'TooltipString', ...
-    sprintf("Click to determine and display the disc's radius / shell's\nheight based on the right-integration method."));
+    sprintf("Click to approximate and display the disks / shells\nbased on right-endpoints."));
 end
 
 
