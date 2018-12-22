@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 29-Nov-2018 22:07:17
+% Last Modified by GUIDE v2.5 18-Dec-2018 20:27:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,7 @@ xAxis = xlabel('X','FontWeight','bold');
 yAxis = ylabel('Y','FontWeight','bold');
 set(xAxis, 'fontSize', 16);
 set(yAxis, 'fontSize', 16);
+set(handles.axes1, 'FontSize', 16); 
 
 % Set tool tips of calculation + error textboxes.
 set(handles.actualVolumeText, 'TooltipString', ...
@@ -329,6 +330,10 @@ else
             % View mode is 2D
         else
             volumePatch = drawDisksAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
+            xAxis = xlabel('X','FontWeight','bold');
+            yAxis = ylabel('Y','FontWeight','bold');
+            set(xAxis, 'fontSize', 16);
+            set(yAxis, 'fontSize', 16);
         end
         
         %Branch if volume generated via shell method.
@@ -351,6 +356,10 @@ else
             % View mode is in 2D.
         else
             volumePatch = drawShellsAsRects(simple_exp_string, lowerBound, upperBound, steps, axisOri, axisValue, radiusMethod);
+            xAxis = xlabel('X','FontWeight','bold');
+            yAxis = ylabel('Y','FontWeight','bold');
+            set(xAxis, 'fontSize', 16);
+            set(yAxis, 'fontSize', 16);
         end
     end
     
@@ -393,8 +402,8 @@ else
     uistack(leg,"top")
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
-    estVolumeString = "Estimated Volume: " + sprintf('%0.4f (un.^3)', estimated_volume);
-    actVolumeString = "Actual Volume: " + sprintf('%0.4f (un.^3)', actual_volume);
+    estVolumeString = "Estimated Volume: " + sprintf('%0.4f (units cubed)', estimated_volume);
+    actVolumeString = "Actual Volume: " + sprintf('%0.4f (units cubed)', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
     errorPerc = round(errorPerc,4);
     
@@ -431,9 +440,8 @@ else
     
     hold off
     
-    if (viewMode == "3D")
-        set(handles.figure1, 'pointer', 'arrow')
-    end
+    set(handles.figure1, 'pointer', 'arrow')
+    set(handles.axes1, 'FontSize', 16); 
 end
 end
 
@@ -1522,4 +1530,41 @@ function axisEditbox_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axisEditbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)\
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function estimatedVolumeText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to estimatedVolumeText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 14);
+end
+end
+
+% --- Executes during object creation, after setting all properties.
+function actualVolumeText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to actualVolumeText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 14);
+end
+end
+
+% --- Executes during object creation, after setting all properties.
+function errorText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to errorText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+if ismac
+    set(hObject, 'fontSize', 14);
+elseif ispc
+    set(hObject, 'fontSize', 14);
+end
 end

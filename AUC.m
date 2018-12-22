@@ -45,7 +45,7 @@ end
 
 % --- Executes just before AreaUnderCurve is made visible.
 function AreaUnderCurve_OpeningFcn(hObject, ~, handles, varargin)
-% This function has no output args, see OutputFcn.
+% This function has no output args, see OutputFcn.x
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -87,6 +87,7 @@ xAxis = xlabel('X','FontWeight','bold');
 yAxis = ylabel('Y','FontWeight','bold');
 set(xAxis, 'fontSize', 16);
 set(yAxis, 'fontSize', 16);
+set(handles.graph, 'FontSize', 16); 
 
 % Calculation + Error Statement Tooltips
 set(handles.actVolText, 'TooltipString', ...
@@ -525,8 +526,8 @@ else
         end
         format shortG
         errorPerc = ((AUC - actualArea)/actualArea)*100;
-        set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f (un.^2)', AUC)));
-        set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f (un.^2)', actualArea)));
+        set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f (units squared)', AUC)));
+        set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f (units squared)', actualArea)));
         
         % Indents volume calculation strings if they're too long.
         if (length(get(handles.estVolText, 'String')) > 40 ...
@@ -570,6 +571,7 @@ else
         patchLeg = strcat(areaString, ' ' + funcText); 
         leg = legend([h, p], lineLeg, patchLeg, 'location', 'northwest');
         leg.FontSize = 14;
+        set(handles.graph, 'FontSize', 16); 
     end
 end
 
@@ -1081,7 +1083,7 @@ function errorText_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1092,7 +1094,7 @@ function actVolText_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 15);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1103,7 +1105,7 @@ function estVolText_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 
@@ -1115,7 +1117,7 @@ function functionExampleTextBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1126,7 +1128,7 @@ function aBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1137,7 +1139,7 @@ function bBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1148,7 +1150,7 @@ function cBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1159,7 +1161,7 @@ function secondDegreeTextBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1170,7 +1172,7 @@ function firstDegreeTextBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1181,7 +1183,7 @@ function constantBox_CreateFcn(hObject, eventdata, handles)
 if ismac
     set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 

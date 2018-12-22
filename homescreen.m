@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 15-Dec-2018 18:59:12
+% Last Modified by GUIDE v2.5 22-Dec-2018 10:27:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,13 +60,13 @@ handles.output = hObject;
 % set(handles.VUCpicture, 'CData', VUCimage);
 
 % Testing resizing images out
-VSRimage = imread('img/VSRBiggerTest.jpg');
+VSRimage = imread('img/VSR.jpg');
 set(handles.VUCpicture,'Units','pixels');
 resizePos = get(handles.VUCpicture,'Position');
 VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
 set(handles.VUCpicture, 'CData', VSRimage);
 
-AUCimage = imread('img/AUCBiggerTest.jpg');
+AUCimage = imread('img/AUC.jpg');
 set(handles.AUCpicture,'Units','pixels');
 resizePos = get(handles.AUCpicture,'Position');
 AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);
@@ -224,3 +224,21 @@ else
         open('MATLAB WORKBOOK1.pdf')
     end
 end
+
+
+% --- Executes on button press in AUCpicture.
+function AUCpicture_Callback(hObject, eventdata, handles)
+% hObject    handle to AUCpicture (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('AUC');
+
+
+% --- Executes on button press in VUCpicture.
+function VUCpicture_Callback(hObject, eventdata, handles)
+% hObject    handle to VUCpicture (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('VUC');
