@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 22-Dec-2018 10:27:53
+% Last Modified by GUIDE v2.5 22-Dec-2018 14:40:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,20 +59,22 @@ handles.output = hObject;
 % VUCimage = imread('img/VSR.jpg');
 % set(handles.VUCpicture, 'CData', VUCimage);
 
-% Testing resizing images out
-VSRimage = imread('img/VSR.jpg');
+% Resizing images
+% VSRimage = imread('img/VSR.jpg');
+VSRimage = imread('img/VSR-highres.png');
 set(handles.VUCpicture,'Units','pixels');
 resizePos = get(handles.VUCpicture,'Position');
 VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
 set(handles.VUCpicture, 'CData', VSRimage);
 
-AUCimage = imread('img/AUC.jpg');
+% AUCimage = imread('img/AUC.jpg');
+AUCimage = imread('img/AUC-highres.png');
 set(handles.AUCpicture,'Units','pixels');
 resizePos = get(handles.AUCpicture,'Position');
 AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);
 set(handles.AUCpicture, 'CData', AUCimage);
 
-msu = imread('img/MSU-Logo.png');
+msu = imread('img/MSUlogo.jpeg');
 set(handles.msuLogo,'Units','pixels');
 resizePos = get(handles.msuLogo,'Position');
 msu= imresize(msu, [resizePos(4), resizePos(3)]);
@@ -172,26 +174,25 @@ function vsr_tutorial_Callback(hObject, eventdata, handles)
 % [~, ~, xlsxdata] = xlsread(filename);
 % assignin('base','xlsxdata',xlsxdata);
 
+url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+% Running on Windows
 if ispc
-  % Running code in deployed app
-  if isdeployed
-    ctfroot
-    folder = fileparts(mfilename('fullpath'));
-    winopen(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
-  % Running in MATLAB editor
-  else
-    winopen('MATLAB WORKBOOK1.pdf');
-  end
-else
-  % Running code in deployed app
-  if isdeployed
-    ctfroot
-    folder = fileparts(mfilename('fullpath'));
-    open(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
-  % Running in MATLAB editor
-  else
-    open('MATLAB WORKBOOK1.pdf')
-  end
+    % Running on compiled app
+    if isdeployed
+        web(url, '-browser')
+      % Running in MATLAB editor
+    else
+        web(url, '-browser')
+    end
+% Running on Mac
+else 
+    % Running on compiled app
+    if isdeployed
+        web(url, '-browser')
+      % Running in MATLAB editor
+    else
+        web(url, '-browser')
+    end
 end
 
 
@@ -201,27 +202,24 @@ function auc_tutorial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
 % Running on Windows
 if ispc
     % Running on compiled app
     if isdeployed
-        ctfroot
-        folder = fileparts(mfilename('fullpath'));
-        winopen(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
+        web(url, '-browser')
       % Running in MATLAB editor
     else
-        winopen('MATLAB WORKBOOK1.pdf')
+        web(url, '-browser')
     end
 % Running on Mac
 else 
     % Running on compiled app
     if isdeployed
-        ctfroot
-        folder = fileparts(mfilename('fullpath'));
-        open(fullfile(folder, 'MATLAB WORKBOOK1.pdf'));
+        web(url, '-browser')
       % Running in MATLAB editor
     else
-        open('MATLAB WORKBOOK1.pdf')
+        web(url, '-browser')
     end
 end
 
@@ -242,3 +240,26 @@ function VUCpicture_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
 run('VUC');
+
+
+% --- Executes during object creation, after setting all properties.
+% function AUCdesc_CreateFcn(hObject, eventdata, handles)
+% % hObject    handle to AUCdesc (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    empty - handles not created until after all CreateFcns called
+% if ismac
+%     set(hObject, 'fontSize', 13);
+% elseif ispc
+%     set(hObject, 'fontSize', 14);
+% end
+
+% --- Executes during object creation, after setting all properties.
+% function VUCdesc_CreateFcn(hObject, eventdata, handles)
+% % hObject    handle to VUCdesc (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    empty - handles not created until after all CreateFcns called
+% if ismac
+%     set(hObject, 'fontSize', 13);
+% elseif ispc
+%     set(hObject, 'fontSize', 14);
+% end

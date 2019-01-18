@@ -58,6 +58,15 @@ homeImage = imread('homebutton.jpg');
 set(handles.homeButton, 'CData', homeImage);
 resetImage = imread('reset1.jpg');
 set(handles.resetButton, 'CData', resetImage);
+
+% Resizing images
+helpIcon = imread('img/help2.jpg');
+% set(handles.helpButton,'Units','pixels');
+% resizePos = get(handles.helpButton,'Position');
+% helpIcon= imresize(helpIcon, [resizePos(4), resizePos(3)]);
+set(handles.helpButton, 'CData', helpIcon);
+% set(handles.helpButton,'Units','normalized');
+
 % Defines global variables that need to be set before user makes
 % selections.
 guidata(hObject, handles);
@@ -70,7 +79,7 @@ global functionChoice;
 functionChoice = "Select a function";
 definedFunction = 0;
 lowerBound = 0;
-upperBound = 20;
+upperBound = 1;
 rectCount = 5;
 
 % initializes subinterval slider to default values.
@@ -127,9 +136,9 @@ if(isnan(lowerBound))
 else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
-    if(lowerBound < -100)
+    if(lowerBound < -10)
 %         d = errordlg('Lower Domain must be LARGER than -101 and SMALLER than 99.', 'Domain Error');
-        d = errordlg('The new bound must be greater than -101 and smaller than 100', 'Domain Error');
+        d = errordlg('The new bound must be between -10 and 10.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
@@ -157,7 +166,7 @@ function lowerBoundEditBox_CreateFcn(hObject, ~, ~)
 
 % sets tooltip for lower bound edit text box
 % toolTipString = sprintf('Enter a real number for lower bound. \nMust be SMALLER THAN 100 \nMust be LARGER THAN -101');
-toolTipString = sprintf('Enter a real number for the lower bound.\n-Max: 100\n-Min: -100\n-Lower bound must be less than the upper bound.');
+toolTipString = sprintf('Enter a real number for the lower bound.\n-Max: 10\n-Min: -10\n-Lower bound must be less than the upper bound.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -188,8 +197,8 @@ if(isnan(upperBound))
 else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
-    if(upperBound > 100)
-        d = errordlg('The new bound must be greater than -101 and smaller than 100', 'Domain Error');
+    if(upperBound > 10)
+        d = errordlg('The new bound must be between -10 and 10.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
@@ -216,8 +225,8 @@ function upperBoundEditBox_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 
 % Sets tooltip for upper bound text box
-% toolTipString = sprintf('Enter a real number for upper bound. \nMust be SMALLER THAN 101 \nMust be LARGER THAN -100');
-toolTipString = sprintf('Enter a real number for the upper bound.\n-Max: 100\n-Min: -100\n-Lower bound must be less than the upper bound.');
+% toolTipString = sprintf('Enter a real number for upper bound. \nMust be SMALLER THAN 10 \nMust be LARGER THAN -10');
+toolTipString = sprintf('Enter a real number for the upper bound.\n-Max: 10\n-Min: -10\n-Lower bound must be less than the upper bound.');
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -281,6 +290,12 @@ if(strcmp(functionChoice,'Exponential'))
         set(handles.fifthCoefficientEditBox, 'string', '1');
         set(handles.fourthCoefficientEditBox, 'string', '1');
         set(handles.thirdCoefficientEditBox, 'string', '0');
+        
+        % Change tooltips of coefficients to display ranges.
+        set(handles.fifthCoefficientEditBox, 'TooltipString', sprintf("Enter a real number (or\nenter as blank to set to 0).\nMax: 10\nMin: -10"));
+        set(handles.fourthCoefficientEditBox, 'TooltipString', sprintf("Enter a real number (or\nenter as blank to set to 0).\nMax: 2\nMin: -2"));
+        set(handles.thirdCoefficientEditBox, 'TooltipString', sprintf("Enter a real number (or\nenter as blank to set to 0).\nMax: 100\nMin: -100"));
+        
 elseif(strcmp(functionChoice,'Polynomial'))
         % set default parameters when creating a polynomial function is
         % selected.
@@ -304,10 +319,19 @@ elseif(strcmp(functionChoice,'Polynomial'))
         set(handles.secondCoefficientEditBox, 'string', '1');
         set(handles.firstCoefficientEditBox, 'string', '0');
         set(handles.constantEditBox, 'string', '0');
+        
+        % Change tooltips of coefficients to display ranges.
+        coefTooltip = sprintf("Enter a real number (or\nenter as blank to set to 0).\nMax: 100\nMin: -100");
+        set(handles.fifthCoefficientEditBox, 'TooltipString', coefTooltip);
+        set(handles.fourthCoefficientEditBox, 'TooltipString', coefTooltip);
+        set(handles.thirdCoefficientEditBox, 'TooltipString', coefTooltip);
+        set(handles.secondCoefficientEditBox, 'TooltipString', coefTooltip);
+        set(handles.firstCoefficientEditBox, 'TooltipString', coefTooltip);
+        set(handles.constantEditBox, 'TooltipString', coefTooltip);
 elseif(strcmp(functionChoice,'f(x)=x^3+5*x^2'))
     % Previous selected function was not 'Select a function')
         if (definedFunction == 1)
-            upperBound = 20;
+            upperBound = 1;
             lowerBound = 0;
         end
         set(handles.lowerBoundEditBox, 'string', lowerBound);
@@ -375,7 +399,7 @@ else
     if(lowerBound > upperBound)
         newString = 'Fix domain';
         set(handles.text4, 'string', newString);
-        d = errordlg('LOWER bound is larger than UPPER bound', 'Domain Error');
+        d = errordlg('The lower bound must be less than the upper bound.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
     else
@@ -526,23 +550,25 @@ else
         end
         format shortG
         errorPerc = ((AUC - actualArea)/actualArea)*100;
-        set(handles.estVolText, 'string', strcat({'  Estimated Area: '}, sprintf('%.4f (units squared)', AUC)));
-        set(handles.actVolText, 'string', strcat({'  Actual Area: '}, sprintf('%.4f (units squared)', actualArea)));
+        set(handles.estVolText, 'string', strcat({'Estimated Area:'}, sprintf('\n%.4f\n(units squared)', AUC)));
+        set(handles.actVolText, 'string', strcat({'Actual Area:'}, sprintf('\n%.4f\n(units squared)', actualArea)));
         
-        % Indents volume calculation strings if they're too long.
-        if (length(get(handles.estVolText, 'String')) > 40 ...
-            || length(get(handles.estVolText, 'String')) > 40)
-            set(handles.estVolText, 'string', strcat({'  Estimated Area:\n '}, sprintf('%.4f', AUC)));
-            set(handles.actVolText, 'string', strcat({'  Actual Area:\n '}, sprintf('%.4f', actualArea)));
-        end
+%         % Indents volume calculation strings if they're too long.
+%         if (length(get(handles.estVolText, 'String')) > 40 ...
+%             || length(get(handles.estVolText, 'String')) > 40)
+%             set(handles.estVolText, 'string', strcat({'Estimated Area:\n '}, sprintf('%.4f', AUC)));
+%             set(handles.actVolText, 'string', strcat({'Actual Area:\n '}, sprintf('%.4f', actualArea)));
+%         end
         
         if(isnan(errorPerc) || round(AUC,4) == round(actualArea,4))
-            set(handles.errorText, 'ForegroundColor', 'black','string', strcat({'  Relative Error: '}, {'0%'}));
+            set(handles.errorText, 'ForegroundColor', 'black','string', strcat({'Relative Error: '}, sprintf('\n'), {'0%'}));
         else
             if(errorPerc > 0)
-                set(handles.errorText, 'ForegroundColor', 'red', 'string', strcat({'  Relative Error: '}, sprintf('%.4f', errorPerc), {'% (overestimate)'}));
+%                 set(handles.errorText, 'ForegroundColor', 'red', 'string', strcat({'Relative Error: '}, sprintf('\n%.4f\n', errorPerc), {'(overestimate)'}));
+                set(handles.errorText, 'ForegroundColor', 'red', 'string', strcat({'Relative Error: '}, sprintf('\n%.4f', errorPerc), {'%'}, sprintf('\n(overestimate)')));
             else
-                set(handles.errorText, 'ForegroundColor', 'blue', 'string', strcat({'  Relative Error: '}, sprintf('%.4f', errorPerc), {'% (underestimate)'}));
+%                 set(handles.errorText, 'ForegroundColor', 'blue', 'string', strcat({'Relative Error: '}, sprintf('\n%.4f%\n', errorPerc), {'(underestimate)'}));
+                set(handles.errorText, 'ForegroundColor', 'blue', 'string', strcat({'Relative Error: '}, sprintf('\n%.4f', errorPerc), {'%'}, sprintf('\n(underestimate)')));
             end
         end
         % sets up legend in the display axis
@@ -595,7 +621,9 @@ function fifthCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global fifthCoefficientValue;
+global functionChoice;
 tempValue = get(handles.fifthCoefficientEditBox, 'string');
+
 if(isnan(str2double(tempValue)))
     if(isempty(tempValue))
         fifthCoefficientValue = 0;
@@ -609,7 +637,27 @@ if(isnan(str2double(tempValue)))
         set(handles.fifthCoefficientEditBox, 'string', fifthCoefficientValue);
     end
 else
-    fifthCoefficientValue = tempValue;
+    % Value x < -10 or x > 10, spit out error.
+    if (strcmp(functionChoice, 'Exponential') && (str2double(tempValue) < -10 || str2double(tempValue) > 10))
+            set(handles.fifthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+%             w = warndlg(sprintf(), 'Value Warning');
+            newString = {"When the exponential option is selected, this value must be greater than -10 and less than 10."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.fifthCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.fifthCoefficientEditBox ,'string', fifthCoefficientValue)
+     elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.fifthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"When the polynomial option is selected, this value can be a minimum of -100 and a maximum of 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.fifthCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.fifthCoefficientEditBox ,'string', fifthCoefficientValue);
+    else
+        fifthCoefficientValue = tempValue;
+    end
 end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
@@ -638,21 +686,43 @@ function fourthCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global forthCoefficientValue;
+global functionChoice;
 tempValue = get(handles.fourthCoefficientEditBox, 'string');
+
+% Coefficient entered not a real number.
 if(isnan(str2double(tempValue)))
     if(isempty(tempValue))
         forthCoefficientValue = 0;
         set(handles.fourthCoefficientEditBox, 'string', 0);
     else
         newString = 'The new coefficient must be a real number.';
-%         set(handles.constantEditBox, 'string', constantValue);
         d = errordlg(newString, 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         set(handles.fourthCoefficientEditBox, 'string', forthCoefficientValue);
     end
 else
-    forthCoefficientValue = tempValue;
+    % Value x < -2 or x > 2, spit out error.
+    if (strcmp(functionChoice, 'Exponential') && (str2double(tempValue) < -2 || str2double(tempValue) > 2))
+            set(handles.fourthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+%             w = warndlg(sprintf("When the exponential option is selected, this value must be\ngreater than -2 and less than 2."), 'Value Warning');
+            newString = {"When the exponential option is selected, this value must be greater than -2 and less than 2."};
+            w = warndlg(newString, 'Value Warning'); 
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.fourthCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.fourthCoefficientEditBox ,'string', forthCoefficientValue)
+     elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.fourthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"When the polynomial option is selected, this value can be a minimum of -100 and a maximum of 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.fourthCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.fourthCoefficientEditBox ,'string', forthCoefficientValue);
+    else
+        forthCoefficientValue = tempValue;
+    end
 end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
@@ -681,6 +751,7 @@ function thirdCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global thirdCoefficientValue;
+global functionChoice;
 tempValue = get(handles.thirdCoefficientEditBox, 'string');
 if(isnan(str2double(tempValue)))
     if(isempty(tempValue))
@@ -695,7 +766,26 @@ if(isnan(str2double(tempValue)))
         set(handles.thirdCoefficientEditBox, 'string', thirdCoefficientValue);
     end
 else
-    thirdCoefficientValue = tempValue;
+    % Value x < -2 or x > 2, spit out error.
+    if (strcmp(functionChoice, 'Exponential') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.thirdCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"When the exponential option is selected, this value must be greater than -100 and less than 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.thirdCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.thirdCoefficientEditBox ,'string', thirdCoefficientValue);
+    elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.thirdCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"When the polynomial option is selected, this value can be a minimum of -100 and a maximum of 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.thirdCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.thirdCoefficientEditBox ,'string', thirdCoefficientValue);
+    else
+        thirdCoefficientValue = tempValue;
+    end
 end
 calculatePushButton_Callback(handles.calculatePushButton, eventdata, handles);
 
@@ -724,6 +814,7 @@ function secondCoefficientEditBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global secondCoefficientValue;
+global functionChoice;
 tempValue = get(handles.secondCoefficientEditBox, 'string');
 if(isnan(str2double(tempValue)))
     if(isempty(tempValue))
@@ -737,6 +828,14 @@ if(isnan(str2double(tempValue)))
         uiwait(d);
         set(handles.secondCoefficientEditBox, 'string', secondCoefficientValue);
     end
+ elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.secondCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"This value can be a minimum of -100 and a maximum of 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.secondCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.secondCoefficientEditBox ,'string', secondCoefficientValue);
 else
     secondCoefficientValue = tempValue;
 end
@@ -768,6 +867,7 @@ function firstCoefficientEditBox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 global firstCoefficientValue;
+global functionChoice;
 tempValue = get(handles.firstCoefficientEditBox, 'string');
 if(isnan(str2double(tempValue)))
     if(isempty(tempValue))
@@ -781,6 +881,14 @@ if(isnan(str2double(tempValue)))
         uiwait(d);
         set(handles.firstCoefficientEditBox, 'string', firstCoefficientValue);
     end
+ elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.firstCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"This value can be a minimum of -100 and a maximum of 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.firstCoefficientEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.firstCoefficientEditBox ,'string', firstCoefficientValue);
 else
     firstCoefficientValue = tempValue;
 end
@@ -849,7 +957,7 @@ tempRectCount = str2double(get(hObject,'String'));
 if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 101)
     % set(handles.text4, 'string', newString);
 %     d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
-    d = errordlg('The number of subintervals must be an integer between 0 and 102.', 'Rectangle Error');
+    d = errordlg('The number of subintervals must be an integer between 1 and 100.', 'Rectangle Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.stepEdit, 'string', rectCount);
@@ -872,7 +980,7 @@ function stepEdit_CreateFcn(hObject, eventdata, handles)
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 % toolTipString = sprintf('Enter a positive integer less than or equal to 100');
-toolTipString = sprintf("Enter a positive integer less than or equal to 101 for the\nnumber of subintervals to determine the estimated area.");
+toolTipString = sprintf("Enter a positive integer less than or equal to 100 for the\nnumber of subintervals to determine the estimated area.");
 set(hObject, 'TooltipString', toolTipString);
 if ismac
     set(hObject, 'fontSize', 14);
@@ -888,6 +996,7 @@ end
 function constantEditBox_Callback(hObject, eventdata, handles)
 
 global constantValue;
+global functionChoice;
 tempValue = get(handles.constantEditBox, 'string');
 if(isnan(str2double(tempValue)))
     if(isempty(tempValue))
@@ -901,6 +1010,14 @@ if(isnan(str2double(tempValue)))
         uiwait(d);
         set(handles.constantEditBox, 'string', constantValue);
     end
+ elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
+            set(handles.constantEditBox ,'BackgroundColor', [1 0.89 0.61]);
+            newString = {"This value can be a minimum of -100 and a maximum of 100."};
+            w = warndlg(newString, 'Value Warning');
+            set(w, 'WindowStyle', 'modal');
+            uiwait(w);
+            set(handles.constantEditBox ,'BackgroundColor', [1 1 1]);
+            set(handles.constantEditBox ,'string', constantValue);
 else
     constantValue = tempValue;
 end
@@ -962,11 +1079,11 @@ function leftIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
 % toolTipString = sprintf('Click to display left end point integration method.');
 toolTipString = sprintf('Click to calculate and display the area using the left-integration method.');
 set(hObject, 'TooltipString', toolTipString);
-if ismac
-    set(hObject, 'fontSize', 10);
-elseif ispc
-    set(hObject, 'fontSize', 10);
-end
+% if ismac
+%     set(hObject, 'fontSize', 10);
+% elseif ispc
+%     set(hObject, 'fontSize', 10);
+
 
 % --- Executes during object creation, after setting all properties.
 function rightIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
@@ -976,11 +1093,12 @@ function rightIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
 % toolTipString = sprintf('Click to display right end point integration method.');
 toolTipString = sprintf('Click to calculate and display the area using the right-integration method.');
 set(hObject, 'TooltipString', toolTipString);
-if ismac
-    set(hObject, 'fontSize', 10);
-elseif ispc
-    set(hObject, 'fontSize', 10);
-end
+% if ismac
+%     set(hObject, 'fontSize', 10);
+% elseif ispc
+%     set(hObject, 'fontSize', 10);
+% end
+% end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1001,11 +1119,11 @@ function trapzIntegrationRadioButton_CreateFcn(hObject, eventdata, handles)
 % toolTipString = sprintf('Click to display trapezoidal integration method.');
 toolTipString = sprintf('Click to calculate and display the area using the trapezoidal-integration method.');
 set(hObject, 'TooltipString', toolTipString);
-if ismac
-    set(hObject, 'fontSize', 10);
-elseif ispc
-    set(hObject, 'fontSize', 10);
-end
+% if ismac
+%     set(hObject, 'fontSize', 10);
+% elseif ispc
+%     set(hObject, 'fontSize', 10);
+% end
 
 
 % --- Executes on button press in resetButton.
@@ -1070,9 +1188,9 @@ function boundariesTextBox_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 if ismac
-    set(hObject, 'fontSize', 13);
+    set(hObject, 'fontSize', 14);
 elseif ispc
-    set(hObject, 'fontSize', 10);
+    set(hObject, 'fontSize', 14);
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -1192,3 +1310,29 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+function helpButton_Callback(hObject, eventdata, handles)
+% hObject    handle to auc_tutorial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+% Running on Windows
+if ispc
+    % Running on compiled app
+    if isdeployed
+        web(url, '-browser')
+      % Running in MATLAB editor
+    else
+        web(url, '-browser')
+    end
+% Running on Mac
+else 
+    % Running on compiled app
+    if isdeployed
+        web(url, '-browser')
+      % Running in MATLAB editor
+    else
+        web(url, '-browser')
+    end
+end

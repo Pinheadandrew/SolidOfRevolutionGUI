@@ -34,6 +34,15 @@ VUCimage = imread('img/homebutton.jpg');
 set(handles.homeButton, 'CData', VUCimage);
 resetImage = imread('img/reset1.jpg');
 set(handles.resetButton, 'CData', resetImage);
+
+% Resizing images
+helpIcon = imread('img/help2.jpg');
+% set(handles.helpButton,'Units','pixels');
+% resizePos = get(handles.helpButton,'Position');
+% helpIcon= imresize(helpIcon, [resizePos(4), resizePos(3)]);
+set(handles.helpButton, 'CData', helpIcon);
+% set(handles.helpButton,'Units','normalized');
+
 % Update handles structure2
 guidata(hObject, handles);
 global lowerBound;
@@ -124,7 +133,7 @@ if (strcmp(functionContents, "Select a function") || ~isValidVolume(functionCont
         methodChoice, lowerBound, upperBound, axisOri))
     
     if (strcmp(functionContents, "Select a function"))
-        f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
+        f = errordlg('No function selected. Choose one on the menu in the top-right.', 'Function Error');
         set(f, 'WindowStyle', 'modal');
         uiwait(f);
     else
@@ -238,7 +247,7 @@ global originallyNegativeArea;
 % If 3D selected, plot volume using 3D functions. Else, draw patches in
 % 2D. Nothing changes about calculations though, so nest it right.
 if (strcmp(functionChoice, "Select a function"))
-    f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
+    f = errordlg('No function selected. Choose one on the menu to the top-right.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else
@@ -402,26 +411,26 @@ else
     uistack(leg,"top")
     % Display the estimated and actual volumes and the error percenter b/w
     % both.
-    estVolumeString = "Estimated Volume: " + sprintf('%0.4f (units cubed)', estimated_volume);
-    actVolumeString = "Actual Volume: " + sprintf('%0.4f (units cubed)', actual_volume);
+    estVolumeString = "Estimated Volume:" + sprintf('\n%0.4f\n(units cubed)', estimated_volume);
+    actVolumeString = "Actual Volume:" + sprintf('\n%0.4f\n(units cubed)', actual_volume);
     errorPerc = ((estimated_volume - actual_volume)/actual_volume)*100;
     errorPerc = round(errorPerc,4);
     
     % New line for volume statements so that string in textboxes aren't
     % overflowing.
     
-    if (length(estVolumeString) > 40 || length(actVolumeString) > 40)
-        estVolumeString = sprintf("Estimated Volume:\n" + sprintf('%0.4f', estimated_volume));
-        actVolumeString = sprintf("Actual Volume:\n" + sprintf('%0.4f', actual_volume));
-    end
+%     if (length(estVolumeString) > 40 || length(actVolumeString) > 40)
+%         estVolumeString = sprintf("Estimated Volume:" + sprintf('%0.4f', estimated_volume));
+%         actVolumeString = sprintf("Actual Volume:" + sprintf('%0.4f', actual_volume));
+%     end
     
     % Text added on to displayed error percentage, stating estimation type.
     % Set color of error percent statement based on under/overestimate.
     if (errorPerc < 0)
-        estimate_type = " (Underestimate)";
+        estimate_type = "(Underestimate)";
         set(handles.errorText, 'ForegroundColor', 'blue');
     elseif (errorPerc > 0)
-        estimate_type = " (Overestimate)";
+        estimate_type = "(Overestimate)";
         set(handles.errorText, 'ForegroundColor', 'red');
     else
         estimate_type = "";
@@ -430,14 +439,15 @@ else
     
     set(handles.estimatedVolumeText, 'string', estVolumeString);
     set(handles.actualVolumeText, 'string', actVolumeString);
-    
-    % For undefined percentage, dispaly as 0%
+
+    % For undefined percentage, display as 0%
     if(isnan(errorPerc))
-        set(handles.errorText, 'string', strcat({'  Error: '}, {'0% '}));
+        errorString = strcat({'Relative Error:'}, sprintf('\n'), {'0%'});
     else
-        set(handles.errorText, 'string', strcat({'  Error: '}, sprintf('%0.4f', errorPerc), {'%'}, estimate_type));
+        errorString = strcat({'Relative Error:'}, sprintf('\n%.4f\n', errorPerc), {'%'}, sprintf('\n' + estimate_type));
     end
     
+    set(handles.errorText, 'string', errorString);
     hold off
     
     set(handles.figure1, 'pointer', 'arrow')
@@ -457,7 +467,7 @@ stepInput = str2double(get(hObject,'String'));
 
 % Step input not an integer, or out of range of 0<x<101, throw error.
 if(isnan(stepInput) || stepInput <= 0 || stepInput > 75 || (floor(stepInput) ~= stepInput))
-    d = errordlg('The number of subintervals must be an integer between 0 and 76.', 'Subinterval Count Error');
+    d = errordlg('The number of subintervals must be an integer between 1 and 75.', 'Subinterval Count Error');
     set(d, 'WindowStyle', 'modal');
     set(handles.diskEdit, 'string', steps);
     uiwait(d);
@@ -511,7 +521,7 @@ lower_input = str2double(get(hObject,'String'));
 funcString = functionChoice(6:end);
 
 if(isnan(lower_input))
-    d = errordlg('The new bound must be a real number.', 'Bound Error');
+    d = errorlg('The new bound must be a real number.', 'Bound Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.lowerBoundEdit, 'string', lowerBound);
@@ -521,9 +531,9 @@ elseif(lower_input >= upperBound)
     uiwait(d);
     set(handles.lowerBoundEdit, 'string', lowerBound);
     viewModeChanged = 1;
-    % Lower bound must be within range of -50 and 50.
-elseif(lower_input < -50 || lower_input > 50)
-    d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+    % Lower bound must be within range of -10 and 10.
+elseif(lower_input < -10 || lower_input > 10)
+    d = warndlg('The bound value must fall within the range of -10 and 10.', 'Bound Warning');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.lowerBoundEdit, 'string', lowerBound);
@@ -552,7 +562,7 @@ else
         if (sameSigns(lower_input, upperBound) == 0)
             if (lower_input < 0)
                 tempUpper = 0;
-                f = warndlg(sprintf('In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe upper bound will be changed to 0.'), 'Bounds Update');
+                f = warndlg(sprintf('To minimize complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe upper bound will be changed to 0.'), 'Bounds Update');
                 set(f, 'WindowStyle', 'modal');
                 uiwait(f);
                 viewModeChanged = 1;
@@ -623,7 +633,7 @@ else
                 tempUpper = 0;
                 
                 f = warndlg(sprintf(...
-                    'In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe upper bound will be changed to 0.')...
+                    'To minimize complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe upper bound will be changed to 0.')...
                     , 'Bounds Update');
                 set(f, 'WindowStyle', 'modal');
                 uiwait(f);
@@ -704,7 +714,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Enter the lower bound for the area to be rotated.\n-Min.: -50\n-Max.: 50\n-Lower bound must be less than the upper bound."));
+    sprintf("Enter the lower bound for the area to be rotated.\n-Min.: -10\n-Max.: 10\n-Lower bound must be less than the upper bound."));
 end
 
 % Setting the upper bound of the volume.
@@ -734,8 +744,8 @@ elseif(upper_input <= lowerBound)
     uiwait(d);
     set(handles.upperBoundEdit, 'string', upperBound);
     viewModeChanged = 1;
-elseif(upper_input < -50 || upper_input > 50)
-    d = errordlg('The bound value must fall within the range of -50 and 50.', 'Bound Error');
+elseif(upper_input < -10 || upper_input > 10)
+    d = warndlg('The bound value must fall within the range of -10 and 10.', 'Bound Warning');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.upperBoundEdit, 'string', upperBound);
@@ -758,7 +768,7 @@ if (strcmp(functionChoice, "Select a function"))
     if (sameSigns(upper_input, lowerBound) == 0)
         if (upper_input > 0)
             tempLower = 0;
-            f = warndlg(sprintf('In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.'), 'Bounds Update');
+            f = warndlg(sprintf('To minimize complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.'), 'Bounds Update');
             set(f, 'WindowStyle', 'modal');
             uiwait(f);
             viewModeChanged = 1;
@@ -822,7 +832,7 @@ else
             [inverseLowerBound, inverseUpperBound] = inverseBounds(funcString, ...
                 tempLower, upper_input, 0);
             
-            f = warndlg(sprintf('In minimizing complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.'), 'Bounds Update');
+            f = warndlg(sprintf('To minimize complexity of generated volumes, the bounds should have the same signs, with the exception of areas under the function, 2^x.\n\nThe lower bound will be changed to 0.'), 'Bounds Update');
             set(f, 'WindowStyle', 'modal');
             uiwait(f);
             viewModeChanged = 1;
@@ -919,7 +929,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Enter the upper bound for the area to be rotated.\n-Min.: -50\n-Max.: 50\n-Lower bound must be less than the upper bound."));
+    sprintf("Enter the upper bound for the area to be rotated.\n-Min.: -10\n-Max.: 10\n-Lower bound must be less than the upper bound."));
 end
 
 % Setting the axis line.
@@ -1040,34 +1050,6 @@ global viewMode;
 % statement in perspective of opposite axis
 axisPicked = lower(get(get(handles.axisButtonGroup,'SelectedObject'),'string'));
 
-% Switching axis orientation and the volume to be generated violates the
-% negative bounds constraint under some configurations, i.e. when y=2^x,
-% 0<y<infinity. If this occurs, make error message and switch back to
-% previous axis orientation.
-% if (strcmp(functionChoice, "Select a function"))
-% %     f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
-% %     set(f, 'WindowStyle', 'modal');
-% %     uiwait(f);
-%     position = get(handles.axisEditbox,'Position');
-%
-%     if (axisOri == "x")
-%         position(2) = 0.4484536082474227;
-%         set(handles.axisEditbox, 'Position', position)
-%         set(handles.xAxisRadio,'Value', 1)
-%         set(handles.xAxisRadio,'string',"X    =")
-%         set(handles.yAxisRadio,'string',"Y")
-%         set(handles.methodText, 'string', "Shell");
-%         set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
-%     elseif (axisOri == "y")
-%         position(2) = 0.1436372269705601;
-%         set(handles.axisEditbox, 'Position', position)
-%         set(handles.yAxisRadio,'Value', 1)
-%         set(handles.yAxisRadio,'string',"Y    =")
-%         set(handles.xAxisRadio,'string',"X")
-%         set(handles.methodText, 'string', "Disk");
-%         set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
-%     end
-% else
 % If new orientation selected, prompt user to enter a new axis value,
 % or go back to previous configuration. Then, update the plot and GUI
 % based afterwards.
@@ -1281,7 +1263,7 @@ global viewModeChanged;
 global functionChoice;
 
 if (strcmp(functionChoice, "Select a function"))
-    f = errordlg('No function selected. Choose one in the "Function Rotated" list to the right.', 'Function Error');
+    f = errordlg('No function selected. Choose one on the menu to the top-right.', 'Function Error');
     set(f, 'WindowStyle', 'modal');
     uiwait(f);
 else
@@ -1352,7 +1334,7 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Slide for an integer between 0 and 76 to set the number \n of subintervals in determining the estimated volume."));
+    sprintf("Slide for an integer between 1 and 75 to set the number \n of subintervals in determining the estimated volume."));
 end
 
 % --- Executes on button press in resetButton.
@@ -1568,3 +1550,31 @@ elseif ispc
     set(hObject, 'fontSize', 14);
 end
 end
+
+function helpButton_Callback(hObject, eventdata, handles)
+% hObject    handle to auc_tutorial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+% Running on Windows
+if ispc
+    % Running on compiled app
+    if isdeployed
+        web(url, '-browser')
+      % Running in MATLAB editor
+    else
+        web(url, '-browser')
+    end
+% Running on Mac
+else 
+    % Running on compiled app
+    if isdeployed
+        web(url, '-browser')
+      % Running in MATLAB editor
+    else
+        web(url, '-browser')
+    end
+end
+end
+
