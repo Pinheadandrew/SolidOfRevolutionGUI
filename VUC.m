@@ -98,6 +98,28 @@ set(handles.estimatedVolumeText, 'TooltipString', ...
     sprintf("The volume of the solid approximated with a summation of the set,\nfinite number of subintervals."));
 set(handles.errorText, 'TooltipString', ...
     sprintf("The measure of accuracy of the estimated volume in respect to the actual, evaluated as:\n((Estimated Volume - Actual Volume) / Actual Volume)*100."));
+
+% Horizontally centering the equals sign within the Axis box, between the
+% radio button and the axis editbox.
+set(handles.yAxisRadio,'Units','pixels');
+set(handles.axisEditbox,'Units','pixels');
+set(handles.equalsSign,'Units','pixels');
+
+axisRadioPosition = get(handles.yAxisRadio, 'Position');
+axisEditPosition = get(handles.axisEditbox, 'Position');
+equalsPosition = get(handles.equalsSign, 'Position');
+
+x_at_right_radio = (axisRadioPosition(1) + 4*axisRadioPosition(3)/5);   %X at right edge of radio button.
+spaceBetween = axisEditPosition(1) - x_at_right_radio;              % Lenght of space b/w editbox and edge
+unusedLength = spaceBetween - equalsPosition(3);                 % Combined Empty space between radio and editbox, minus length of equals sign
+setEquals_x_at = unusedLength/2;
+equalsPosition(1) = x_at_right_radio + setEquals_x_at;
+equalsPosition(2) = axisRadioPosition(2);
+set(handles.equalsSign, 'position', equalsPosition);
+
+set(handles.yAxisRadio,'Units','normalize');
+set(handles.axisEditbox,'Units','normalize');
+set(handles.equalsSign,'Units','normalize');
 end
 
 % --- Outputs from this function are returned to the command line.
