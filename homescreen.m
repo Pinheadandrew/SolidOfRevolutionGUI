@@ -61,14 +61,16 @@ handles.output = hObject;
 
 % Resizing images
 % VSRimage = imread('img/VSR.jpg');
-VSRimage = imread('img/VSR-highres.png');
+% VSRimage = imread('img/VSR-highres.png');
+VSRimage = imread('img/Homescreen_VSR.jpg');
 set(handles.VUCpicture,'Units','pixels');
 resizePos = get(handles.VUCpicture,'Position');
 VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
 set(handles.VUCpicture, 'CData', VSRimage);
 
 % AUCimage = imread('img/AUC.jpg');
-AUCimage = imread('img/AUC-highres.png');
+% AUCimage = imread('img/AUC-highres.png');
+AUCimage = imread('img/Homescreen_AUC.jpg');
 set(handles.AUCpicture,'Units','pixels');
 resizePos = get(handles.AUCpicture,'Position');
 AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);

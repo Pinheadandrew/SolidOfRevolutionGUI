@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 18-Dec-2018 20:27:06
+% Last Modified by GUIDE v2.5 21-Jan-2019 22:28:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -37,11 +37,7 @@ set(handles.resetButton, 'CData', resetImage);
 
 % Resizing images
 helpIcon = imread('img/help2.jpg');
-% set(handles.helpButton,'Units','pixels');
-% resizePos = get(handles.helpButton,'Position');
-% helpIcon= imresize(helpIcon, [resizePos(4), resizePos(3)]);
 set(handles.helpButton, 'CData', helpIcon);
-% set(handles.helpButton,'Units','normalized');
 
 % Update handles structure2
 guidata(hObject, handles);
@@ -115,6 +111,10 @@ unusedLength = spaceBetween - equalsPosition(3);                 % Combined Empt
 setEquals_x_at = unusedLength/2;
 equalsPosition(1) = x_at_right_radio + setEquals_x_at;
 equalsPosition(2) = axisRadioPosition(2);
+
+% Set Y-position of equals sign to 
+equalsPosition(2) = (axisRadioPosition(4) - equalsPosition(4))/2 + axisRadioPosition(2);
+
 set(handles.equalsSign, 'position', equalsPosition);
 
 set(handles.yAxisRadio,'Units','normalize');
@@ -543,22 +543,28 @@ lower_input = str2double(get(hObject,'String'));
 funcString = functionChoice(6:end);
 
 if(isnan(lower_input))
+    set(handles.lowerBoundEdit,'BackgroundColor', [0.969 0.816 0.816])
     d = errorlg('The new bound must be a real number.', 'Bound Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
+    set(handles.lowerBoundEdit,'BackgroundColor', [1 1 1])
     set(handles.lowerBoundEdit, 'string', lowerBound);
 elseif(lower_input >= upperBound)
+    set(handles.lowerBoundEdit,'BackgroundColor', [0.969 0.816 0.816])
     d = errordlg('The upper bound must be greater than the lower bound.', 'Bound Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
+    set(handles.lowerBoundEdit,'BackgroundColor', [1 1 1])
     set(handles.lowerBoundEdit, 'string', lowerBound);
     viewModeChanged = 1;
     % Lower bound must be within range of -10 and 10.
 elseif(lower_input < -10 || lower_input > 10)
-    d = warndlg('The bound value must fall within the range of -10 and 10.', 'Bound Warning');
+    set(handles.lowerBoundEdit,'BackgroundColor', [1 0.89 0.61])
+    d = warndlg('The new bound must be between -10 and 10.', 'Bound Warning');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.lowerBoundEdit, 'string', lowerBound);
+    set(handles.lowerBoundEdit,'BackgroundColor', [1 1 1])
     viewModeChanged = 1;
     % If entering lower bound to create invalid instance, produce error
     % message and reset bound to what it was previously.
@@ -756,21 +762,27 @@ upper_input = str2double(get(hObject,'String'));
 funcString = functionChoice(6:end);
 
 if(isnan(upper_input))
+    set(handles.upperBoundEdit,'BackgroundColor', [0.969 0.816 0.816])
     d = errordlg('The new bound must be a real number.', 'Bound Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
+    set(handles.upperBoundEdit,'BackgroundColor', [1 1 1])
     set(handles.upperBoundEdit, 'string', upperBound);
 elseif(upper_input <= lowerBound)
+    set(handles.upperBoundEdit,'BackgroundColor', [0.969 0.816 0.816])
     d = errordlg('The upper bound must be greater than the lower bound.', 'Bound Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
+    set(handles.upperBoundEdit,'BackgroundColor', [1 1 1])
     set(handles.upperBoundEdit, 'string', upperBound);
     viewModeChanged = 1;
 elseif(upper_input < -10 || upper_input > 10)
-    d = warndlg('The bound value must fall within the range of -10 and 10.', 'Bound Warning');
+    set(handles.upperBoundEdit,'BackgroundColor', [1 0.89 0.61])
+    d = warndlg('The new bound must be between -10 and 10.', 'Bound Warning');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.upperBoundEdit, 'string', upperBound);
+    set(handles.upperBoundEdit,'BackgroundColor', [1 1 1])
     viewModeChanged = 1;
 elseif (~isValidVolume(funcString, methodChoice, lowerBound, upper_input, axisOri))
     f = errordlg(sprintf(...
@@ -1085,23 +1097,40 @@ if (axisPicked ~= axisOri)
     end
     
     position = get(handles.axisEditbox,'Position');
+    equalsPosition = get(handles.equalsSign, 'Position');
+    yRadioPosition = get(handles.yAxisRadio, 'Position');
+    xRadioPosition = get(handles.xAxisRadio, 'Position');
     
-    % Positions the axis value box adjacent to the axis orientation selected.
+    % Positions the axis value box adjacent to the axis orientation selected, and equals sign.
     % Also sets the axis orientation parameter in the volume function.
     % Also, user-prompt text different based on axis selected.
     if (axisPicked == "x")
-        position(2) = 0.4484536082474227;
+%         position(2) = 0.4484536082474227;
+        position(2) = .56;
         set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
-        set(handles.yAxisRadio,'string',"Y")
+        
+        % Set equals sign next to X.
+        new_y =  (xRadioPosition(4) - equalsPosition(4))/2;
+        set(handles.equalsSign, 'Position', [equalsPosition(1), xRadioPosition(2)+new_y,...
+            equalsPosition(3), equalsPosition(4)]);
+        
+%         set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
+%         set(handles.yAxisRadio,'string',"Y")
         set(handles.methodText, 'string', "Shell");
 %         set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the Y-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
     else
-        position(2) = 0.1436372269705601;
+%         position(2) = 0.1436372269705601;
+        position(2) = 0.24;
         set(handles.axisEditbox, 'Position', position)
-        set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
-        set(handles.xAxisRadio,'string',"X")
+        
+        % Set equals sign next to Y.
+        new_y =  (yRadioPosition(4) - equalsPosition(4))/2;
+        set(handles.equalsSign, 'Position', [equalsPosition(1), yRadioPosition(2) + new_y,...
+            equalsPosition(3), equalsPosition(4)]);
+        
+%         set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
+%         set(handles.xAxisRadio,'string',"X")
         set(handles.methodText, 'string', "Disk");
 %         set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
         prompt = {sprintf('Enter a new number for the axis value to rotate the area about(or enter 0 to rotate about the X-axis).\n\nMake sure the new axis value is outside the bounds highlighted to the left.')};
@@ -1129,19 +1158,27 @@ if (axisPicked ~= axisOri)
         % Reset axis box and selected axis string to what it
         % was before error
         if (axisPicked == "y")
-            position(2) = 0.4484536082474227;
+            %         position(2) = 0.4484536082474227;
+            position(2) = .56;
             set(handles.axisEditbox, 'Position', position)
             set(handles.xAxisRadio, 'value', 1.0)
-            set(handles.xAxisRadio,'string',"X    =")
-            set(handles.yAxisRadio,'string',"Y")
+            new_y =  (xRadioPosition(4) - equalsPosition(4))/2;
+            set(handles.equalsSign, 'Position', [equalsPosition(1), xRadioPosition(2)+new_y,...
+                equalsPosition(3), equalsPosition(4)]);
+%             set(handles.xAxisRadio,'string',"X    =")
+%             set(handles.yAxisRadio,'string',"Y")
             set(handles.methodText, 'string', "Shell");
 %             set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
         elseif (axisPicked == "x")
-            position(2) = 0.1436372269705601;
+%             position(2) = 0.1436372269705601;
+            position(2) = 0.24;
             set(handles.axisEditbox, 'Position', position)
             set(handles.yAxisRadio, 'value', 1.0)
-            set(handles.yAxisRadio,'string',"Y    =")
-            set(handles.xAxisRadio,'string',"X")
+            new_y =  (yRadioPosition(4) - equalsPosition(4))/2;
+            set(handles.equalsSign, 'Position', [equalsPosition(1), yRadioPosition(2)+new_y,...
+                equalsPosition(3), equalsPosition(4)]);
+%             set(handles.yAxisRadio,'string',"Y    =")
+%             set(handles.xAxisRadio,'string',"X")
             set(handles.methodText, 'string', "Disk");
 %             set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
         end
@@ -1185,10 +1222,14 @@ if (axisPicked ~= axisOri)
                 
                 % Reset axis box and selected axis string to what it
                 % was before error, to be aligned with x-radio.
-                position(2) = 0.4484536082474227;
+                %         position(2) = 0.4484536082474227;
+                position(2) = .56;
                 set(handles.axisEditbox, 'Position', position)
-                set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
-                set(handles.yAxisRadio,'string',"Y")
+                new_y =  (xRadioPosition(4) - equalsPosition(4))/2;
+                set(handles.equalsSign, 'Position', [equalsPosition(1), xRadioPosition(2)+new_y,...
+                    equalsPosition(3), equalsPosition(4)]);
+%                 set(get(handles.axisButtonGroup,'SelectedObject'),'string',"X    =")
+%                 set(handles.yAxisRadio,'string',"Y")
                 set(handles.methodText, 'string', "Shell");
 %                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Shell Height');
                 
@@ -1207,10 +1248,14 @@ if (axisPicked ~= axisOri)
                 
                 % Reset axis box and selected axis string to what it
                 % was before error, to be aligned with y-radio.
-                position(2) = 0.1436372269705601;
+%                 position(2) = 0.1436372269705601;
+                position(2) = 0.24;
                 set(handles.axisEditbox, 'Position', position)
-                set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
-                set(handles.xAxisRadio,'string',"X")
+                new_y =  (yRadioPosition(4) - equalsPosition(4))/2;
+                set(handles.equalsSign, 'Position', [equalsPosition(1), yRadioPosition(2)+new_y,...
+                    equalsPosition(3), equalsPosition(4)]);
+%                 set(get(handles.axisButtonGroup,'SelectedObject'),'string',"Y    =")
+%                 set(handles.xAxisRadio,'string',"X")
                 set(handles.methodText, 'string', "Disk");
 %                 set(handles.radiusMethodRadioGroup, 'title', 'Method of Disc Radius');
             end

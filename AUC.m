@@ -84,7 +84,7 @@ rectCount = 5;
 
 % initializes subinterval slider to default values.
 maxNumberOfRect = 100;
-set(handles.intervalSlider, 'Min', 5);
+set(handles.intervalSlider, 'Min', 1);
 set(handles.intervalSlider, 'Max', maxNumberOfRect);
 set(handles.intervalSlider, 'Value', 5);
 set(handles.intervalSlider, 'SliderStep', [1/maxNumberOfRect , 10/maxNumberOfRect ]);
@@ -128,28 +128,34 @@ lowerBound = str2double(get(hObject,'String'));
 % checks to make sure value entered as the lower bound is an integer.
 % Throws an error if that is not the case.
 if(isnan(lowerBound))
-    d = errordlg('The bound must be a real number.', 'Domain Error');
+    set(handles.lowerBoundEditBox ,'BackgroundColor', [0.969 0.816 0.816])
+    d = errordlg('The new bound must be a real number.', 'Domain Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     lowerBound = tempLowerBound;
+    set(handles.lowerBoundEditBox ,'BackgroundColor', [1 1 1])
     set(handles.lowerBoundEditBox, 'string', lowerBound);
 else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(lowerBound < -10)
 %         d = errordlg('Lower Domain must be LARGER than -101 and SMALLER than 99.', 'Domain Error');
-        d = errordlg('The new bound must be between -10 and 10.', 'Domain Error');
+        set(handles.lowerBoundEditBox ,'BackgroundColor', [1 0.89 0.61])
+        d = warndlg('The new bound must be between -10 and 10.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
         set(handles.lowerBoundEditBox, 'string', lowerBound);
+        set(handles.lowerBoundEditBox ,'BackgroundColor', [1 1 1])
     end
     if(lowerBound >= upperBound)
 %         d = errordlg('Lower Domain must be SMALLER than Upper Domain.', 'Domain Error');
+        set(handles.lowerBoundEditBox ,'BackgroundColor', [0.969 0.816 0.816])
         d = errordlg('The lower bound must be less than the upper bound.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         lowerBound = tempLowerBound;
+        set(handles.lowerBoundEditBox ,'BackgroundColor', [1 1 1])
         set(handles.lowerBoundEditBox, 'string', lowerBound);
     end
     intervalSlider_Callback(handles.intervalSlider, eventdata, handles)
@@ -189,26 +195,32 @@ upperBound = str2double(get(hObject,'String'));
 % checks to make sure value entered as the lower bound is an real number.
 % Throws an error if that is not the case.
 if(isnan(upperBound))
-    d = errordlg('The bound must be a real number.', 'Domain Error');
+    set(handles.upperBoundEditBox ,'BackgroundColor', [0.969 0.816 0.816])
+    d = errordlg('The new bound must be a real number.', 'Domain Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     upperBound = tempUpperBound;
+    set(handles.upperBoundEditBox ,'BackgroundColor', [1 1 1])
     set(handles.upperBoundEditBox, 'string', upperBound);
 else
     % Error checking to make sure that the lower bound's value is less than
     % the upper bound value
     if(upperBound > 10)
-        d = errordlg('The new bound must be between -10 and 10.', 'Domain Error');
+        set(handles.upperBoundEditBox ,'BackgroundColor', [1 0.89 0.61])
+        d = warndlg('The new bound must be between -10 and 10.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
+        set(handles.upperBoundEditBox ,'BackgroundColor', [1 1 1])
         set(handles.upperBoundEditBox, 'string', upperBound);
     end
     if(lowerBound >= upperBound)
+        set(handles.upperBoundEditBox ,'BackgroundColor', [0.969 0.816 0.816])
         d = errordlg('The upper bound must be greater than the lower bound.', 'Domain Error');
         set(d, 'WindowStyle', 'modal');
         uiwait(d);
         upperBound = tempUpperBound;
+        set(handles.upperBoundEditBox ,'BackgroundColor', [1 1 1])
         set(handles.upperBoundEditBox, 'string', upperBound);
     end
     intervalSlider_Callback(handles.intervalSlider, eventdata, handles)
@@ -641,7 +653,7 @@ else
     if (strcmp(functionChoice, 'Exponential') && (str2double(tempValue) < -10 || str2double(tempValue) > 10))
             set(handles.fifthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
 %             w = warndlg(sprintf(), 'Value Warning');
-            newString = {"When the exponential option is selected, this value must be greater than -10 and less than 10."};
+            newString = {"When the exponential option is selected, this value must be within the range of -10 and 10."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -649,7 +661,7 @@ else
             set(handles.fifthCoefficientEditBox ,'string', fifthCoefficientValue)
      elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.fifthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"When the polynomial option is selected, this value can be a minimum of -100 and a maximum of 100."};
+            newString = {"When the polynomial option is selected, this value must be within the range of -100 to 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -706,7 +718,7 @@ else
     if (strcmp(functionChoice, 'Exponential') && (str2double(tempValue) < -2 || str2double(tempValue) > 2))
             set(handles.fourthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
 %             w = warndlg(sprintf("When the exponential option is selected, this value must be\ngreater than -2 and less than 2."), 'Value Warning');
-            newString = {"When the exponential option is selected, this value must be greater than -2 and less than 2."};
+            newString = {"When the exponential option is selected, this value must be within the range of -2 and 2."};
             w = warndlg(newString, 'Value Warning'); 
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -714,7 +726,7 @@ else
             set(handles.fourthCoefficientEditBox ,'string', forthCoefficientValue)
      elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.fourthCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"When the polynomial option is selected, this value can be a minimum of -100 and a maximum of 100."};
+            newString = {"When the polynomial option is selected, this value must be within the range of -100 to 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -769,7 +781,7 @@ else
     % Value x < -2 or x > 2, spit out error.
     if (strcmp(functionChoice, 'Exponential') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.thirdCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"When the exponential option is selected, this value must be greater than -100 and less than 100."};
+            newString = {"When the exponential option is selected, this value must be within the range of -100 and 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -777,7 +789,7 @@ else
             set(handles.thirdCoefficientEditBox ,'string', thirdCoefficientValue);
     elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.thirdCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"When the polynomial option is selected, this value can be a minimum of -100 and a maximum of 100."};
+            newString = {"When the polynomial option is selected, this value must be within the range of -100 to 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -830,7 +842,7 @@ if(isnan(str2double(tempValue)))
     end
  elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.secondCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"This value can be a minimum of -100 and a maximum of 100."};
+            newString = {"This value must be within the range of -100 to 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -883,7 +895,7 @@ if(isnan(str2double(tempValue)))
     end
  elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.firstCoefficientEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"This value can be a minimum of -100 and a maximum of 100."};
+            newString = {"This value must be within the range of -100 to 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
@@ -954,10 +966,10 @@ function stepEdit_Callback(hObject, eventdata, handles)
 global rectCount;
 global functionChoice;
 tempRectCount = str2double(get(hObject,'String'));
-if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 101)
+if(tempRectCount < 1 || (floor(tempRectCount) ~= tempRectCount) || tempRectCount > 100)
     % set(handles.text4, 'string', newString);
 %     d = errordlg('Subinterval count must be positive integer equal to or below 100', 'Rectangle Error');
-    d = errordlg('The number of subintervals must be an integer between 1 and 100.', 'Rectangle Error');
+    d = warndlg('The number of subintervals must be an integer between 1 and 100.', 'Rectangle Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.stepEdit, 'string', rectCount);
@@ -1012,7 +1024,7 @@ if(isnan(str2double(tempValue)))
     end
  elseif (strcmp(functionChoice, 'Polynomial') && (str2double(tempValue) < -100 || str2double(tempValue) > 100))
             set(handles.constantEditBox ,'BackgroundColor', [1 0.89 0.61]);
-            newString = {"This value can be a minimum of -100 and a maximum of 100."};
+            newString = {"This value must be within the range of -100 to 100."};
             w = warndlg(newString, 'Value Warning');
             set(w, 'WindowStyle', 'modal');
             uiwait(w);
