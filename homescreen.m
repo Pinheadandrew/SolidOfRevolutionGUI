@@ -60,21 +60,41 @@ handles.output = hObject;
 % set(handles.VUCpicture, 'CData', VUCimage);
 
 % Resizing images
-% VSRimage = imread('img/VSR.jpg');
-% VSRimage = imread('img/VSR-highres.png');
-VSRimage = imread('img/Homescreen_VSR.jpg');
-set(handles.VUCpicture,'Units','pixels');
-resizePos = get(handles.VUCpicture,'Position');
-VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
-set(handles.VUCpicture, 'CData', VSRimage);
+% VSRimage = imread('img/Homescreen_VSR.jpg');
+% set(handles.VUCpicture,'Units','pixels');
+% resizePos = get(handles.VUCpicture,'Position');
+% VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
+% set(handles.VUCpicture, 'CData', VSRimage);
 
-% AUCimage = imread('img/AUC.jpg');
-% AUCimage = imread('img/AUC-highres.png');
-AUCimage = imread('img/Homescreen_AUC.jpg');
-set(handles.AUCpicture,'Units','pixels');
-resizePos = get(handles.AUCpicture,'Position');
-AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);
-set(handles.AUCpicture, 'CData', AUCimage);
+myImage = imread('img/Homescreen_AUC.jpg');
+set(handles.AUCaxes,'Units','pixels');
+resizePos = get(handles.AUCaxes,'Position');
+myImage= imresize(myImage, [resizePos(4) resizePos(3)]);
+axes(handles.AUCaxes);
+imshow(myImage);
+% set(handles.AUCaxes,'Units','normalized');
+
+% AUCimage = imread('img/Homescreen_AUC.jpg');
+% set(handles.AUCpicture,'Units','pixels');
+% resizePos = get(handles.AUCpicture,'Position');
+% AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);
+% set(handles.AUCpicture, 'CData', AUCimage);
+
+% myImage = imread('img/Homescreen_VSR.jpg');
+% set(handles.VSRaxes,'Units','pixels');
+% resizePos = get(handles.VSRaxes,'Position');
+% myImage= imresize(myImage, [resizePos(4) resizePos(3)]);
+% axes(handles.VSRaxes);
+% imshow(myImage);
+% set(handles.VSRaxes,'Units','normalized');
+
+myImage = imread('img/Homescreen_VSR.jpg');
+set(handles.VSRaxes,'Units','pixels');
+resizePos = get(handles.VSRaxes,'Position');
+myImage= imresize(myImage, [resizePos(4) resizePos(3)]);
+axes(handles.VSRaxes);
+imshow(myImage);
+set(handles.VSRaxes,'Units','normalized');
 
 msu = imread('img/MSUlogo.jpeg');
 set(handles.msuLogo,'Units','pixels');
@@ -93,7 +113,7 @@ set(handles.AUCdesc,'Units','pixels');
 set(handles.VUCdesc,'Units','pixels');
 
 buttonPosition = get(handles.AUCbutton, 'Position');
-imgPosition = get(handles.AUCpicture, 'Position');
+imgPosition = get(handles.AUCaxes, 'Position');
 AUCdescPosition = get(handles.AUCdesc, 'Position');
 VUCdescPosition = get(handles.VUCdesc, 'Position');
 
@@ -109,8 +129,8 @@ VUCdescPosition(2) = y_at_button_top + moveVUCDescUpBy;
 set(handles.AUCdesc, 'position', AUCdescPosition);
 set(handles.VUCdesc, 'position', VUCdescPosition);
 
-set(handles.VUCpicture,'Units','normalize');
-set(handles.AUCpicture,'Units','normalize');
+set(handles.VSRaxes,'Units','normalize');
+set(handles.AUCaxes,'Units','normalize');
 set(handles.AUCbutton,'Units','normalize');
 set(handles.VUCbutton,'Units','normalize');
 set(handles.AUCdesc,'Units','normalize');
