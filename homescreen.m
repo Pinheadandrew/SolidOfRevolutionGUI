@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 22-Dec-2018 14:40:15
+% Last Modified by GUIDE v2.5 07-Feb-2019 20:40:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -154,22 +154,6 @@ function varargout = homescreen_OutputFcn(~, ~, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in AUCpicture.
-function AUCbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to AUCpicture (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-close(homescreen);
-run('AUC');
-
-% --- Executes on button press in VUCpicture.
-function VUCbutton_Callback(hObject, eventdata, handles)
-% hObject    handle to VUCpicture (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-close(homescreen);
-run('VUC');
-
 %--- Executes during object creation, after setting all properties.
 function msuLogo_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to msuLogo (see GCBO)
@@ -285,3 +269,36 @@ run('VUC');
 % elseif ispc
 %     set(hObject, 'fontSize', 14);
 % end
+
+
+% --- Executes on mouse press over axes background.
+function AUCaxes_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to AUCaxes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('AUC');
+
+
+% --- Executes on mouse press over axes background.
+function VSRaxes_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to VSRaxes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('VUC');
+
+% --- Executes on button press in AUCbutton.
+function AUCbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to AUCbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('AUC');
+
+function VUCbutton_Callback(hObject, eventdata, handles)
+% hObject    handle to AUCbutton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('VUC');

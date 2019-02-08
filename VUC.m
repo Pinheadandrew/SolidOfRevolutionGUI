@@ -2,7 +2,7 @@
 % and descriptions when any parameter is changed.
 
 function varargout = VUC(varargin)
-% Last Modified by GUIDE v2.5 21-Jan-2019 22:28:27
+% Last Modified by GUIDE v2.5 06-Feb-2019 22:39:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1644,4 +1644,3 @@ else
     end
 end
 end
-
