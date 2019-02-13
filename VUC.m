@@ -105,7 +105,7 @@ axisRadioPosition = get(handles.yAxisRadio, 'Position');
 axisEditPosition = get(handles.axisEditbox, 'Position');
 equalsPosition = get(handles.equalsSign, 'Position');
 
-x_at_right_radio = (axisRadioPosition(1) + 4*axisRadioPosition(3)/5);   %X at right edge of radio button.
+x_at_right_radio = (axisRadioPosition(1) + 3*axisRadioPosition(3)/5);   %X at right edge of radio button.
 spaceBetween = axisEditPosition(1) - x_at_right_radio;              % Lenght of space b/w editbox and edge
 unusedLength = spaceBetween - equalsPosition(3);                 % Combined Empty space between radio and editbox, minus length of equals sign
 setEquals_x_at = unusedLength/2;
@@ -544,7 +544,7 @@ funcString = functionChoice(6:end);
 
 if(isnan(lower_input))
     set(handles.lowerBoundEdit,'BackgroundColor', [0.969 0.816 0.816])
-    d = errorlg('The new bound must be a real number.', 'Bound Error');
+    d = errordlg('The new bound must be a real number.', 'Bound Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.lowerBoundEdit,'BackgroundColor', [1 1 1])
@@ -985,10 +985,19 @@ else
 end
 
 if(isnan(axis_input))
+    set(handles.axisEditbox,'BackgroundColor', [0.969 0.816 0.816])
     d = errordlg('The axis value must be a real number.', 'Axis Value Error');
     set(d, 'WindowStyle', 'modal');
     uiwait(d);
     set(handles.axisEditbox, 'string', axisValue);
+    set(handles.axisEditbox,'BackgroundColor', [1 1 1])
+elseif(axis_input < -2000 || axis_input > 2000)
+    set(handles.axisEditbox,'BackgroundColor', [1 0.89 0.61])
+    d = warndlg('The new axis value must be between -2000 and 2000.', 'Bound Warning');
+    set(d, 'WindowStyle', 'modal');
+    uiwait(d);
+    set(handles.axisEditbox, 'string', axisValue);
+    set(handles.axisEditbox,'BackgroundColor', [1 1 1])
 elseif (~axisOutsideBounds(functionToUse, methodChoice, lowerBound, upperBound, axisOri, axis_input))
     if (methodChoice == "Shell")
         d = errordlg(sprintf('Cannot generate a shell volume, given the axis of rotation\nis set between the bounds of the area to be rotated, hightlighted to the left.'),'Shell Volume Error');
@@ -1066,7 +1075,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 set(hObject, 'TooltipString', ...
-    sprintf("Enter a real number to set the axis of rotation, perpendicular to the axis orientation selected.\nIf 'X' selected, the new axis value must be outside of the X-boundaries, set within the 'Bounds of Area' box above.\n Otherwise, if 'Y' selected, the new axis value must be outside of the Y-boundaries."));
+    sprintf("Enter a real number between -2000 and 2000 for the axis of rotation, perpendicular to the axis orientation selected.\nIf 'X' selected, the new axis value must be outside of the X-boundaries, set within the 'Bounds of Area' box above.\n Otherwise, if 'Y' selected, the new axis value must be outside of the Y-boundaries."));
 end
 
 % --- Executes when axis orientation is selected in button group of axes
@@ -1623,7 +1632,7 @@ function helpButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+url = 'https://www.dropbox.com/s/57e4qguhxykt5bx/VSR%20User%20Manual.pdf?dl=0';
 % Running on Windows
 if ispc
     % Running on compiled app

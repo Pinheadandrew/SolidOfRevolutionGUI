@@ -22,7 +22,7 @@ function varargout = homescreen(varargin)
 
 % Edit the above text to modify the response to help homescreen
 
-% Last Modified by GUIDE v2.5 07-Feb-2019 20:40:19
+% Last Modified by GUIDE v2.5 07-Feb-2019 21:03:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,46 +54,23 @@ function homescreen_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for homescreen
 handles.output = hObject;
-% AUCimage = imread('img/AUC.jpg');
-% set(handles.AUCpicture, 'CData', AUCimage);
-% VUCimage = imread('img/VSR.jpg');
-% set(handles.VUCpicture, 'CData', VUCimage);
-
-% Resizing images
-% VSRimage = imread('img/Homescreen_VSR.jpg');
-% set(handles.VUCpicture,'Units','pixels');
-% resizePos = get(handles.VUCpicture,'Position');
-% VSRimage= imresize(VSRimage, [resizePos(4), resizePos(3)]);
-% set(handles.VUCpicture, 'CData', VSRimage);
 
 myImage = imread('img/Homescreen_AUC.jpg');
 set(handles.AUCaxes,'Units','pixels');
 resizePos = get(handles.AUCaxes,'Position');
 myImage= imresize(myImage, [resizePos(4) resizePos(3)]);
 axes(handles.AUCaxes);
-imshow(myImage);
-% set(handles.AUCaxes,'Units','normalized');
-
-% AUCimage = imread('img/Homescreen_AUC.jpg');
-% set(handles.AUCpicture,'Units','pixels');
-% resizePos = get(handles.AUCpicture,'Position');
-% AUCimage= imresize(AUCimage, [resizePos(4), resizePos(3)]);
-% set(handles.AUCpicture, 'CData', AUCimage);
-
-% myImage = imread('img/Homescreen_VSR.jpg');
-% set(handles.VSRaxes,'Units','pixels');
-% resizePos = get(handles.VSRaxes,'Position');
-% myImage= imresize(myImage, [resizePos(4) resizePos(3)]);
-% axes(handles.VSRaxes);
-% imshow(myImage);
-% set(handles.VSRaxes,'Units','normalized');
+aucImage = imshow(myImage);
+set(aucImage, 'ButtonDownFcn', @aucImage_ButtonDownFcn);
 
 myImage = imread('img/Homescreen_VSR.jpg');
 set(handles.VSRaxes,'Units','pixels');
 resizePos = get(handles.VSRaxes,'Position');
 myImage= imresize(myImage, [resizePos(4) resizePos(3)]);
 axes(handles.VSRaxes);
-imshow(myImage);
+vucImage = imshow(myImage);
+set(vucImage, 'ButtonDownFcn', @vucImage_ButtonDownFcn);
+
 set(handles.VSRaxes,'Units','normalized');
 
 msu = imread('img/MSUlogo.jpeg');
@@ -103,7 +80,6 @@ msu= imresize(msu, [resizePos(4), resizePos(3)]);
 set(handles.msuLogo, 'CData', msu);
 set(handles.msuLogo,'Units','normalize');
 % End test
-
 
 % Vertically centering the description for each GUI between the
 % buttons.
@@ -159,12 +135,6 @@ function msuLogo_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to msuLogo (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-% msulogo = imread('img/MSU-Logo.png');
-% set(handles.msuLogo,'Units','pixels');
-% resizePos = get(handles.msuLogo,'Position');
-% MSU= imresize(msulogo, [resizePos(4), resizePos(3)]);
-% set(handles.msuLogo, 'CData', MSU);
-% set(handles.msuLogo,'Units','normalize');
 
 
 % --- Executes on button press in vsr_tutorial.
@@ -173,14 +143,7 @@ function vsr_tutorial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% edit(fullfile(matlabroot, 'toolbox\matlab\general\private\openpdf.m'))
-
-% filename = 'MATLAB WORKBOOK1.pdf';
-% % read data from file
-% [~, ~, xlsxdata] = xlsread(filename);
-% assignin('base','xlsxdata',xlsxdata);
-
-url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+url = 'https://www.dropbox.com/s/57e4qguhxykt5bx/VSR%20User%20Manual.pdf?dl=0';
 % Running on Windows
 if ispc
     % Running on compiled app
@@ -200,7 +163,6 @@ else
         web(url, '-browser')
     end
 end
-
 
 % --- Executes on button press in auc_tutorial.
 function auc_tutorial_Callback(hObject, eventdata, handles)
@@ -208,7 +170,7 @@ function auc_tutorial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+url = 'https://www.dropbox.com/s/ukzf1pdlympj8dl/MATLAB%20WORKBOOK1.pdf?dl=0';
 % Running on Windows
 if ispc
     % Running on compiled app
@@ -228,7 +190,6 @@ else
         web(url, '-browser')
     end
 end
-
 
 % --- Executes on button press in AUCpicture.
 function AUCpicture_Callback(hObject, eventdata, handles)
@@ -238,7 +199,6 @@ function AUCpicture_Callback(hObject, eventdata, handles)
 close(homescreen);
 run('AUC');
 
-
 % --- Executes on button press in VUCpicture.
 function VUCpicture_Callback(hObject, eventdata, handles)
 % hObject    handle to VUCpicture (see GCBO)
@@ -246,30 +206,6 @@ function VUCpicture_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 close(homescreen);
 run('VUC');
-
-
-% --- Executes during object creation, after setting all properties.
-% function AUCdesc_CreateFcn(hObject, eventdata, handles)
-% % hObject    handle to AUCdesc (see GCBO)
-% % eventdata  reserved - to be defined in a future version of MATLAB
-% % handles    empty - handles not created until after all CreateFcns called
-% if ismac
-%     set(hObject, 'fontSize', 13);
-% elseif ispc
-%     set(hObject, 'fontSize', 14);
-% end
-
-% --- Executes during object creation, after setting all properties.
-% function VUCdesc_CreateFcn(hObject, eventdata, handles)
-% % hObject    handle to VUCdesc (see GCBO)
-% % eventdata  reserved - to be defined in a future version of MATLAB
-% % handles    empty - handles not created until after all CreateFcns called
-% if ismac
-%     set(hObject, 'fontSize', 13);
-% elseif ispc
-%     set(hObject, 'fontSize', 14);
-% end
-
 
 % --- Executes on mouse press over axes background.
 function AUCaxes_ButtonDownFcn(hObject, eventdata, handles)
@@ -300,5 +236,13 @@ function VUCbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to AUCbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+close(homescreen);
+run('VUC');
+
+function aucImage_ButtonDownFcn(hObject, eventdata, handles)
+close(homescreen);
+run('AUC');
+
+function vucImage_ButtonDownFcn(hObject, eventdata, handles)
 close(homescreen);
 run('VUC');

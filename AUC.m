@@ -601,6 +601,8 @@ else
         funcText = strrep(funcText, "e^-^1^x", "e^-^x");
         funcText = strrep(funcText, "*", "");
         funcText = strrep(funcText, " ", "");
+        funcText = strrep(funcText, " ", "");
+        funcText = strrep(funcText, "+-", "-");
 %         funcText = strrep(funcText, "+   0.", "+ .");
 %         lineLeg = strcat(funcString, char(3), funcText); 
 %         patchLeg = strcat(areaString, char(3), funcText); 
@@ -1328,7 +1330,7 @@ function helpButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-url = 'https://ximera.osu.edu/mooculus/calculus1/master/approximatingTheAreaUnderACurve/digInApproximatingAreaWithRectangles';
+url = 'https://www.dropbox.com/s/ukzf1pdlympj8dl/MATLAB%20WORKBOOK1.pdf?dl=0';
 % Running on Windows
 if ispc
     % Running on compiled app
