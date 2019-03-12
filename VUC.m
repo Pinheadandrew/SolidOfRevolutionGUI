@@ -1632,7 +1632,8 @@ function helpButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-url = 'https://www.dropbox.com/s/57e4qguhxykt5bx/VSR%20User%20Manual.pdf?dl=0';
+% url = 'https://www.dropbox.com/s/57e4qguhxykt5bx/VSR%20User%20Manual.pdf?dl=0';
+url = 'https://www.dropbox.com/s/6b7doooa2mczo6f/VSR%20User%20Manual.pdf?dl=0';
 % Running on Windows
 if ispc
     % Running on compiled app

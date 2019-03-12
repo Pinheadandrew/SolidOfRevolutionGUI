@@ -1330,7 +1330,8 @@ function helpButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-url = 'https://www.dropbox.com/s/ukzf1pdlympj8dl/MATLAB%20WORKBOOK1.pdf?dl=0';
+% url = 'https://www.dropbox.com/s/ukzf1pdlympj8dl/MATLAB%20WORKBOOK1.pdf?dl=0';
+url = 'https://www.dropbox.com/s/y48skpdg1yjajx0/AUC%20User%20Manual.pdf?dl=0';
 % Running on Windows
 if ispc
     % Running on compiled app
